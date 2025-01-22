@@ -1,4 +1,4 @@
-# ForgePrep AI - Practice Test Generator
+# Forge Prep AI - Practice Test Generator
 
 ## Project Overview
 ForgePrep AI is a state-of-the-art application designed to help students prepare for exams by generating customizable practice tests using AI. This project leverages modern technologies like FastAPI, PostgreSQL, and OpenAI's GPT-4, following scalable, secure, and user-centric design principles.
