@@ -6,7 +6,7 @@ import os
 # Load database credentials from environment variables
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:DevilDawg2021%40@localhost:5432/forgeprep"
+    ""#Change to database URL
 )
 
 # Create the SQLAlchemy engine
