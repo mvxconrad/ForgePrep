@@ -6,7 +6,12 @@ import os
 # Load database credentials from environment variables
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
+<<<<<<< Updated upstream
     ""#Change to database URL
+=======
+    "postgresql://Administrator:StrongPassword123@rds-instance-name.aws-region.rds.amazonaws.com:5432/mydatabase
+    "
+>>>>>>> Stashed changes
 )
 
 # Create the SQLAlchemy engine
