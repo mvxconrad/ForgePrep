@@ -1,18 +1,18 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
+from dotenv import load_dotenv
 
-# Load database credentials from environment variables
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-<<<<<<< Updated upstream
-    ""#Change to database URL
-=======
-    "postgresql://Administrator:StrongPassword123@rds-instance-name.aws-region.rds.amazonaws.com:5432/mydatabase
-    "
->>>>>>> Stashed changes
-)
+# Load environment variables from .env file
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+load_dotenv(dotenv_path)
+
+# Securely retrieve database URL
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in the environment variables.")
 
 # Create the SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
