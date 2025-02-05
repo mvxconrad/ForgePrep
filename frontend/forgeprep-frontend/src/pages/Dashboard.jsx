@@ -2,11 +2,11 @@ import React from "react";
 import PerformanceChart from "../components/PerformanceChart";
 
 const Dashboard = () => {
-  const mockPerformanceData = {
-    dates: ["Jan", "Feb", "Mar"],
-    correct: [5, 7, 8],
-    incorrect: [2, 3, 1],
-  };
+  const mockPerformanceData = [
+    { date: "Jan", correct: 5, incorrect: 2 },
+    { date: "Feb", correct: 7, incorrect: 3 },
+    { date: "Mar", correct: 8, incorrect: 1 },
+  ];
 
   return (
     <div>
