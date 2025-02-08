@@ -1,18 +1,16 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import TestGeneratorPage from "./pages/TestGeneratorPage";
-import FileUploadPage from "./pages/FileUploadPage";
+import FileUpload from "./pages/FileUploadPage";
+import TestGenerator from "./pages/TestGeneratorPage";
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/test-generator" element={<TestGeneratorPage />} />
-        <Route path="/file-upload" element={<FileUploadPage />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/fileupload" element={<FileUpload />} />
+        <Route path="/testgenerator" element={<TestGenerator />} />
       </Routes>
     </Router>
   );

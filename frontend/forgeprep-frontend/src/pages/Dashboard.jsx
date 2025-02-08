@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import PerformanceChart from "../components/PerformanceChart";
 
 const Dashboard = () => {
@@ -11,6 +12,12 @@ const Dashboard = () => {
   return (
     <div>
       <h1>Dashboard</h1>
+      <nav>
+        <ul>
+          <li><Link to="/fileupload">File Upload</Link></li>
+          <li><Link to="/testgenerator">Test Generator</Link></li>
+        </ul>
+      </nav>
       <PerformanceChart performanceData={mockPerformanceData} />
     </div>
   );
