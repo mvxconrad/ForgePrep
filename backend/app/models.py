@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
+from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -14,6 +14,16 @@ class User(Base):
 
     sets = relationship("StudySet", back_populates="owner")  # Relationship with Study Sets
 
+class UserProgress(Base):
+    __tablename__ = "user_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    study_set_id = Column(Integer, ForeignKey("study_sets.id"))
+    progress = Column(Float, default=0.0)  # Percentage of completion
+
+    user = relationship("User", back_populates="progress")
+    study_set = relationship("StudySet", back_populates="progress")
 
 class StudySet(Base):
     __tablename__ = "study_sets"
