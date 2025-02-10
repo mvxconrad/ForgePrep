@@ -11,7 +11,7 @@ DATABASE_URL = os.getenv(
 )
 
 # Load environment variables from .env file
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database.env")
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 load_dotenv(dotenv_path)
 
 if not DATABASE_URL:

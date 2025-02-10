@@ -1,13 +1,14 @@
 import os
 from dotenv import load_dotenv
+import jwt
+import datetime
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Security
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database.database import get_db
-from user import User
+from models import User
 from enum import Enum
-
 
 # For OAuth2 password hashing
 from fastapi import FastAPI, Depends, HTTPException, status
@@ -18,8 +19,12 @@ from datetime import datetime, timedelta
 from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
 
+from fastapi.security import OAuth2PasswordBearer
+from security import verify_password, create_access_token, decode_access_token, hash_password
+
 # Load environment variables from a .env file
-load_dotenv()
+dotenv_path = os.path.join(os.path.dirname(__file__), "config", ".env")
+load_dotenv(dotenv_path)
 
 # Initialize router
 app = FastAPI()
@@ -27,35 +32,107 @@ app = FastAPI()
 # Password hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# -------------------   Start OAuth2 Password Hashing   -------------------
+# -------------------   Start OAuth2 Password Management   -------------------
+
 # OAuth client setup
 oauth = OAuth()
+
+# OAuth2 token authentication
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+# Register Google OAuth
 oauth.register(
-    name='google',
-    client_id="GOOGLE_CLIENT_ID",
-    client_secret="GOOGLE_CLIENT_SECRET",
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
     authorize_url="https://accounts.google.com/o/oauth2/auth",
-    authorize_params=None,
     access_token_url="https://oauth2.googleapis.com/token",
-    access_token_params=None,
     client_kwargs={"scope": "openid email profile"},
 )
 
-@app.get("/login/google")
-async def login(request: Request):
-    redirect_uri = request.url_for("auth_google")
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+# Register Facebook OAuth
+oauth.register(
+    name="facebook",
+    client_id=os.getenv("FACEBOOK_CLIENT_ID"),
+    client_secret=os.getenv("FACEBOOK_CLIENT_SECRET"),
+    authorize_url="https://www.facebook.com/v12.0/dialog/oauth",
+    access_token_url="https://graph.facebook.com/v12.0/oauth/access_token",
+    client_kwargs={"scope": "email"},
+)
 
-@app.get("/auth/google")
-async def auth_google(request: Request):
-    token = await oauth.google.authorize_access_token(request)
-    user = await oauth.google.parse_id_token(request, token)
-    return {"user": user}
+# Register GitHub OAuth
+oauth.register(
+    name="github",
+    client_id=os.getenv("GITHUB_CLIENT_ID"),
+    client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+    authorize_url="https://github.com/login/oauth/authorize",
+    access_token_url="https://github.com/login/oauth/access_token",
+    client_kwargs={"scope": "user:email"},
+)
 
-#-------------------   End OAuth2 Password Hashing   -------------------
+# Unified login route for different providers
+@app.get("/login/{provider}")
+async def login(request: Request, provider: str):
+    if provider not in ["google", "facebook", "github"]:
+        return {"error": "Unsupported provider"}
+    redirect_uri = request.url_for(f"auth_{provider}")
+    return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
 
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+# Unified authentication route for different providers
+@app.get("/auth/{provider}")
+async def auth_provider(request: Request, provider: str):
+    if provider not in ["google", "facebook", "github"]:
+        return {"error": "Unsupported provider"}
+    
+    client = oauth.create_client(provider)
+    token = await client.authorize_access_token(request)
+    
+    if provider == "google":
+        user = await client.parse_id_token(request, token)
+    elif provider == "facebook":
+        resp = await client.get("https://graph.facebook.com/me?fields=id,name,email", token=token)
+        user = resp.json()
+    elif provider == "github":
+        resp = await client.get("https://api.github.com/user", token=token)
+        user = resp.json()
+    
+    return {"provider": provider, "user": user}
+
+# -------------------   End OAuth2 Password Management   -------------------
+# ------------------- Start DB Password Management -------------------
+
+
+# ------------------- End DB Password Management -------------------
+
+# User Registration Route
+@app.post("/register/")
+async def register_user(username: str, email: str, password: str, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    new_user = User(username=username, email=email, hashed_password=hash_password(password))
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "User registered successfully"}
+
+# User Login Route (Returns JWT)
+@app.post("/login/")
+async def login(email: str, password: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    # Generate JWT token
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+# Protected Route (Requires JWT)
+@app.get("/protected/")
+async def protected_route(token: str = Security(oauth2_scheme)):
+    user_data = decode_access_token(token)
+    return {"message": f"Hello, {user_data['sub']}!"}
 
 # Pydantic schemas
 class UserCreate(BaseModel):
@@ -113,6 +190,20 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     return db_user
 
 
+@app.get("/users/{user_id}/profile")
+async def get_user_profile(user_id: int):
+    return {"user_id": user_id}
+
+@app.get("/users/{user_id}/sets")
+async def get_user_sets(user_id: int):
+    return {"user_id": user_id}
+
+@app.get("/users/{user_id}/sets/{set_id}")
+async def get_user_set(user_id: int, set_id: int):
+    return {"user_id": user_id, "set_id": set_id}
+
+# -------------------   Start FastAPI Testing   -------------------
+
 @app.get("/")
 async def root():
     return {"message": "hello from get"}
@@ -124,6 +215,19 @@ async def root():
 @app.put("/")
 async def root():
     return {"message": "hello from put"}
+
+@app.post("/register/")
+async def register_user(username: str, email: str, password: str, db: Session = Depends(get_db)):
+    # Check if user exists
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Hash password and create user
+    new_user = User(username=username, email=email, hashed_password=hash_password(password))
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "User registered successfully"}
 
 @app.get("/users")
 async def list_users():
@@ -176,14 +280,4 @@ async def get_user_item(user_id: int, item_id: str, q: str | None = None, short:
         )
     return item
 
-@app.get("/users/{user_id}/profile")
-async def get_user_profile(user_id: int):
-    return {"user_id": user_id}
-
-@app.get("/users/{user_id}/sets")
-async def get_user_sets(user_id: int):
-    return {"user_id": user_id}
-
-@app.get("/users/{user_id}/sets/{set_id}")
-async def get_user_set(user_id: int, set_id: int):
-    return {"user_id": user_id, "set_id": set_id}
+# -------------------   End FastAPI Testing   -------------------
