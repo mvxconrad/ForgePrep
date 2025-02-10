@@ -3,23 +3,23 @@ from dotenv import load_dotenv
 import jwt
 import datetime
 
-from fastapi import APIRouter, Security
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database.database import get_db
-from models import User
+from models import User, StudySet, Flashcard
+from models import File as FileModel
 from enum import Enum
 
 # For OAuth2 password hashing
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import Security, APIRouter,FastAPI, Depends, HTTPException, status, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import StreamingResponse
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
 
-from fastapi.security import OAuth2PasswordBearer
 from security import verify_password, create_access_token, decode_access_token, hash_password
 
 # Load environment variables from a .env file
@@ -133,6 +133,61 @@ async def login(email: str, password: str, db: Session = Depends(get_db)):
 async def protected_route(token: str = Security(oauth2_scheme)):
     user_data = decode_access_token(token)
     return {"message": f"Hello, {user_data['sub']}!"}
+
+# Create Study Set Route (Protected)
+@app.post("/study_sets/")
+async def create_study_set(title: str, description: str, token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    user_data = decode_access_token(token)
+    user = db.query(User).filter(User.email == user_data["sub"]).first()
+
+    new_set = StudySet(title=title, description=description, user_id=user.id)
+    db.add(new_set)
+    db.commit()
+    db.refresh(new_set)
+    return new_set
+
+# Get All Study Sets
+@app.get("/study_sets/")
+async def get_study_sets(db: Session = Depends(get_db)):
+    return db.query(StudySet).all()
+
+# Add Flashcard to Study Set (Protected)
+@app.post("/study_sets/{set_id}/flashcards/")
+async def add_flashcard(set_id: int, question: str, answer: str, token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    user_data = decode_access_token(token)
+    user = db.query(User).filter(User.email == user_data["sub"]).first()
+    
+    study_set = db.query(StudySet).filter(StudySet.id == set_id, StudySet.user_id == user.id).first()
+    if not study_set:
+        raise HTTPException(status_code=404, detail="Study set not found")
+
+    new_card = Flashcard(question=question, answer=answer, set_id=set_id)
+    db.add(new_card)
+    db.commit()
+    db.refresh(new_card)
+    return new_card
+
+# For uploading files
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    file_data = await file.read()  # Read the file as binary
+
+    db_file = FileModel(filename=file.filename, content=file_data)
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+
+    return {"message": "File uploaded successfully", "file_id": db_file.id}
+
+# For downloading files
+@app.get("/files/{file_id}")
+async def get_file(file_id: int, db: Session = Depends(get_db)):
+    file = db.query(FileModel).filter(FileModel.id == file_id).first()
+    if not file:
+        return {"error": "File not found"}
+
+    return StreamingResponse(io.BytesIO(file.content), media_type="application/octet-stream",
+                             headers={"Content-Disposition": f"attachment; filename={file.filename}"})
 
 # Pydantic schemas
 class UserCreate(BaseModel):
