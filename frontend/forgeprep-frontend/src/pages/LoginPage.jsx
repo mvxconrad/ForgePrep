@@ -1,33 +1,22 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate(); // Hook to navigate between pages
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
 
-    // TEMPORARY: Allow login with hardcoded test credentials
-    if (email === "test@example.com" && password === "password") {
-      localStorage.setItem("token", "fake-token"); // Store fake token
-      navigate("/dashboard"); // Redirect to dashboard
-      return;
-    }
+    // Get the user info from localStorage
+    const storedUser = JSON.parse(localStorage.getItem("user"));
 
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/login`,
-        { email, password }
-      );
-
+    if (storedUser && storedUser.email === email && storedUser.password === password) {
+      localStorage.setItem("token", "fake-jwt-token"); // Simulate successful login
       alert("Login successful!");
-      localStorage.setItem("token", response.data.token); // Store real token
-      navigate("/dashboard"); // Redirect after login
-    } catch (error) {
-      console.error("Login failed", error);
+      navigate("/dashboard");
+    } else {
       alert("Invalid credentials");
     }
   };
@@ -41,15 +30,20 @@ const LoginPage = () => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
         <button type="submit">Login</button>
       </form>
+      <p>
+        Don't have an account? <a href="/signup">Sign Up</a>
+      </p>
     </div>
   );
 };

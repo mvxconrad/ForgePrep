@@ -15,6 +15,8 @@ const Dashboard = () => {
       <nav>
         <Link to="/profile">Profile</Link> | 
         <Link to="/settings">Settings</Link> | 
+        <Link to="/fileupload">File Upload</Link> | 
+        <Link to="/testgenerator">Test Generator</Link> | 
         <Link to="/" onClick={() => localStorage.removeItem("token")}>Logout</Link>
       </nav>
       <PerformanceChart performanceData={mockPerformanceData} />
