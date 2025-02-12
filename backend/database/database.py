@@ -1,13 +1,18 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
+from dotenv import load_dotenv
 
-# Load database credentials from environment variables
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:DevilDawg2021%40@localhost:5432/forgeprep"
-)
+# Load environment variables from /git/ForgePrep/config/.env
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", ".env")
+load_dotenv(dotenv_path)
+
+# Securely retrieve database URL
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set in the environment variables.")
 
 # Create the SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
