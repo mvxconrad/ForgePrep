@@ -8,6 +8,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import FileUpload from "./pages/FileUploadPage";  
 import TestGenerator from "./pages/TestGeneratorPage";  
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("token");

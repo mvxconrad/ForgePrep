@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import Navbar from "../components/Navbar";
 const SignupPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -27,6 +27,7 @@ const SignupPage = () => {
 
   return (
     <div>
+      <Navbar />
       <h1>Sign Up</h1>
       <form onSubmit={handleSignup}>
         <input
