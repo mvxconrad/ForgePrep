@@ -1,53 +1,45 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+
 const LoginPage = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
-    // Get the user info from localStorage
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    try {
+      const response = await fetch("http://your-backend-api.com/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (storedUser && storedUser.email === email && storedUser.password === password) {
-      localStorage.setItem("token", "fake-jwt-token"); // Simulate successful login
-      alert("Login successful!");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Invalid credentials");
+
+      localStorage.setItem("token", data.token);
       navigate("/dashboard");
-    } else {
-      alert("Invalid credentials");
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
-    <div>
-      <Navbar />
-      <h1>Login</h1>
+    <div className="container mt-5">
+      <h2>Login</h2>
+      {error && <p className="text-danger">{error}</p>}
       <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
+        <input type="email" className="form-control mb-2" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" className="form-control mb-2" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <button type="submit" className="btn btn-primary">Login</button>
       </form>
-      <p>
-        Don't have an account? <a href="/signup">Sign Up</a>
-      </p>
+      <p className="mt-2">Don't have an account? <a href="/signup">Sign up</a></p>
     </div>
   );
 };
 
 export default LoginPage;
-

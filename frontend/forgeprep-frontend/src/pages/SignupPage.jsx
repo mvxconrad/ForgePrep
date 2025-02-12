@@ -1,64 +1,44 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+
 const SignupPage = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
+    try {
+      const response = await fetch("http://your-backend-api.com/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Signup failed");
+
+      navigate("/login");
+    } catch (err) {
+      setError(err.message);
     }
-
-    // Store the user info in localStorage
-    const newUser = { email, password };
-    localStorage.setItem("user", JSON.stringify(newUser));
-
-    alert("Signup successful!");
-    
-    // Redirect to login page after signup
-    navigate("/login");
   };
 
   return (
-    <div>
-      <Navbar />
-      <h1>Sign Up</h1>
+    <div className="container mt-5">
+      <h2>Sign Up</h2>
+      {error && <p className="text-danger">{error}</p>}
       <form onSubmit={handleSignup}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Sign Up</button>
+        <input type="email" className="form-control mb-2" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input type="password" className="form-control mb-2" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <button type="submit" className="btn btn-success">Sign Up</button>
       </form>
-      <p>
-        Already have an account? <a href="/login">Login</a>
-      </p>
+      <p className="mt-2">Already have an account? <a href="/login">Login</a></p>
     </div>
   );
 };
 
 export default SignupPage;
-
