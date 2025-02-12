@@ -1,15 +1,16 @@
 import os
-import io
 from dotenv import load_dotenv
 import jwt
 import datetime
+import io
 
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database.database import get_db
-from models import User, StudySet, Flashcard, UserProgress
+from models import User, StudySet, Flashcard
 from models import File as FileModel
 from enum import Enum
+from app.models import User, StudySet, Flashcard, FileModel, UserProgress
 
 # For OAuth2 password hashing
 from fastapi import Security, APIRouter,FastAPI, Depends, HTTPException, status, File, UploadFile
@@ -22,6 +23,8 @@ from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
 
 from security import verify_password, create_access_token, decode_access_token, hash_password
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # Load environment variables from a .env file
 dotenv_path = os.path.join(os.path.dirname(__file__), "config", ".env")
@@ -29,6 +32,15 @@ load_dotenv(dotenv_path)
 
 # Initialize router
 app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8000"],  # Frontend URL (change for production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Password hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
