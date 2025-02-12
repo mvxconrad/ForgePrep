@@ -12,7 +12,7 @@ const SignupPage = () => {
     setError("");
 
     try {
-      const response = await fetch("http://your-backend-api.com/api/register", {
+      const response = await fetch("http://18.221.47.222:8000/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

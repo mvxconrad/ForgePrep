@@ -12,7 +12,7 @@ const LoginPage = () => {
     setError("");
 
     try {
-      const response = await fetch("http://your-backend-api.com/api/login", {
+      const response = await fetch("http://18.221.47.222:8000/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
