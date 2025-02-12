@@ -1,4 +1,5 @@
 import os
+import io
 from dotenv import load_dotenv
 import jwt
 import datetime
@@ -6,7 +7,7 @@ import datetime
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database.database import get_db
-from models import User, StudySet, Flashcard
+from models import User, StudySet, Flashcard, UserProgress
 from models import File as FileModel
 from enum import Enum
 
@@ -204,6 +205,31 @@ class UserUpdate(BaseModel):
 @app.get("/")
 def root():
     return {"message": "API is running and connected to PostgreSQL!"}
+
+@app.get("/dashboard/")
+async def get_dashboard(token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    user_data = decode_access_token(token)
+    user = db.query(User).filter(User.email == user_data["sub"]).first()
+
+    study_sets = db.query(StudySet).filter(StudySet.user_id == user.id).all()
+    return {"user": user.username, "study_sets": study_sets}
+
+@app.get("/users/{user_id}/progress")
+async def get_user_progress(user_id: int, db: Session = Depends(get_db)):
+    progress_data = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
+    return {"user_id": user_id, "progress": progress_data}
+
+@app.post("/generate-test/")
+async def generate_test(set_id: int, num_questions: int, token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    user_data = decode_access_token(token)
+    user = db.query(User).filter(User.email == user_data["sub"]).first()
+
+    study_set = db.query(StudySet).filter(StudySet.id == set_id, StudySet.user_id == user.id).first()
+    if not study_set:
+        raise HTTPException(status_code=404, detail="Study set not found")
+
+    flashcards = db.query(Flashcard).filter(Flashcard.set_id == set_id).limit(num_questions).all()
+    return {"test_questions": [{"question": fc.question, "answer": fc.answer} for fc in flashcards]}
 
 @app.get("/users/")
 def get_users(db: Session = Depends(get_db)):
