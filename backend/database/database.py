@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# Load environment variables from /git/ForgePrep/config/.env
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", ".env")
 load_dotenv(dotenv_path)
 
