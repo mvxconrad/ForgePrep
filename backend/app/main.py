@@ -7,10 +7,9 @@ import io
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database.database import get_db
-from models import User, StudySet, Flashcard
-from models import File as FileModel
 from enum import Enum
-from app.models import User, StudySet, Flashcard, FileModel, UserProgress
+from app.models.models import User, StudySet, Flashcard, UserProgress
+from app.models.models import File as FileModel
 
 # For OAuth2 password hashing
 from fastapi import Security, APIRouter,FastAPI, Depends, HTTPException, status, File, UploadFile
@@ -22,12 +21,15 @@ from datetime import datetime, timedelta
 from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
 
-from security import verify_password, create_access_token, decode_access_token, hash_password
+from app.security import verify_password, create_access_token, decode_access_token, hash_password
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Load environment variables from a .env file
-dotenv_path = os.path.join(os.path.dirname(__file__), "config", ".env")
+# dotenv_path = os.path.join(os.path.dirname(__file__), "config", ".env")
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+dotenv_path = os.path.join(ROOT_PATH, "config", ".env")
+
 load_dotenv(dotenv_path)
 
 # Initialize router
