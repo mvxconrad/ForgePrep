@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import GoogleAuth from "../components/GoogleAuth";
+import FacebookAuth from "../components/FacebookAuth";
+import GitHubAuth from "../components/GitHubAuth";
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -36,6 +39,11 @@ const SignupPage = () => {
         <input type="password" className="form-control mb-2" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <button type="submit" className="btn btn-success">Sign Up</button>
       </form>
+      <div className="mt-3">
+        <GoogleAuth />
+        <FacebookAuth />
+        <GitHubAuth />
+      </div>
       <p className="mt-2">Already have an account? <a href="/login">Login</a></p>
     </div>
   );
