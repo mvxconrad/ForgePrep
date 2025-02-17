@@ -19,7 +19,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/register" element={<SignupPage />} />
         <Route path="/dashboard" element={<ProtectedRoute component={Dashboard} />} />
         <Route path="/profile" element={<ProtectedRoute component={ProfilePage} />} />
         <Route path="/settings" element={<ProtectedRoute component={SettingsPage} />} />
