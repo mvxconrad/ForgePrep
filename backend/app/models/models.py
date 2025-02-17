@@ -10,9 +10,13 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    username = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username}, email={self.email})>"
 
     sets = relationship("StudySet", back_populates="owner")  # Relationship with Study Sets
 
@@ -78,5 +82,4 @@ class Test(Base):
 
     user = relationship("User", back_populates="tests")
     study_material = relationship("StudyMaterial", back_populates="tests")
-
 

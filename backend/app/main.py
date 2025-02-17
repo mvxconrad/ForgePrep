@@ -10,6 +10,7 @@ from database.database import get_db
 from enum import Enum
 from app.models.models import User, StudySet, Flashcard, UserProgress
 from app.models.models import File as FileModel
+from app.models.schemas import RegisterRequest
 
 # For OAuth2 password hashing
 from fastapi import Security, APIRouter,FastAPI, Depends, HTTPException, status, File, UploadFile
@@ -120,17 +121,23 @@ async def auth_provider(request: Request, provider: str):
 
 # ------------------- End DB Password Management -------------------
 
-# User Registration Route
+
+
 @app.post("/register/")
-async def register_user(username: str, email: str, password: str, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == email).first():
+async def register_user(request: RegisterRequest, db: Session = Depends(get_db)):
+    """Handles user registration."""
+    
+    # Check if user exists
+    if db.query(User).filter(User.email == request.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    new_user = User(username=username, email=email, hashed_password=hash_password(password))
+    # Hash password and create user
+    new_user = User(username=request.username, email=request.email, hashed_password=hash_password(request.password))
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return {"message": "User registered successfully"}
+    
+    return {"message": "User registered successfully", "user_id": new_user.id}
 
 # User Login Route (Returns JWT)
 @app.post("/login/")
@@ -311,19 +318,6 @@ async def root():
 @app.put("/")
 async def root():
     return {"message": "hello from put"}
-
-@app.post("/register/")
-async def register_user(username: str, email: str, password: str, db: Session = Depends(get_db)):
-    # Check if user exists
-    if db.query(User).filter(User.email == email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
-
-    # Hash password and create user
-    new_user = User(username=username, email=email, hashed_password=hash_password(password))
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {"message": "User registered successfully"}
 
 @app.get("/users")
 async def list_users():
