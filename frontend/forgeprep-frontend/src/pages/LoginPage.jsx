@@ -45,7 +45,7 @@ const LoginPage = () => {
         <FacebookAuth />
         <GitHubAuth />
       </div>
-      <p className="mt-2">Don't have an account? <a href="/signup">Sign up</a></p>
+      <p className="mt-2">Don't have an account? <a href="/register">Sign up</a></p>
     </div>
   );
 };
