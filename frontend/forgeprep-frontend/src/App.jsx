@@ -17,7 +17,8 @@ const App = () => {
     <Router>
       {isAuthenticated && <Navbar />}
       <Routes>
-        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/register" />} />
+        {/*<Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />*/}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />
         <Route path="/dashboard" element={<ProtectedRoute component={Dashboard} />} />
