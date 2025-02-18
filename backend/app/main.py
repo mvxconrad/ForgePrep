@@ -148,8 +148,13 @@ async def login(email: str, password: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Generate JWT token
-    access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = create_access_token(data={"sub": user.email}, expires_delta=60)
+    # return {"access_token": access_token, "token_type": "bearer"} possibly remove
+
+    # Set the token as an HttpOnly cookie
+    response = JSONResponse(content={"message": "Login successful"})
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    return response
 
 # Protected Route (Requires JWT)
 @app.get("/protected/")
