@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import GoogleAuth from "../components/GoogleAuth";
+{/*import GoogleAuth from "../components/GoogleAuth";
 import FacebookAuth from "../components/FacebookAuth";
-import GitHubAuth from "../components/GitHubAuth";
+import GitHubAuth from "../components/GitHubAuth"; */}
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -62,11 +62,12 @@ const SignupPage = () => {
         />
         <button type="submit" className="btn btn-success">Sign Up</button>
       </form>
+      {/*
       <div className="mt-3">
         <GoogleAuth />
         <FacebookAuth />
         <GitHubAuth />
-      </div>
+      </div> */}
       <p className="mt-2">Already have an account? <a href="/login">Login</a></p>
     </div>
   );
