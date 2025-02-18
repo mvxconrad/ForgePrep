@@ -29,7 +29,7 @@ This application allows users to **upload study materials, generate practice que
 |--------------------------------------|------------------|-----------------------------------------------------------------|
 | Define project scope                 | Completed        | The initial scope, features, and technical architecture were defined. |
 | GitHub Repository & Version Control  | Completed        | Repository was initialized, and a branching strategy was established. |
-| Frontend Upgrade to Vite              | Completed        | Switched from Create React App to Vite for better performance. |
+| Frontend Upgrade to Vite              | Completed        | Switched to Vite for better performance. |
 | OAuth 2.0 & JWT Authentication        | In Progress      | Google and GitHub login authentication is being implemented, JWT session management is partially completed. |
 | AI-Powered Test Generation            | In Progress      | GPT-4 integration is functional but requires fine-tuning for better question accuracy. |
 | File Upload and Parsing               | In Progress      | Text extraction from PDFs, Word, and plain text is working; OCR support for scanned documents is still in development. |
@@ -63,7 +63,6 @@ This application allows users to **upload study materials, generate practice que
 ### **Additional Dependencies**
 - **PyPDF2, pdfplumber, python-docx** – For parsing text from uploaded study materials.
 - **Tesseract OCR** *(Planned)* – Will be integrated to process scanned PDFs and extract text.
-- **Docker** *(Planned)* – Will be used for containerization to ensure consistent development and production environments.
 - **GitHub Actions** *(Planned)* – Will be implemented for CI/CD automation.
 
 ---
