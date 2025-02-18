@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from database.database import Base
+from pydantic import BaseModel, EmailStr
 
 Base = declarative_base()
 
@@ -19,6 +20,7 @@ class User(Base):
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
 
     sets = relationship("StudySet", back_populates="owner")  # Relationship with Study Sets
+    progress = relationship("UserProgress", back_populates="user")  # Relationship with UserProgress
 
 class UserProgress(Base):
     __tablename__ = "user_progress"
