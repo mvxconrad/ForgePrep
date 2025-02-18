@@ -1,114 +1,140 @@
-# Forge Prep - AI Practice Test Generator
+# **ForgePrep - AI Practice Test Generator**
 
-## Project Overview
-ForgePrep AI is a state-of-the-art application designed to help students prepare for exams by generating customizable practice tests using AI. This project leverages modern technologies like FastAPI, PostgreSQL, and OpenAI's GPT-4, following scalable, secure, and user-centric design principles.
+## **Project Overview**
+ForgePrep AI is an **AI-driven platform** designed to help students **generate practice tests** based on their study materials. The project focuses on **customizability, ease of use, and security**, leveraging **FastAPI, PostgreSQL, OpenAI's GPT-4, and React.js (Vite)** to provide a scalable and efficient solution.
 
----
-
-## Features
-- Upload study materials (PDF, Word, plain text) and parse content for test generation.
-- AI-powered test generation with customizable question types (e.g., multiple-choice, short-answer, essays).
-- User authentication and secure session management.
-- Responsive and intuitive user interface designed with modern tools.
-- Advanced features like performance analytics, collaboration, and gamification (planned).
+This application allows users to **upload study materials, generate practice questions**, and **track their progress** through an intuitive dashboard. 
 
 ---
 
-## Development Workflow
-
-### **Phase 1: Foundation**
-- Define project scope and architecture.
-- Identify core technologies:
-  - **Frontend**: React.js
-  - **Backend**: FastAPI
-  - **Database**: PostgreSQL
-  - **AI**: OpenAI GPT-4
-- Set up a GitHub repository with version control and Git branching strategies.
-
-### **Phase 2: User Database and Authentication**
-- Implement OAuth 2.0 for third-party logins (Google, GitHub).
-- Create a database schema for users, study materials, and tests.
-- Develop secure authentication endpoints with hashed passwords and encrypted data.
-
-### **Phase 3: File Upload and Material Parsing**
-- Support file uploads for PDF, Word, and plain text files.
-- Use libraries like PyPDF2, pdfplumber, and python-docx for text extraction.
-- Incorporate OCR for scanned documents using Tesseract.
-
-### **Phase 4: AI-Powered Test Generation**
-- Integrate OpenAI GPT-4 API for generating questions.
-- Customize test generation (difficulty levels, question types, etc.).
-- Save generated tests to the database with metadata.
-
-### **Phase 5: Frontend Development**
-- Design wireframes for:
-  - Login/Signup pages
-  - Dashboard for managing study materials and tests
-  - Test generation and preview pages
-- Use Tailwind CSS for responsive, modern design.
-
-### **Phase 6: Advanced Features**
-- Analytics dashboard to provide insights into user performance.
-- Collaborative tools for sharing and editing study materials.
-- Gamification elements (badges, streaks, leaderboards).
-
-### **Phase 7: Testing and Deployment**
-- Unit and integration testing for all modules.
-- Set up CI/CD pipeline using GitHub Actions.
-- Deploy on a scalable cloud platform (AWS Elastic Beanstalk, Render, or Firebase).
+## **Features**
+- **Upload and Process Study Materials**  
+  Users can upload **PDF, Word, and plain text files**, which are parsed for test generation.  
+- **AI-Powered Test Generation** *(In Progress)*  
+  The application uses **GPT-4** to generate **multiple-choice, short-answer, and essay** questions based on the provided materials. The AI integration is currently being refined for better accuracy and customization.  
+- **User Authentication** *(In Progress)*  
+  OAuth 2.0 is being implemented to allow users to log in via **Google and GitHub**. JWT is used for **secure session management**, ensuring only authorized users access their tests and data.  
+- **Frontend-Backend Integration**  
+  The **React (Vite) frontend** is fully connected to the **FastAPI backend**, allowing seamless interaction with the PostgreSQL database.  
+- **User Dashboard for Test Management**  
+  Users have access to a dashboard where they can manage their study materials and tests. Authentication ensures that only logged-in users can access this page.  
+- **Frontend Optimization and UI Enhancements** *(Ongoing)*  
+  The UI is being refined to improve user experience, with a focus on **responsiveness and modern design**.  
 
 ---
 
-## Current Progress
-| **Feature/Task**                | **Status**       | **Notes**                                               |
-|----------------------------------|------------------|--------------------------------------------------------|
-| Define project scope             | Completed        | Initial draft completed.                              |
-| User authentication system       | In Progress      | Password hashing with bcrypt is implemented. JWT planned. |
-| File upload and parsing          | Not Started      |                                                        |
-| GPT-4 API integration            | Not Started      |                                                        |
-| Frontend wireframe design        | Not Started      |                                                        |
-| Responsive UI implementation     | Not Started      |                                                        |
-| Deployment                       | Not Started      |                                                        |
+## **Development Progress**
+
+| **Feature**                          | **Status**        | **Details** |
+|--------------------------------------|------------------|-----------------------------------------------------------------|
+| Define project scope                 | Completed        | The initial scope, features, and technical architecture were defined. |
+| GitHub Repository & Version Control  | Completed        | Repository was initialized, and a branching strategy was established. |
+| Frontend Upgrade to Vite              | Completed        | Switched from Create React App to Vite for better performance. |
+| OAuth 2.0 & JWT Authentication        | In Progress      | Google and GitHub login authentication is being implemented, JWT session management is partially completed. |
+| AI-Powered Test Generation            | In Progress      | GPT-4 integration is functional but requires fine-tuning for better question accuracy. |
+| File Upload and Parsing               | In Progress      | Text extraction from PDFs, Word, and plain text is working; OCR support for scanned documents is still in development. |
+| Frontend-Backend Integration          | Completed        | The frontend is fully linked with the backend and PostgreSQL database. |
+| User Dashboard                        | Completed        | Authentication-protected dashboard for managing tests is implemented. |
+| UI and Frontend Enhancements          | Ongoing         | The UI is being refined for a modern, user-friendly experience. |
+| Deployment Planning                    | Not Yet Started | AWS deployment will be handled after core functionalities are complete. |
 
 ---
 
-## Future Enhancements
-- Add mobile app support using React Native or Flutter.
-- Integrate auto-grading for subjective questions using AI.
-- Explore multilingual support for international users.
+## **Technology Stack & Dependencies**
 
-## Getting Started
-### Prerequisites
+### **Frontend**
+- **React.js (Vite)** – Chosen for its **fast build times and optimized performance** compared to traditional React setups. Vite provides **hot module replacement** and significantly improves local development speeds.
+- **Tailwind CSS** – Used for styling due to its **flexibility, utility-first approach, and responsiveness**.
+
+### **Backend**
+- **FastAPI** – Selected for its **speed, built-in async support, and automatic OpenAPI documentation**. It integrates well with modern frontend frameworks and provides high-performance API endpoints.
+- **Python** – The core backend language due to its **robust ecosystem, AI/ML support, and extensive libraries**.
+
+### **Database**
+- **PostgreSQL (Amazon RDS)** – Chosen for its **scalability, reliability, and strong ACID compliance**. PostgreSQL is well-suited for handling structured data and integrating with AI-based applications.
+
+### **Authentication**
+- **OAuth 2.0 (Google, GitHub)** – Provides a secure and convenient login system, eliminating the need for users to remember separate credentials.
+- **JWT (JSON Web Tokens)** – Used for secure session management and authentication of API requests.
+
+### **AI Integration**
+- **OpenAI GPT-4** – Used for generating practice test questions. The API allows customization of prompts to create **context-aware and relevant** study questions.
+
+### **Additional Dependencies**
+- **PyPDF2, pdfplumber, python-docx** – For parsing text from uploaded study materials.
+- **Tesseract OCR** *(Planned)* – Will be integrated to process scanned PDFs and extract text.
+- **Docker** *(Planned)* – Will be used for containerization to ensure consistent development and production environments.
+- **GitHub Actions** *(Planned)* – Will be implemented for CI/CD automation.
+
+---
+
+## **Getting Started**
+
+### **Prerequisites**
+Ensure you have the following installed:
 - Python 3.10+
 - PostgreSQL
-- Node.js (for frontend development)
+- Node.js
 - OpenAI API Key
 
-### Local Setup
-1. Clone the repository:
+### **Setup Instructions**
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/your-username/ForgePrep-AI.git
    cd ForgePrep-AI
    ```
-2. Set up a virtual environment and install dependencies:
+
+2. **Set up a virtual environment and install dependencies:**
    ```bash
    python -m venv venv
-   source venv/bin/activate   # For Linux/Mac
-   venv\Scripts\activate      # For Windows
+   source venv/bin/activate   # Linux/Mac
+   venv\Scripts\activate      # Windows
    pip install -r requirements.txt
    ```
-3. Set up your environment variables (e.g., `DATABASE_URL` and `OPENAI_API_KEY`).
-4. Run the application:
+
+3. **Configure environment variables:**
+   Create a `.env` file in the root directory and add:
+   ```
+   DATABASE_URL=your_postgres_url
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+
+4. **Run the backend:**
    ```bash
    uvicorn app.main:app --reload
    ```
 
+5. **Set up the frontend:**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
 ---
 
-## Contributing
-Contributions are welcome! Please create a new branch for your feature or bug fix and submit a pull request.
+## **Next Steps**
+- **Finalize OAuth 2.0 & JWT authentication** to ensure smooth user authentication.
+- **Improve AI-generated test questions** by refining prompt engineering and response filtering.
+- **Redesign the frontend UI** to enhance usability and improve responsiveness.
+- **Add support for OCR-based document parsing** to handle scanned PDFs.
+- **Set up CI/CD pipelines** for automated testing and deployment.
+- **Deploy the application on AWS (Elastic Beanstalk & RDS).**
 
 ---
 
-## License
+## **Future Enhancements**
+- **Mobile App Support** – Potential React Native or Flutter integration.
+- **Gamification Features** – Achievement badges, study streaks, and leaderboards.
+- **Performance Analytics** – Insights into user progress and study efficiency.
+- **Multilingual Support** – Expand accessibility to non-English speakers.
+
+---
+
+## **Contributing**
+Contributions are welcome! Developers should follow the **Git branching strategy** and ensure all changes are tested before submitting pull requests.
+
+---
+
+## **License**
 This project is licensed under the MIT License. See the LICENSE file for details.
