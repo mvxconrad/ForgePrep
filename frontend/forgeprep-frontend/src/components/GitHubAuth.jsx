@@ -1,23 +1,19 @@
 import React from "react";
-import GitHubLogin from "react-github-login";
 
 const GitHubAuth = () => {
-  const handleSuccess = (response) => {
-    console.log("GitHub Login Success:", response);
-    // Handle the response and authenticate the user
-  };
+  const handleGitHubSignIn = () => {
+    const clientId = "Ov23liVxGO4oX1R3f1YN";
+    const redirectUri = "forgeprep.cdkwiuiu2vzv.us-east-2.rds.amazonaws.com/github/callback"; // Replace with your redirect URI
+    const scope = "user:email";
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
 
-  const handleFailure = (error) => {
-    console.log("GitHub Login Failed:", error);
+    window.location.href = githubAuthUrl;
   };
 
   return (
-    <GitHubLogin
-      clientId="Ov23liVxGO4oX1R3f1YN"
-      onSuccess={handleSuccess}
-      onFailure={handleFailure}
-      buttonText="Login with GitHub"
-    />
+    <button onClick={handleGitHubSignIn} className="btn btn-dark w-100 mt-2">
+      Login with GitHub
+    </button>
   );
 };
 
