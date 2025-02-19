@@ -20,7 +20,7 @@ const Dashboard = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
               <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-              <Nav.Link as={Link} to="/fileupload">File Upload</Nav.Link>
+              <Nav.Link as={Link} to="/upload">File Upload</Nav.Link>
               <Nav.Link as={Link} to="/testgenerator">Test Generator</Nav.Link>
               <Nav.Link as={Link} to="/profile">Profile</Nav.Link>
               <Nav.Link as={Link} to="/settings">Settings</Nav.Link>

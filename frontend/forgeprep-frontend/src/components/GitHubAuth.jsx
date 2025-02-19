@@ -1,8 +1,10 @@
+import React from "react";
 import GitHubLogin from "react-github-login";
 
 const GitHubAuth = () => {
   const handleSuccess = (response) => {
     console.log("GitHub Login Success:", response);
+    // Handle the response and authenticate the user
   };
 
   const handleFailure = (error) => {
