@@ -26,7 +26,7 @@ const App = () => {
         <Route path="/settings" element={<ProtectedRoute component={SettingsPage} />} />
         <Route path="/upload" element={<ProtectedRoute component={FileUpload} />} />
         <Route path="/testgenerator" element={<ProtectedRoute component={TestGenerator} />} />
-        <Route path="/github/callback" element={<GitHubCallback />} />
+        <Route path="/auth/github/callback" element={<GitHubCallback />} />
       </Routes>
     </Router>
   );
