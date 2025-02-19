@@ -41,6 +41,7 @@ app.add_middleware(
 oauth = OAuth()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+# Google OAuth Configuration
 oauth.register(
     name="google",
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
@@ -50,10 +51,30 @@ oauth.register(
     client_kwargs={"scope": "openid email profile"},
 )
 
+# Facebook OAuth Configuration
+oauth.register(
+    name="facebook",
+    client_id=os.getenv("FACEBOOK_CLIENT_ID"),
+    client_secret=os.getenv("FACEBOOK_CLIENT_SECRET"),
+    authorize_url="https://www.facebook.com/v12.0/dialog/oauth",
+    access_token_url="https://graph.facebook.com/v12.0/oauth/access_token",
+    client_kwargs={"scope": "public_profile email"},
+)
+
+# GitHub OAuth Configuration
+oauth.register(
+    name="github",
+    client_id=os.getenv("GITHUB_CLIENT_ID"),
+    client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+    authorize_url="https://github.com/login/oauth/authorize",
+    access_token_url="https://github.com/login/oauth/access_token",
+    client_kwargs={"scope": "user:email"},
+)
+
 @app.get("/login/{provider}")
 async def login_provider(request: Request, provider: str):
     """OAuth login for Google, Facebook, GitHub"""
-    if provider not in ["google"]:
+    if provider not in ["google", "facebook", "github"]:
         raise HTTPException(status_code=400, detail="Unsupported provider")
     redirect_uri = request.url_for("auth_provider", provider=provider)
     return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
@@ -63,7 +84,7 @@ async def auth_provider(request: Request, provider: str):
     """OAuth authentication callback"""
     client = oauth.create_client(provider)
     token = await client.authorize_access_token(request)
-    user = await client.parse_id_token(request, token)
+    user = await client.parse_id_token(request, token) if provider == "google" else token
     return {"provider": provider, "user": user}
 
 # -------------------   User Authentication Routes   -------------------

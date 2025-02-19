@@ -3,7 +3,7 @@ import React from "react";
 const GitHubAuth = () => {
   const handleGitHubSignIn = () => {
     const clientId = "Ov23liVxGO4oX1R3f1YN";
-    const redirectUri = "forgeprep.cdkwiuiu2vzv.us-east-2.rds.amazonaws.com/github/callback"; // Replace with your redirect URI
+    const redirectUri = "https://localhost:8000/auth/github/"; 
     const scope = "user:email";
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
 
