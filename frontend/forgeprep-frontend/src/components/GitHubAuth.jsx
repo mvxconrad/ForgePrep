@@ -3,9 +3,10 @@ import React from "react";
 const GitHubAuth = () => {
   const handleGitHubSignIn = () => {
     const clientId = "Ov23liVxGO4oX1R3f1YN";
-    const redirectUri = "https://localhost:8000/auth/github/"; 
+    const redirectUri = "http://localhost:5173/auth/github/callback"; // Change this for production!
     const scope = "user:email";
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+    
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`;
 
     window.location.href = githubAuthUrl;
   };
