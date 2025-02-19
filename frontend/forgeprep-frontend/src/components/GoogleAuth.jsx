@@ -2,32 +2,42 @@ import React, { useEffect } from "react";
 
 const GoogleAuth = () => {
   useEffect(() => {
+    const loadGoogleScript = () => {
+      if (!window.google) {
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeGoogleSignIn;
+        document.body.appendChild(script);
+      } else {
+        initializeGoogleSignIn();
+      }
+    };
+
     const initializeGoogleSignIn = () => {
-      window.gapi.load("auth2", () => {
-        window.gapi.auth2.init({
-          client_id: "588883044961-15sl1jthtte8vqsh2aodu7lqf16r3i55.apps.googleusercontent.com",
-        });
+      window.google.accounts.id.initialize({
+        client_id: "588883044961-15sl1jthtte8vqsh2aodu7lqf16r3i55.apps.googleusercontent.com",
+        callback: handleGoogleSignIn,
       });
     };
 
-    initializeGoogleSignIn();
+    loadGoogleScript();
   }, []);
 
-  const handleGoogleSignIn = async () => {
-    const auth2 = window.gapi.auth2.getAuthInstance();
-    const googleUser = await auth2.signIn();
-    const idToken = googleUser.getAuthResponse().id_token;
+  const handleGoogleSignIn = async (response) => {
+    const idToken = response.credential;
     console.log("Google login success:", idToken);
-    // Send the idToken to your backend for verification and authentication
+
     try {
-      const response = await fetch("http://18.221.47.222:8000/google/callback", {
+      const res = await fetch("http://18.221.47.222:5173/auth/google/callback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: idToken }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Google login failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Google login failed");
 
       localStorage.setItem("token", data.token);
       window.location.href = "/dashboard";
@@ -37,9 +47,14 @@ const GoogleAuth = () => {
   };
 
   return (
-    <button onClick={handleGoogleSignIn} className="btn btn-danger w-100 mt-2">
-      Login with Google
-    </button>
+    <div>
+      <div id="g_id_onload"
+        data-client_id="588883044961-15sl1jthtte8vqsh2aodu7lqf16r3i55.apps.googleusercontent.com"
+        data-callback="handleGoogleSignIn"
+        data-auto_prompt="false">
+      </div>
+      <div className="g_id_signin" data-type="standard"></div>
+    </div>
   );
 };
 
