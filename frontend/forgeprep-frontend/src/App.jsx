@@ -9,6 +9,10 @@ import FileUpload from "./pages/FileUploadPage";
 import TestGenerator from "./pages/TestGeneratorPage";
 import GitHubCallback from "./pages/GitHubCallback";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Classes from "./pages/Classes";
+import Templates from "./pages/Templates";
+import Quizzes from "./pages/Quizzes";
+
 import Navbar from "./components/Navbar";
 
 const App = () => {
@@ -27,6 +31,9 @@ const App = () => {
         <Route path="/upload" element={<ProtectedRoute component={FileUpload} />} />
         <Route path="/testgenerator" element={<ProtectedRoute component={TestGenerator} />} />
         <Route path="/auth/github/callback" element={<GitHubCallback />} />
+        <Route path="/templates" element={<Templates />} />
+        <Route path="/quizzes" element={<Quizzes />} />
+        <Route path="/classes" element={<Classes />} />
       </Routes>
     </Router>
   );

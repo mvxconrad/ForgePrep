@@ -28,6 +28,15 @@ const Navbar = () => {
               <Link className="nav-link" to="/testgenerator">Test Generator</Link>
             </li>
             <li className="nav-item">
+              <Link className="nav-link" to="/classes">Classes</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/quizzes">Quizzes</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/templates">Templates</Link>
+            </li>
+            <li className="nav-item">
               <Link className="nav-link" to="/profile">Profile</Link>
             </li>
             <li className="nav-item">
