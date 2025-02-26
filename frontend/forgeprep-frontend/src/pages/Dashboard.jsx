@@ -1,79 +1,92 @@
-import React from "react";
-import { Container, Row, Col, Card, Navbar, Nav } from "react-bootstrap";
-import PerformanceChart from "../components/PerformanceChart";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Container, Row, Col, Card, ListGroup } from "react-bootstrap";
 
 const Dashboard = () => {
-  const mockPerformanceData = {
-    dates: ["Jan", "Feb", "Mar"],
-    correct: [5, 7, 8],
-    incorrect: [2, 3, 1],
-  };
+  const [recentTests, setRecentTests] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [statistics, setStatistics] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const testResponse = await fetch("http://18.221.47.222:8000/api/tests/recent");
+        const goalResponse = await fetch("http://18.221.47.222:8000/api/goals");
+        const statsResponse = await fetch("http://18.221.47.222:8000/api/stats");
+
+        const testsData = await testResponse.json();
+        const goalsData = await goalResponse.json();
+        const statsData = await statsResponse.json();
+
+        setRecentTests(testsData);
+        setGoals(goalsData);
+        setStatistics(statsData);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   return (
-    <>
-      {/* Navbar */}
-      <Navbar bg="dark" variant="dark" expand="lg">
-        <Container>
-          <Navbar.Brand as={Link} to="/dashboard">ForgePrep</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto">
-              <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-              <Nav.Link as={Link} to="/upload">File Upload</Nav.Link>
-              <Nav.Link as={Link} to="/testgenerator">Test Generator</Nav.Link>
-              <Nav.Link as={Link} to="/profile">Profile</Nav.Link>
-              <Nav.Link as={Link} to="/settings">Settings</Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+    <Container className="mt-4">
+      <h1 className="mb-4">Dashboard</h1>
 
-      {/* Main Dashboard Content */}
-      <Container className="mt-4">
-        <h1 className="mb-4">Dashboard</h1>
+      <Row>
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Header>Recent Tests</Card.Header>
+            <Card.Body>
+              {recentTests.length > 0 ? (
+                <ListGroup>
+                  {recentTests.map((test) => (
+                    <ListGroup.Item key={test.id} className="d-flex justify-content-between align-items-center">
+                      {test.name}
+                      <span className="badge bg-primary rounded-pill">{test.score}%</span>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <p>No recent tests available.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Header>Your Goals</Card.Header>
+            <Card.Body>
+              {goals.length > 0 ? (
+                <ListGroup>
+                  {goals.map((goal) => (
+                    <ListGroup.Item key={goal.id}>
+                      {goal.title} - <strong>{goal.progress}%</strong> completed
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <p>No goals set yet.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-        {/* Stats Section */}
-        <Row>
-          <Col md={4}>
-            <Card className="shadow">
-              <Card.Body>
-                <Card.Title>Tests Taken</Card.Title>
-                <Card.Text>15</Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}>
-            <Card className="shadow">
-              <Card.Body>
-                <Card.Title>Correct Answers</Card.Title>
-                <Card.Text>75%</Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={4}>
-            <Card className="shadow">
-              <Card.Body>
-                <Card.Title>Incorrect Answers</Card.Title>
-                <Card.Text>25%</Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Performance Chart */}
-        <Row className="mt-4">
-          <Col>
-            <Card className="shadow">
-              <Card.Body>
-                <Card.Title>Performance Over Time</Card.Title>
-                <PerformanceChart performanceData={mockPerformanceData} />
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </>
+      <Card className="mb-4">
+        <Card.Header>Past Test Statistics</Card.Header>
+        <Card.Body>
+          {statistics ? (
+            <div>
+              <p><strong>Average Score:</strong> {statistics.averageScore}%</p>
+              <p><strong>Best Score:</strong> {statistics.bestScore}%</p>
+              <p><strong>Worst Score:</strong> {statistics.worstScore}%</p>
+            </div>
+          ) : (
+            <p>No statistics available.</p>
+          )}
+        </Card.Body>
+      </Card>
+    </Container>
   );
 };
 

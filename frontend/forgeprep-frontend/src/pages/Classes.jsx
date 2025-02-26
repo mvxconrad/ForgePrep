@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Form, Button, ListGroup, Card } from "react-bootstrap";
 
 const Classes = () => {
   const [classes, setClasses] = useState([]);
@@ -6,7 +7,7 @@ const Classes = () => {
   const [syllabus, setSyllabus] = useState(null);
 
   useEffect(() => {
-    fetch("http://your-backend-url/api/classes") // Update with actual API
+    fetch("http://your-backend-url/api/classes")
       .then((res) => res.json())
       .then((data) => setClasses(data))
       .catch((err) => console.error("Error fetching classes:", err));
@@ -38,20 +39,52 @@ const Classes = () => {
   };
 
   return (
-    <div>
+    <Container className="mt-4">
       <h2>Classes</h2>
-      <ul>
-        {classes.map((c) => (
-          <li key={c.id}>
-            {c.name} 
-            <button onClick={() => handleRemoveClass(c.id)}>⋮</button>
-          </li>
-        ))}
-      </ul>
-      <input type="text" placeholder="New Class Name" value={newClass} onChange={(e) => setNewClass(e.target.value)} />
-      <input type="file" onChange={(e) => setSyllabus(e.target.files[0])} />
-      <button onClick={handleAddClass}>Add Class</button>
-    </div>
+      <Row>
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Body>
+              <Card.Title>Add New Class</Card.Title>
+              <Form>
+                <Form.Group controlId="formClassName" className="mb-3">
+                  <Form.Label>New Class Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter class name"
+                    value={newClass}
+                    onChange={(e) => setNewClass(e.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group controlId="formSyllabus" className="mb-3">
+                  <Form.Label>Syllabus</Form.Label>
+                  <Form.Control
+                    type="file"
+                    onChange={(e) => setSyllabus(e.target.files[0])}
+                  />
+                </Form.Group>
+                <Button onClick={handleAddClass}>Add Class</Button>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Class List</Card.Title>
+              <ListGroup>
+                {classes.map((c) => (
+                  <ListGroup.Item key={c.id}>
+                    {c.name}
+                    <Button variant="danger" size="sm" onClick={() => handleRemoveClass(c.id)} className="float-end">Remove</Button>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

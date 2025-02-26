@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Form, Button, ListGroup, Card } from "react-bootstrap";
 
 const Quizzes = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -32,20 +33,62 @@ const Quizzes = () => {
   };
 
   return (
-    <div>
+    <Container className="mt-4">
       <h2>Quizzes</h2>
-      <ul>
-        {quizzes.map((q) => (
-          <li key={q.id}>
-            {q.name} - {q.className} ({q.template})
-          </li>
-        ))}
-      </ul>
-      <input type="text" placeholder="Quiz Name" value={newQuiz} onChange={(e) => setNewQuiz(e.target.value)} />
-      <input type="text" placeholder="Class Name" value={className} onChange={(e) => setClassName(e.target.value)} />
-      <input type="text" placeholder="Template" value={template} onChange={(e) => setTemplate(e.target.value)} />
-      <button onClick={handleAddQuiz}>Add Quiz</button>
-    </div>
+      <Row>
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Body>
+              <Card.Title>Add New Quiz</Card.Title>
+              <Form>
+                <Form.Group controlId="formQuizName" className="mb-3">
+                  <Form.Label>Quiz Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter quiz name"
+                    value={newQuiz}
+                    onChange={(e) => setNewQuiz(e.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group controlId="formClassName" className="mb-3">
+                  <Form.Label>Class Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter class name"
+                    value={className}
+                    onChange={(e) => setClassName(e.target.value)}
+                  />
+                </Form.Group>
+                <Form.Group controlId="formTemplate" className="mb-3">
+                  <Form.Label>Template</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter template"
+                    value={template}
+                    onChange={(e) => setTemplate(e.target.value)}
+                  />
+                </Form.Group>
+                <Button onClick={handleAddQuiz}>Add Quiz</Button>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Quiz List</Card.Title>
+              <ListGroup>
+                {quizzes.map((q) => (
+                  <ListGroup.Item key={q.id}>
+                    {q.name} - {q.className} ({q.template})
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
