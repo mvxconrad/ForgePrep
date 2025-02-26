@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Form, Button, ListGroup, Card } from "react-bootstrap";
 
 const Templates = () => {
   const [templates, setTemplates] = useState([]);
@@ -28,16 +29,42 @@ const Templates = () => {
   };
 
   return (
-    <div>
+    <Container className="mt-4">
       <h2>Templates</h2>
-      <ul>
-        {templates.map((t) => (
-          <li key={t.id}>{t.name}</li>
-        ))}
-      </ul>
-      <input type="text" placeholder="New Template Name" value={newTemplate} onChange={(e) => setNewTemplate(e.target.value)} />
-      <button onClick={handleAddTemplate}>Add Template</button>
-    </div>
+      <Row>
+        <Col md={6}>
+          <Card className="mb-4">
+            <Card.Body>
+              <Card.Title>Add New Template</Card.Title>
+              <Form>
+                <Form.Group controlId="formTemplateName" className="mb-3">
+                  <Form.Label>New Template Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter template name"
+                    value={newTemplate}
+                    onChange={(e) => setNewTemplate(e.target.value)}
+                  />
+                </Form.Group>
+                <Button onClick={handleAddTemplate}>Add Template</Button>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Template List</Card.Title>
+              <ListGroup>
+                {templates.map((t) => (
+                  <ListGroup.Item key={t.id}>{t.name}</ListGroup.Item>
+                ))}
+              </ListGroup>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

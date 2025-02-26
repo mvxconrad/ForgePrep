@@ -3,7 +3,7 @@ import axios from "axios";
 import PerformanceChart from "../components/PerformanceChart";
 import { Container, Table, Card } from "react-bootstrap";
 
-const Dashboard = () => {
+const SettingsPage = () => {
   const [testResults, setTestResults] = useState([]);
   const [performanceData, setPerformanceData] = useState({
     dates: [],
@@ -39,7 +39,7 @@ const Dashboard = () => {
 
   return (
     <Container className="mt-4">
-      <h1 className="mb-4">Dashboard</h1>
+      <h1 className="mb-4">Settings</h1>
 
       {/* Performance Chart */}
       <Card className="mb-4 p-3">
@@ -85,4 +85,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default SettingsPage;

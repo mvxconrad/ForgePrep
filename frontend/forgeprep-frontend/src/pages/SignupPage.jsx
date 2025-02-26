@@ -36,11 +36,11 @@ const SignupPage = () => {
   return (
     <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
       <Row className="w-100">
-        <Col md={{ span: 6, offset: 3 }}>
+        <Col lg={{ span: 8, offset: 2 }} md={{ span: 10, offset: 1 }}>
           <Card className="shadow">
             <Card.Body>
-              <h2 className="mb-4">Sign Up</h2>
-              {error && <p className="text-danger">{error}</p>}
+              <h2 className="mb-4 text-center">Sign Up</h2>
+              {error && <p className="text-danger text-center">{error}</p>}
               <Form onSubmit={handleSignup}>
                 <Form.Group className="mb-3" controlId="formUsername">
                   <Form.Label>Username</Form.Label>
@@ -79,7 +79,7 @@ const SignupPage = () => {
                 <FacebookAuth />
                 <GitHubAuth />
               </div>
-              <p className="mt-3">Already have an account? <a href="/login">Login</a></p>
+              <p className="mt-3 text-center">Already have an account? <a href="/login">Login</a></p>
             </Card.Body>
           </Card>
         </Col>

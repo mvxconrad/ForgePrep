@@ -35,11 +35,11 @@ const LoginPage = () => {
   return (
     <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
       <Row className="w-100">
-        <Col md={{ span: 6, offset: 3 }}>
+        <Col lg={{ span: 8, offset: 2 }} md={{ span: 10, offset: 1 }}>
           <Card className="shadow">
             <Card.Body>
-              <h2 className="mb-4">Login</h2>
-              {error && <p className="text-danger">{error}</p>}
+              <h2 className="mb-4 text-center">Login</h2>
+              {error && <p className="text-danger text-center">{error}</p>}
               <Form onSubmit={handleLogin}>
                 <Form.Group className="mb-3" controlId="formEmail">
                   <Form.Label>Email</Form.Label>
@@ -68,7 +68,7 @@ const LoginPage = () => {
                 <FacebookAuth />
                 <GitHubAuth />
               </div>
-              <p className="mt-3">Don't have an account? <a href="/register">Sign up</a></p>
+              <p className="mt-3 text-center">Don't have an account? <a href="/register">Sign up</a></p>
             </Card.Body>
           </Card>
         </Col>
