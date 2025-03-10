@@ -191,6 +191,16 @@ async def get_file(file_id: int, db: Session = Depends(get_db)):
     return StreamingResponse(io.BytesIO(file.content), media_type="application/octet-stream",
                              headers={"Content-Disposition": f"attachment; filename={file.filename}"})
 
+# Pydantic schemas
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class UserUpdate(BaseModel):
+    username: str = None
+    email: str = None
+
 # -------------------   Utility Routes   -------------------
 
 @app.get("/")
