@@ -207,6 +207,76 @@ async def get_dashboard(token: str = Security(oauth2_scheme), db: Session = Depe
     study_sets = db.query(StudySet).filter(StudySet.user_id == user.id).all()
     return {"user": user.username, "study_sets": study_sets}
 
+@app.get("/users/{user_id}/progress")
+async def get_user_progress(user_id: int, db: Session = Depends(get_db)):
+    progress_data = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
+    return {"user_id": user_id, "progress": progress_data}
+
+@app.post("/generate-test/")
+async def generate_test(set_id: int, num_questions: int, token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    user_data = decode_access_token(token)
+    user = db.query(User).filter(User.email == user_data["sub"]).first()
+
+    study_set = db.query(StudySet).filter(StudySet.id == set_id, StudySet.user_id == user.id).first()
+    if not study_set:
+        raise HTTPException(status_code=404, detail="Study set not found")
+
+    flashcards = db.query(Flashcard).filter(Flashcard.set_id == set_id).limit(num_questions).all()
+    return {"test_questions": [{"question": fc.question, "answer": fc.answer} for fc in flashcards]}
+
+@app.get("/users/")
+def get_users(db: Session = Depends(get_db)):
+    return db.query(User).all()
+
+@app.post("/users/")
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    hashed_password = hash_password(user.password)
+    new_user = User(
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {"error": "User not found"}
+    return user
+
+@app.put("/users/{user_id}")
+def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        return {"error": "User not found"}
+    
+    if user.username:
+        db_user.username = user.username
+    if user.email:
+        db_user.email = user.email
+
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+@app.get("/users/{user_id}/profile")
+async def get_user_profile(user_id: int):
+    return {"user_id": user_id}
+
+@app.get("/users/{user_id}/sets")
+async def get_user_sets(user_id: int):
+    return {"user_id": user_id}
+
+@app.get("/users/{user_id}/sets/{set_id}")
+async def get_user_set(user_id: int, set_id: int):
+    return {"user_id": user_id, "set_id": set_id}
+
+
 # -------------------   Testing Routes   -------------------
 
 @app.get("/items")
