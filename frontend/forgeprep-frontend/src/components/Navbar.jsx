@@ -11,7 +11,7 @@ const CustomNavbar = () => {
   };
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
+    <Navbar bg="dark" variant="dark" expand="lg" className="mb-4 custom-navbar">
       <Container fluid>
         <Navbar.Brand as={Link} to="/dashboard">ForgePrep</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />

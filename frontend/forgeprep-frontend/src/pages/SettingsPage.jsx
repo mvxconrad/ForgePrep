@@ -15,13 +15,14 @@ const SettingsPage = () => {
     const fetchTestResults = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/test-results`,
+          `http://your-api-url.com/test-results`, // Replace with your actual API URL
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }
         );
+        console.log("API response:", response.data); // Debugging log
 
-        const results = response.data.slice(0, 5); // Get last 5 tests
+        const results = Array.isArray(response.data) ? response.data.slice(0, 5) : []; // Ensure response data is an array
         setTestResults(results);
 
         const dates = results.map((test) => test.date);
@@ -31,6 +32,7 @@ const SettingsPage = () => {
         setPerformanceData({ dates, correct, incorrect });
       } catch (error) {
         console.error("Error fetching test results:", error);
+        setTestResults([]); // Set to empty array on error
       }
     };
 

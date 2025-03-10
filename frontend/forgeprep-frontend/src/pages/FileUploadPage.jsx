@@ -5,7 +5,7 @@ import { Container, Form, Button, ProgressBar, Table, Card } from "react-bootstr
 const FileUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileHistory, setFileHistory] = useState([]);
+  const [fileHistory, setFileHistory] = useState([]); // Initialize as an empty array
 
   useEffect(() => {
     fetchFileHistory();
@@ -14,14 +14,16 @@ const FileUpload = () => {
   const fetchFileHistory = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/files`,
+        `http://your-api-url.com/files`, // Replace with your actual API URL
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
-      setFileHistory(response.data);
+      console.log("API response:", response.data); // Debugging log
+      setFileHistory(Array.isArray(response.data) ? response.data : []); // Ensure response data is an array
     } catch (error) {
       console.error("Error fetching file history:", error);
+      setFileHistory([]); // Set to empty array on error
     }
   };
 
@@ -40,7 +42,7 @@ const FileUpload = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/upload`,
+        `http://your-api-url.com/upload`, // Replace with your actual API URL
         formData,
         {
           headers: {

@@ -8,12 +8,12 @@ import SettingsPage from "./pages/SettingsPage";
 import FileUpload from "./pages/FileUploadPage";
 import TestGenerator from "./pages/TestGeneratorPage";
 import GitHubCallback from "./pages/GitHubCallback";
-import ProtectedRoute from "./components/ProtectedRoute";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
 import Quizzes from "./pages/Quizzes";
 
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("token");

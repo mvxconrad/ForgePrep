@@ -5,21 +5,22 @@ const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState(null);
+  const [username, setUsername] = useState(""); // State to store the user's name
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const testResponse = await fetch("http://18.221.47.222:8000/api/tests/recent");
-        const goalResponse = await fetch("http://18.221.47.222:8000/api/goals");
-        const statsResponse = await fetch("http://18.221.47.222:8000/api/stats");
+        const response = await fetch("http://18.221.47.222:8000/dashboard", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
-        const testsData = await testResponse.json();
-        const goalsData = await goalResponse.json();
-        const statsData = await statsResponse.json();
-
-        setRecentTests(testsData);
-        setGoals(goalsData);
-        setStatistics(statsData);
+        const data = await response.json();
+        setUsername(data.user); // Set the user's name
+        setRecentTests(data.recentTests || []);
+        setGoals(data.goals || []);
+        setStatistics(data.statistics || null);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       }
@@ -31,6 +32,7 @@ const Dashboard = () => {
   return (
     <Container className="mt-4">
       <h1 className="mb-4">Dashboard</h1>
+      <h2>Welcome, {username}!</h2> {/* Display the user's name */}
 
       <Row>
         <Col md={6}>
