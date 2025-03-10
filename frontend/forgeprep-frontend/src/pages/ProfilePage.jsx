@@ -5,18 +5,18 @@ import axios from "axios";
 const ProfilePage = () => {
   const [userData, setUserData] = useState({});
   const [editable, setEditable] = useState(false);
-  const [formData, setFormData] = useState({ email: "", username: "" });
+  const [formData, setFormData] = useState({ email: "", username: "", password: "", confirmPassword: "" });
 
   useEffect(() => {
     // Fetch user data when the page loads
     const fetchUserData = async () => {
-      const response = await axios.get("/api/user-profile", {
+      const response = await axios.get("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/user-profile", { // Updated API URL
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
       setUserData(response.data);
-      setFormData({ email: response.data.email, username: response.data.username });
+      setFormData({ email: response.data.email, username: response.data.username, password: "", confirmPassword: "" });
     };
 
     fetchUserData();
@@ -28,8 +28,13 @@ const ProfilePage = () => {
 
   const handleSave = async () => {
     // Save updated data
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
     await axios.put(
-      "/api/update-profile",
+      "http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/update-profile", // Updated API URL
       formData,
       {
         headers: {
@@ -65,6 +70,26 @@ const ProfilePage = () => {
                 disabled={!editable}
               />
             </Form.Group>
+            {editable && (
+              <>
+                <Form.Group controlId="formPassword" className="mb-3">
+                  <Form.Label>New Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </Form.Group>
+                <Form.Group controlId="formConfirmPassword" className="mb-3">
+                  <Form.Label>Confirm New Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  />
+                </Form.Group>
+              </>
+            )}
             <Button variant="primary" onClick={editable ? handleSave : handleEdit}>
               {editable ? "Save" : "Edit"}
             </Button>

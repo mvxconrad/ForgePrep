@@ -10,7 +10,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("http://18.221.47.222:8000/dashboard", {
+        const response = await fetch("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/dashboard", { // Updated API URL
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },

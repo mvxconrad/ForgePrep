@@ -13,7 +13,6 @@ import Templates from "./pages/Templates";
 import Quizzes from "./pages/Quizzes";
 
 import Navbar from "./components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("token");
@@ -25,11 +24,11 @@ const App = () => {
         <Route path="/" element={<Navigate to="/register" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />
-        <Route path="/dashboard" element={<ProtectedRoute component={Dashboard} />} />
-        <Route path="/profile" element={<ProtectedRoute component={ProfilePage} />} />
-        <Route path="/settings" element={<ProtectedRoute component={SettingsPage} />} />
-        <Route path="/upload" element={<ProtectedRoute component={FileUpload} />} />
-        <Route path="/testgenerator" element={<ProtectedRoute component={TestGenerator} />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/upload" element={<FileUpload />} />
+        <Route path="/testgenerator" element={<TestGenerator />} />
         <Route path="/auth/github/callback" element={<GitHubCallback />} />
         <Route path="/templates" element={<Templates />} />
         <Route path="/quizzes" element={<Quizzes />} />

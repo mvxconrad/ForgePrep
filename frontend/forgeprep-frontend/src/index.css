@@ -71,6 +71,8 @@ button:focus-visible {
 /* Custom styles for Navbar */
 .custom-navbar {
   background-color: #343a40; /* Dark background color */
+  width: 100%;
+  margin: 0;
 }
 
 .custom-navbar .navbar-brand,
@@ -82,9 +84,11 @@ button:focus-visible {
 .custom-navbar .btn-outline-light {
   color: #ffffff !important; /* White text color for buttons */
   border-color: #ffffff !important; /* White border color for buttons */
+  border: none; /* Remove border */
 }
 
 .custom-navbar .btn-outline-light:hover {
   background-color: #ffffff !important; /* White background color on hover */
   color: #343a40 !important; /* Dark text color on hover */
+  border: none; /* Remove border on hover */
 }

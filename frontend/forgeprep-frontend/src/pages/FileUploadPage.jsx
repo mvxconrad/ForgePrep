@@ -14,7 +14,7 @@ const FileUpload = () => {
   const fetchFileHistory = async () => {
     try {
       const response = await axios.get(
-        `http://your-api-url.com/files`, // Replace with your actual API URL
+        `http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/files`, // Updated API URL
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -42,7 +42,7 @@ const FileUpload = () => {
 
     try {
       const response = await axios.post(
-        `http://your-api-url.com/upload`, // Replace with your actual API URL
+        `http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/upload`, // Updated API URL
         formData,
         {
           headers: {
