@@ -1,9 +1,15 @@
 import os
-from dotenv import load_dotenv
-import jwt
-import datetime
 import io
+from datetime import datetime, timedelta
+from enum import Enum
+from dotenv import load_dotenv
 
+from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Security
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.security import OAuth2PasswordBearer
+from pydantic import EmailStr
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database.database import get_db
@@ -21,26 +27,31 @@ from datetime import datetime, timedelta
 from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
 
-from security import verify_password, create_access_token, decode_access_token, hash_password
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from database.database import get_db
+from app.models.models import User, StudySet, Flashcard, UserProgress
+from app.models.models import File as FileModel
+from app.models.schemas import RegisterRequest
+from app.security import verify_password, create_access_token, decode_access_token, hash_password
 
 # Load environment variables from a .env file
 # dotenv_path = os.path.join(os.path.dirname(__file__), "config", ".env")
 ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 dotenv_path = os.path.join(ROOT_PATH, "config", ".env")
+# Load environment variables
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+dotenv_path = os.path.join(ROOT_PATH, "config", ".env")
 load_dotenv(dotenv_path)
 
-# Initialize router
+# Initialize FastAPI
 app = FastAPI()
 
-# Configure CORS
+# CORS Middleware (Allow frontend requests)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000"],  # Frontend URL (change for production)
+    allow_origins=["*"],  # Allow all origins for development (restrict in production)
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],  
+    allow_headers=["*"],
 )
 
 # Password hashing setup
@@ -48,13 +59,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # -------------------   Start OAuth2 Password Management   -------------------
 
-# OAuth client setup
+# OAuth Setup
 oauth = OAuth()
 
 # OAuth2 token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# Register Google OAuth
+# Google OAuth Configuration
 oauth.register(
     name="google",
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
@@ -64,17 +75,17 @@ oauth.register(
     client_kwargs={"scope": "openid email profile"},
 )
 
-# Register Facebook OAuth
+# Facebook OAuth Configuration
 oauth.register(
     name="facebook",
     client_id=os.getenv("FACEBOOK_CLIENT_ID"),
     client_secret=os.getenv("FACEBOOK_CLIENT_SECRET"),
     authorize_url="https://www.facebook.com/v12.0/dialog/oauth",
     access_token_url="https://graph.facebook.com/v12.0/oauth/access_token",
-    client_kwargs={"scope": "email"},
+    client_kwargs={"scope": "public_profile email"},
 )
 
-# Register GitHub OAuth
+# GitHub OAuth Configuration
 oauth.register(
     name="github",
     client_id=os.getenv("GITHUB_CLIENT_ID"),
@@ -84,15 +95,14 @@ oauth.register(
     client_kwargs={"scope": "user:email"},
 )
 
-# Unified login route for different providers
 @app.get("/login/{provider}")
-async def login(request: Request, provider: str):
+async def login_provider(request: Request, provider: str):
+    """OAuth login for Google, Facebook, GitHub"""
     if provider not in ["google", "facebook", "github"]:
-        return {"error": "Unsupported provider"}
-    redirect_uri = request.url_for(f"auth_{provider}")
+        raise HTTPException(status_code=400, detail="Unsupported provider")
+    redirect_uri = request.url_for("auth_provider", provider=provider)
     return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
 
-# Unified authentication route for different providers
 @app.get("/auth/{provider}")
 async def auth_provider(request: Request, provider: str):
     if provider not in ["google", "facebook", "github"]:
@@ -112,45 +122,72 @@ async def auth_provider(request: Request, provider: str):
     
     return {"provider": provider, "user": user}
 
-# -------------------   End OAuth2 Password Management   -------------------
-# ------------------- Start DB Password Management -------------------
+# -------------------   User Authentication Routes   -------------------
 
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
 
-# ------------------- End DB Password Management -------------------
+class RegisterRequest(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
 
-# User Registration Route
 @app.post("/register/")
-async def register_user(username: str, email: str, password: str, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == email).first():
+async def register_user(request: RegisterRequest, db: Session = Depends(get_db)):
+    """Handles user registration"""
+    if db.query(User).filter(User.email == request.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    new_user = User(username=username, email=email, hashed_password=hash_password(password))
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {"message": "User registered successfully"}
+    if db.query(User).filter(User.username == request.username).first():
+        raise HTTPException(status_code=400, detail="Username already exists")
 
-# User Login Route (Returns JWT)
+    try:
+        #  Hash the password securely
+        hashed_password = hash_password(request.password)
+
+        #  Create new user
+        new_user = User(
+            username=request.username,
+            email=request.email,
+            hashed_password=hashed_password
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        return {"message": "User registered successfully", "user_id": new_user.id}
+
+    except Exception as e:
+        db.rollback()  # Rollback on failure
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @app.post("/login/")
-async def login(email: str, password: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == email).first()
-    
-    if not user or not verify_password(password, user.hashed_password):
+async def login(request: LoginRequest, db: Session = Depends(get_db)):
+    """Handles user login and returns a JWT token"""
+    user = db.query(User).filter(User.email == request.email).first()
+
+    if not user or not verify_password(request.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Generate JWT token
-    access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = create_access_token(data={"sub": user.email}, expires_delta=timedelta(days=1))
 
-# Protected Route (Requires JWT)
+    response = JSONResponse(content={"message": "Login successful", "token": access_token})
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    return response
+
 @app.get("/protected/")
 async def protected_route(token: str = Security(oauth2_scheme)):
+    """A protected route that requires authentication"""
     user_data = decode_access_token(token)
     return {"message": f"Hello, {user_data['sub']}!"}
 
-# Create Study Set Route (Protected)
+# -------------------   Study Sets and Flashcards   -------------------
+
 @app.post("/study_sets/")
 async def create_study_set(title: str, description: str, token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    """Create a new study set"""
     user_data = decode_access_token(token)
     user = db.query(User).filter(User.email == user_data["sub"]).first()
 
@@ -160,9 +197,9 @@ async def create_study_set(title: str, description: str, token: str = Security(o
     db.refresh(new_set)
     return new_set
 
-# Get All Study Sets
 @app.get("/study_sets/")
 async def get_study_sets(db: Session = Depends(get_db)):
+    """Get all study sets"""
     return db.query(StudySet).all()
 
 # Add Flashcard to Study Set (Protected)
@@ -184,7 +221,8 @@ async def add_flashcard(set_id: int, question: str, answer: str, token: str = Se
 # For uploading files
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    file_data = await file.read()  # Read the file as binary
+    """Upload a file"""
+    file_data = await file.read()
 
     db_file = FileModel(filename=file.filename, content=file_data)
     db.add(db_file)
@@ -193,12 +231,12 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
 
     return {"message": "File uploaded successfully", "file_id": db_file.id}
 
-# For downloading files
 @app.get("/files/{file_id}")
 async def get_file(file_id: int, db: Session = Depends(get_db)):
+    """Download a file"""
     file = db.query(FileModel).filter(FileModel.id == file_id).first()
     if not file:
-        return {"error": "File not found"}
+        raise HTTPException(status_code=404, detail="File not found")
 
     return StreamingResponse(io.BytesIO(file.content), media_type="application/octet-stream",
                              headers={"Content-Disposition": f"attachment; filename={file.filename}"})
@@ -217,10 +255,12 @@ class UserUpdate(BaseModel):
 
 @app.get("/")
 def root():
+    """Health check"""
     return {"message": "API is running and connected to PostgreSQL!"}
 
 @app.get("/dashboard/")
 async def get_dashboard(token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    """Retrieve user dashboard information"""
     user_data = decode_access_token(token)
     user = db.query(User).filter(User.email == user_data["sub"]).first()
 
@@ -335,43 +375,6 @@ async def get_me():
 async def get_user(user_id: int):
     return {"message": f"get user {user_id}"}
 
-class FoodEnum(str, Enum):
-    pizza = "pizza"
-    burger = "burger"
-    pasta = "pasta"
 
-@app.get("/foods/{food_id}")
-async def get_food(food_id: FoodEnum):
-    if food_id == FoodEnum.pizza:
-        return {"food": "pizza",
-                "message": "Pizza is great"}
+# -------------------   End FastAPI Optimization   -------------------
 
-fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
-
-@app.get("/items")
-async def list_items(skip: int = 0, limit: int = 10):
-    return fake_items_db[skip: skip + limit]
-
-@app.get("/items/{item_id}")
-async def get_item(item_id: str, sample_query_param: str, q: str | None = None, short: bool = False):
-    item = {"item_id": item_id, "sample_query_param": sample_query_param}
-    if q:
-        item.update({"q": q})
-    if not short:
-        item.update(
-            {"description": "This is an amazing item that has a long description"}
-        )
-    return item
-
-@app.get("/users/{user_id}/items/{item_id}")
-async def get_user_item(user_id: int, item_id: str, q: str | None = None, short: bool = False):
-    item = {"item_id": item_id, "owner_id": user_id}
-    if q:
-        item.update({"q": q})
-    if not short:
-        item.update(
-            {"description": "This is an amazing item that has a long description"}
-        )
-    return item
-
-# -------------------   End FastAPI Testing   -------------------

@@ -1,5 +1,6 @@
 venv
 backend/app/__pycache__
+backend/venv
 backend/app/models/__pycache__
 backend/app/models/__init__.py
 backend/database/__pycache__
