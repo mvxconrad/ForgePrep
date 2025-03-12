@@ -1,42 +1,19 @@
-import os
-import io
-from datetime import datetime, timedelta
-from enum import Enum
-from dotenv import load_dotenv
-
-from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Security
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
-from fastapi.security import OAuth2PasswordBearer
-from pydantic import EmailStr
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from authlib.integrations.starlette_client import OAuth
-from starlette.requests import Request
+from app.routes import auth, users, study_sets, files
 
-from database.database import get_db
-from app.models.models import User, StudySet, Flashcard, UserProgress
-from app.models.models import File as FileModel
-from app.models.schemas import RegisterRequest
-from app.security import verify_password, create_access_token, decode_access_token, hash_password
-
-# Load environment variables
-ROOT_PATH = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-dotenv_path = os.path.join(ROOT_PATH, "config", ".env")
-load_dotenv(dotenv_path)
-
-# Initialize FastAPI
 app = FastAPI()
 
-# CORS Middleware (Allow frontend requests)
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins for development (restrict in production)
     allow_credentials=True,
-    allow_methods=["*"],  
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
+<<<<<<< HEAD
 # OAuth Setup
 oauth = OAuth()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -202,11 +179,18 @@ class UserUpdate(BaseModel):
     email: str = None
 
 # -------------------   Utility Routes   -------------------
+=======
+# Include routers
+app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(users.router, prefix="/users", tags=["Users"])
+app.include_router(study_sets.router, prefix="/study_sets", tags=["Study Sets"])
+app.include_router(files.router, prefix="/files", tags=["File Management"])
+>>>>>>> anders
 
 @app.get("/")
 def root():
-    """Health check"""
     return {"message": "API is running and connected to PostgreSQL!"}
+<<<<<<< HEAD
 
 @app.get("/dashboard/")
 async def get_dashboard(token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
@@ -308,3 +292,5 @@ async def get_food(food_id: FoodEnum):
 
 # -------------------   End FastAPI Optimization   -------------------
 
+=======
+>>>>>>> anders
