@@ -16,14 +16,14 @@ const LoginPage = () => {
     setError("");
 
     try {
-      const response = await fetch("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/login", { // Updated API URL
+      const response = await fetch("https://forgeprep.net/api/auth/login/", {  //Updated API URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Invalid credentials");
+      if (!response.ok) throw new Error(data.detail || "Invalid credentials");
 
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
