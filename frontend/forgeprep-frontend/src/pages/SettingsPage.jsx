@@ -15,7 +15,7 @@ const SettingsPage = () => {
     const fetchTestResults = async () => {
       try {
         const response = await axios.get(
-          `https://forgeprep.net/api/test-results/`, // Updated API URL
+          `https://forgeprep.net/test-results/`, // Updated API URL
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }

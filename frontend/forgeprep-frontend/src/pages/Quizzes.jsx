@@ -8,7 +8,7 @@ const Quizzes = () => {
   const [template, setTemplate] = useState("");
 
   useEffect(() => {
-    fetch("https://forgeprep.net/api/quizzes/")  // ✅ Fix API URL
+    fetch("https://forgeprep.net/quizzes/")  // ✅ Fix API URL
       .then((res) => res.json())
       .then((data) => setQuizzes(data))
       .catch((err) => console.error("Error fetching quizzes:", err));
@@ -17,7 +17,7 @@ const Quizzes = () => {
   const handleAddQuiz = async () => {
     if (!newQuiz || !className || !template) return;
 
-    const response = await fetch("https://forgeprep.net/api/quizzes/", {
+    const response = await fetch("https://forgeprep.net/quizzes/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: newQuiz, className, template }),

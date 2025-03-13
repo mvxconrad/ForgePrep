@@ -10,7 +10,7 @@ const ProfilePage = () => {
   useEffect(() => {
     // Fetch user data when the page loads
     const fetchUserData = async () => {
-      const response = await axios.get("https://forgeprep.net/api/user-profile/", { // Updated API URL
+      const response = await axios.get("https://forgeprep.net/user-profile/", { // Updated API URL
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -34,7 +34,7 @@ const ProfilePage = () => {
     }
 
     await axios.put(
-      "https://forgeprep.net/api/update-profile/", // Updated API URL
+      "https://forgeprep.net/update-profile/", // Updated API URL
       formData,
       {
         headers: {
