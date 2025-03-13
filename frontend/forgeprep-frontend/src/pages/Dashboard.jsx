@@ -10,7 +10,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/auth/dashboard/", { // Updated API URL
+        const response = await fetch("https://forgeprep.net/dashboard/", { // Updated API URL
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
