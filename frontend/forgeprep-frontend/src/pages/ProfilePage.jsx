@@ -10,7 +10,7 @@ const ProfilePage = () => {
   useEffect(() => {
     // Fetch user data when the page loads
     const fetchUserData = async () => {
-      const response = await axios.get("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/user-profile", { // Updated API URL
+      const response = await axios.get("https://forgeprep.net/api/user-profile/", { // Updated API URL
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -34,7 +34,7 @@ const ProfilePage = () => {
     }
 
     await axios.put(
-      "http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/update-profile", // Updated API URL
+      "https://forgeprep.net/api/update-profile/", // Updated API URL
       formData,
       {
         headers: {

@@ -15,7 +15,7 @@ const SettingsPage = () => {
     const fetchTestResults = async () => {
       try {
         const response = await axios.get(
-          `http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/test-results`, // Updated API URL
+          `https://forgeprep.net/api/test-results/`, // Updated API URL
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }

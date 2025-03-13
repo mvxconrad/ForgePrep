@@ -16,7 +16,7 @@ const SignupPage = () => {
     setError("");
 
     try {
-      const response = await fetch("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/register", { // Updated API URL
+      const response = await fetch("https://forgeprep.net/api/auth/register/", {  // ✅ Fix API URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

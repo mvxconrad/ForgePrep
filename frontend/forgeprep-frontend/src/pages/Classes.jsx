@@ -7,7 +7,7 @@ const Classes = () => {
   const [syllabus, setSyllabus] = useState(null);
 
   useEffect(() => {
-    fetch("http://your-backend-url/api/classes")
+    fetch("https://forgeprep.net/api/auth/classes/")  // ✅ Fix API URL
       .then((res) => res.json())
       .then((data) => setClasses(data))
       .catch((err) => console.error("Error fetching classes:", err));
@@ -20,7 +20,7 @@ const Classes = () => {
     formData.append("name", newClass);
     if (syllabus) formData.append("syllabus", syllabus);
 
-    const response = await fetch("http://your-backend-url/api/classes", {
+    const response = await fetch("https://forgeprep.net/api/auth/classes/", {  // ✅ Fix API URL
       method: "POST",
       body: formData,
     });
@@ -34,7 +34,7 @@ const Classes = () => {
   };
 
   const handleRemoveClass = async (id) => {
-    await fetch(`http://your-backend-url/api/classes/${id}`, { method: "DELETE" });
+    await fetch(`https://forgeprep.net/api/auth/classes/${id}`, { method: "DELETE" });
     setClasses(classes.filter((c) => c.id !== id));
   };
 

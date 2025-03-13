@@ -8,10 +8,10 @@ const LandingPage = () => {
       <h1>Welcome</h1>
       <p>Choose an option to get started:</p>
       <div>
-        <Link to="/login">
+        <Link to="/login/">
           <button>Login</button>
         </Link>
-        <Link to="/register">
+        <Link to="/register/">
           <button>Sign Up</button>
         </Link>
       </div>
