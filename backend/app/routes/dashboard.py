@@ -6,7 +6,7 @@ from app.security.security import decode_access_token
 
 router = APIRouter()
 
-@router.get("/dashboard/")
+@router.get("/")
 async def get_dashboard(token: str = Security(decode_access_token), db: Session = Depends(get_db)):
     """Retrieve user dashboard information"""
     user_data = decode_access_token(token)
