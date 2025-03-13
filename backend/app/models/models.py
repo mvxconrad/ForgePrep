@@ -25,7 +25,7 @@ class StudySet(Base):
 
     owner = relationship("User", back_populates="sets")
     cards = relationship("Flashcard", back_populates="set")
-
+    progress = relationship("UserProgress", back_populates="study_set")
 
 class Flashcard(Base):
     __tablename__ = "flashcards"

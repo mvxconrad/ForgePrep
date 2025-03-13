@@ -46,8 +46,17 @@ oauth.register(
 
 @router.post("/register/")
 async def register_user(request: UserCreate, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == request.email).first():
+    existing_user = db.query(User).filter(User.email == request.email).first()
+
+# Debugging output
+    if existing_user:
+        print(f"DEBUG: Email {request.email} already exists in the database: {existing_user}")
+    else:
+        print(f"DEBUG: Email {request.email} is NOT found in the database.")
+
+    if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+
 
     hashed_password = hash_password(request.password)
     new_user = User(username=request.username, email=request.email, hashed_password=hashed_password)

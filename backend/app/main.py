@@ -24,3 +24,6 @@ app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
 def root():
     return {"message": "API is running and connected to PostgreSQL!"}
 
+@app.get("/api/")
+def api_root():
+    return {"message": "API is accessible!"}
