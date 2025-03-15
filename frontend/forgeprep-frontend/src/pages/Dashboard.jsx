@@ -1,32 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, ListGroup } from "react-bootstrap";
+import statisticsImage from "../assets/statistics.jpg"; // Import the image
 
 const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState(null);
-  const [username, setUsername] = useState(""); // State to store the user's name
+  const [username, setUsername] = useState("John Doe"); // Mock username
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await fetch("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/dashboard", { // Updated API URL
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+    // Mock data for testing
+    const mockRecentTests = [
+      { id: 1, name: "Math Test 1", score: 85 },
+      { id: 2, name: "Science Test 1", score: 90 },
+      { id: 3, name: "History Test 1", score: 78 },
+    ];
 
-        const data = await response.json();
-        setUsername(data.user); // Set the user's name
-        setRecentTests(data.recentTests || []);
-        setGoals(data.goals || []);
-        setStatistics(data.statistics || null);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
+    const mockGoals = [
+      { id: 1, title: "Complete Math Module", progress: 50 },
+      { id: 2, title: "Read Science Chapter 3", progress: 80 },
+      { id: 3, title: "Finish History Assignment", progress: 30 },
+    ];
+
+    const mockStatistics = {
+      averageScore: 84,
+      bestScore: 95,
+      worstScore: 70,
     };
 
-    fetchDashboardData();
+    setRecentTests(mockRecentTests);
+    setGoals(mockGoals);
+    setStatistics(mockStatistics);
   }, []);
 
   return (
@@ -77,6 +81,7 @@ const Dashboard = () => {
       <Card className="mb-4">
         <Card.Header>Past Test Statistics</Card.Header>
         <Card.Body>
+          <img src={statisticsImage} alt="Statistics" style={{ width: "100%", height: "auto" }} />
           {statistics ? (
             <div>
               <p><strong>Average Score:</strong> {statistics.averageScore}%</p>

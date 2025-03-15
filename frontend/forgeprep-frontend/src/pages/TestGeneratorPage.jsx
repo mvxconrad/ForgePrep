@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Form, Button, Card, Dropdown, DropdownButton } from "react-bootstrap";
 import axios from "axios";
+import testImage from "../assets/test.png"; // Import the image
 
 const TestGenerator = () => {
   const [difficulty, setDifficulty] = useState("Medium");
@@ -12,7 +13,7 @@ const TestGenerator = () => {
   const handleGenerateTest = async () => {
     try {
       const response = await axios.post(
-        `http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/generate-test`, // Updated API URL
+        `https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/generate-test`, // Updated API URL
         {
           difficulty,
           numQuestions,
@@ -37,6 +38,9 @@ const TestGenerator = () => {
       <h1 className="mb-4">Test Generator</h1>
 
       <Card className="p-3 mb-4">
+        <div className="text-center mb-4">
+          <img src={testImage} alt="Test Generator" style={{ width: "150px" }} />
+        </div>
         <h3>Generate Your Test</h3>
         <Form.Group controlId="formDifficulty" className="mb-3">
           <Form.Label>Difficulty Level</Form.Label>

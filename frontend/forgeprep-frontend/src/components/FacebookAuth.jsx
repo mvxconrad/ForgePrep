@@ -33,7 +33,7 @@ const FacebookAuth = () => {
           // Send the access token to your backend for verification and authentication
           const accessToken = response.authResponse.accessToken;
           try {
-            const res = await fetch("http://18.221.47.222:8000/facebook/callback", {
+            const res = await fetch("https://18.221.47.222:8000/facebook/callback", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ token: accessToken }),

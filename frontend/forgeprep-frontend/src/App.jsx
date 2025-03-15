@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Dashboard from "./pages/Dashboard";
@@ -11,30 +11,44 @@ import GitHubCallback from "./pages/GitHubCallback";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
 import Quizzes from "./pages/Quizzes";
-
+import LandingPage from "./pages/LandingPage"; // Import the LandingPage
 import Navbar from "./components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute";
 
-const App = () => {
-  const isAuthenticated = !!localStorage.getItem("token");
+const ProtectedRoute = ({ isAuthenticated, children }) => {
+  return isAuthenticated ? children : <Navigate to="/login" />;
+};
+
+const AppContent = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const location = useLocation();
+  const showNavbar = !["/", "/login", "/register"].includes(location.pathname);
 
   return (
-    <Router>
-      {isAuthenticated && <Navbar />}
+    <>
+      {showNavbar && <Navbar />}
       <Routes>
-        <Route path="/" element={<Navigate to="/register" />} />
+        <Route path="/" element={<LandingPage />} /> {/* Set LandingPage as the default route */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />
-        <Route path="/dashboard" element={<ProtectedRoute component={Dashboard} />} />
-        <Route path="/profile" element={<ProtectedRoute component={ProfilePage} />} />
-        <Route path="/settings" element={<ProtectedRoute component={SettingsPage} />} />
-        <Route path="/upload" element={<ProtectedRoute component={FileUpload} />} />
-        <Route path="/testgenerator" element={<ProtectedRoute component={TestGenerator} />} />
+        <Route path="/dashboard" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Dashboard /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute isAuthenticated={isAuthenticated}><ProfilePage /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute isAuthenticated={isAuthenticated}><SettingsPage /></ProtectedRoute>} />
+        <Route path="/upload" element={<ProtectedRoute isAuthenticated={isAuthenticated}><FileUpload /></ProtectedRoute>} />
+        <Route path="/testgenerator" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TestGenerator /></ProtectedRoute>} />
         <Route path="/auth/github/callback" element={<GitHubCallback />} />
-        <Route path="/templates" element={<ProtectedRoute component={Templates} />} />
-        <Route path="/quizzes" element={<ProtectedRoute component={Quizzes} />} />
-        <Route path="/classes" element={<ProtectedRoute component={Classes} />} />
+        <Route path="/templates" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Templates /></ProtectedRoute>} />
+        <Route path="/quizzes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Quizzes /></ProtectedRoute>} />
+        <Route path="/classes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Classes /></ProtectedRoute>} />
       </Routes>
+    </>
+  );
+};
+
+const App = () => {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 };

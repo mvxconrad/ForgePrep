@@ -7,7 +7,7 @@ const GitHubCallback = () => {
   useEffect(() => {
     const fetchAccessToken = async (code) => {
       try {
-        const response = await fetch("http://18.221.47.222:5173/auth/github/callback", {
+        const response = await fetch("https://18.221.47.222:5173/auth/github/callback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),

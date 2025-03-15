@@ -1,34 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, ListGroup, Card } from "react-bootstrap";
+import quizzesImage from "../assets/quiz.png"; // Import the image
 
 const Quizzes = () => {
-  const [quizzes, setQuizzes] = useState([]);
+  const [quizzes, setQuizzes] = useState([]); // Initialize as an empty array
   const [newQuiz, setNewQuiz] = useState("");
   const [className, setClassName] = useState("");
   const [template, setTemplate] = useState("");
 
   useEffect(() => {
-    fetch("http://your-backend-url/api/quizzes")
-      .then((res) => res.json())
-      .then((data) => setQuizzes(data))
-      .catch((err) => console.error("Error fetching quizzes:", err));
+    // Mock data for testing
+    const mockQuizzes = [
+      { id: 1, name: "Math Quiz 1", className: "Math 101", template: "Math Template" },
+      { id: 2, name: "Science Quiz 1", className: "Science 101", template: "Science Template" },
+      { id: 3, name: "History Quiz 1", className: "History 101", template: "History Template" },
+    ];
+
+    setQuizzes(mockQuizzes);
   }, []);
 
   const handleAddQuiz = async () => {
     if (!newQuiz || !className || !template) return;
 
-    const response = await fetch("http://your-backend-url/api/quizzes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newQuiz, className, template }),
-    });
+    try {
+      const response = await fetch("https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/quizzes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newQuiz, className, template }),
+      });
 
-    if (response.ok) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const addedQuiz = await response.json();
       setQuizzes([...quizzes, addedQuiz]);
       setNewQuiz("");
       setClassName("");
       setTemplate("");
+    } catch (err) {
+      console.error("Error adding quiz:", err);
     }
   };
 
@@ -39,6 +50,9 @@ const Quizzes = () => {
         <Col md={6}>
           <Card className="mb-4">
             <Card.Body>
+              <div className="text-center mb-4">
+                <img src={quizzesImage} alt="Quizzes" style={{ width: "150px" }} />
+              </div>
               <Card.Title>Add New Quiz</Card.Title>
               <Form>
                 <Form.Group controlId="formQuizName" className="mb-3">
@@ -78,11 +92,15 @@ const Quizzes = () => {
             <Card.Body>
               <Card.Title>Quiz List</Card.Title>
               <ListGroup>
-                {quizzes.map((q) => (
-                  <ListGroup.Item key={q.id}>
-                    {q.name} - {q.className} ({q.template})
-                  </ListGroup.Item>
-                ))}
+                {quizzes.length > 0 ? (
+                  quizzes.map((q) => (
+                    <ListGroup.Item key={q.id}>
+                      {q.name} - {q.className} ({q.template})
+                    </ListGroup.Item>
+                  ))
+                ) : (
+                  <ListGroup.Item>No quizzes available</ListGroup.Item>
+                )}
               </ListGroup>
             </Card.Body>
           </Card>

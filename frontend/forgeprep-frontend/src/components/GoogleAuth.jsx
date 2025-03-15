@@ -30,7 +30,7 @@ const GoogleAuth = () => {
     console.log("Google login success:", idToken);
 
     try {
-      const res = await fetch("http://18.221.47.222:5173/auth/google/callback", {
+      const res = await fetch("https://18.221.47.222:5173/auth/google/callback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: idToken }),

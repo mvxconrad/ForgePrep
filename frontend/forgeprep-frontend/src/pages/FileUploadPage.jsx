@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Container, Form, Button, ProgressBar, Table, Card } from "react-bootstrap";
+import studyGuideImage from "../assets/study_guide.jpg"; // Import the image
 
 const FileUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -8,24 +9,15 @@ const FileUpload = () => {
   const [fileHistory, setFileHistory] = useState([]); // Initialize as an empty array
 
   useEffect(() => {
-    fetchFileHistory();
-  }, []);
+    // Mock data for testing
+    const mockFileHistory = [
+      { filename: "Math_Study_Guide.pdf", uploadedAt: new Date(), size: 1024 * 1.5 },
+      { filename: "Science_Notes.docx", uploadedAt: new Date(), size: 1024 * 2.3 },
+      { filename: "History_Essay.txt", uploadedAt: new Date(), size: 1024 * 0.8 },
+    ];
 
-  const fetchFileHistory = async () => {
-    try {
-      const response = await axios.get(
-        `http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/files`, // Updated API URL
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      console.log("API response:", response.data); // Debugging log
-      setFileHistory(Array.isArray(response.data) ? response.data : []); // Ensure response data is an array
-    } catch (error) {
-      console.error("Error fetching file history:", error);
-      setFileHistory([]); // Set to empty array on error
-    }
-  };
+    setFileHistory(mockFileHistory);
+  }, []);
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
@@ -42,7 +34,7 @@ const FileUpload = () => {
 
     try {
       const response = await axios.post(
-        `http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/upload`, // Updated API URL
+        `https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/upload`, // Updated API URL
         formData,
         {
           headers: {
@@ -61,7 +53,13 @@ const FileUpload = () => {
       alert("File uploaded successfully!");
       setSelectedFile(null);
       setUploadProgress(0);
-      fetchFileHistory(); // Refresh file history after upload
+      // Add the uploaded file to the mock file history
+      const newFile = {
+        filename: selectedFile.name,
+        uploadedAt: new Date(),
+        size: selectedFile.size / 1024,
+      };
+      setFileHistory([...fileHistory, newFile]);
     } catch (error) {
       console.error("Error uploading file:", error);
       alert("File upload failed. Please try again.");
@@ -73,6 +71,9 @@ const FileUpload = () => {
       <h1 className="mb-4">File Upload</h1>
 
       <Card className="p-3 mb-4">
+        <div className="text-center mb-4">
+          <img src={studyGuideImage} alt="Study Guide" style={{ width: "150px" }} />
+        </div>
         <h3>Upload a File</h3>
         <Form.Group controlId="formFile" className="mb-3">
           <Form.Label>Accepted file types: PDF, DOCX, TXT</Form.Label>
@@ -112,7 +113,7 @@ const FileUpload = () => {
                 <tr key={index}>
                   <td>{file.filename}</td>
                   <td>{new Date(file.uploadedAt).toLocaleString()}</td>
-                  <td>{(file.size / 1024).toFixed(2)} KB</td>
+                  <td>{file.size.toFixed(2)} KB</td>
                 </tr>
               ))
             ) : (

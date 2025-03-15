@@ -4,6 +4,7 @@ import { Card, Form, Button, Container, Row, Col } from "react-bootstrap";
 import GoogleAuth from "../components/GoogleAuth";
 import FacebookAuth from "../components/FacebookAuth";
 import GitHubAuth from "../components/GitHubAuth";
+import signupImage from "../assets/signup.png"; // Import the image
 
 const SignupPage = () => {
   const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ const SignupPage = () => {
     setError("");
 
     try {
-      const response = await fetch("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/register", { // Updated API URL
+      const response = await fetch("https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/register", { // Updated API URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -39,6 +40,7 @@ const SignupPage = () => {
           <Card className="shadow mx-auto" style={{ maxWidth: "900px", width: "100%" }}>
             <Card.Body className="p-5">
               <div className="text-center mb-4">
+                <img src={signupImage} alt="Signup Illustration" style={{ width: "150px" }} />
                 <h1>Welcome to ForgePrep</h1>
                 <p>Your ultimate platform for test preparation and academic success.</p>
               </div>

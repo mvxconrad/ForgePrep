@@ -1,20 +1,44 @@
 import React from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Line } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const PerformanceChart = ({ performanceData }) => {
-  return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={performanceData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line type="monotone" dataKey="correct" stroke="#82ca9d" />
-        <Line type="monotone" dataKey="incorrect" stroke="#ff7300" />
-      </LineChart>
-    </ResponsiveContainer>
-  );
+  const data = {
+    labels: performanceData.dates,
+    datasets: [
+      {
+        label: "Correct Answers",
+        data: performanceData.correct,
+        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
+        fill: true,
+      },
+      {
+        label: "Incorrect Answers",
+        data: performanceData.incorrect,
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        fill: true,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Performance Over Time",
+      },
+    },
+  };
+
+  return <Line data={data} options={options} />;
 };
 
 export default PerformanceChart;

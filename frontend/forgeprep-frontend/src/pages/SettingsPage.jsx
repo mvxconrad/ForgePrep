@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import PerformanceChart from "../components/PerformanceChart";
 import { Container, Table, Card } from "react-bootstrap";
+import settingsImage from "../assets/settings.png"; // Import the image
 
 const SettingsPage = () => {
   const [testResults, setTestResults] = useState([]);
@@ -12,44 +13,34 @@ const SettingsPage = () => {
   });
 
   useEffect(() => {
-    const fetchTestResults = async () => {
-      try {
-        const response = await axios.get(
-          `http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/test-results`, // Updated API URL
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        );
-        console.log("API response:", response.data); // Debugging log
+    // Mock data for testing
+    const mockTestResults = [
+      { date: new Date('2023-01-01'), testName: "Math Test 1", score: 85, correctAnswers: 17, incorrectAnswers: 3 },
+      { date: new Date('2023-02-01'), testName: "Science Test 1", score: 90, correctAnswers: 18, incorrectAnswers: 2 },
+      { date: new Date('2023-03-01'), testName: "History Test 1", score: 78, correctAnswers: 15, incorrectAnswers: 5 },
+    ];
 
-        const results = Array.isArray(response.data) ? response.data.slice(0, 5) : []; // Ensure response data is an array
-        setTestResults(results);
+    setTestResults(mockTestResults);
 
-        const dates = results.map((test) => test.date);
-        const correct = results.map((test) => test.correctAnswers);
-        const incorrect = results.map((test) => test.incorrectAnswers);
+    const dates = mockTestResults.map((test) => test.date.toLocaleDateString());
+    const correct = mockTestResults.map((test) => test.correctAnswers);
+    const incorrect = mockTestResults.map((test) => test.incorrectAnswers);
 
-        setPerformanceData({ dates, correct, incorrect });
-      } catch (error) {
-        console.error("Error fetching test results:", error);
-        setTestResults([]); // Set to empty array on error
-      }
-    };
-
-    fetchTestResults();
+    setPerformanceData({ dates, correct, incorrect });
   }, []);
 
   return (
     <Container className="mt-4">
       <h1 className="mb-4">Settings</h1>
 
-      {/* Performance Chart */}
       <Card className="mb-4 p-3">
+        <div className="text-center mb-4">
+          <img src={settingsImage} alt="Settings" style={{ width: "150px" }} />
+        </div>
         <h3>Performance Overview</h3>
         <PerformanceChart performanceData={performanceData} />
       </Card>
 
-      {/* Recent Test Results */}
       <Card className="p-3">
         <h3>Recent Test Results</h3>
         <Table striped bordered hover>

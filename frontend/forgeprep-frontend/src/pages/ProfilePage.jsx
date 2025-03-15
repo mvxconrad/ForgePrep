@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Button, Form } from "react-bootstrap";
 import axios from "axios";
+import profileImage from "../assets/profile.png"; // Import the image
 
 const ProfilePage = () => {
   const [userData, setUserData] = useState({});
@@ -10,7 +11,7 @@ const ProfilePage = () => {
   useEffect(() => {
     // Fetch user data when the page loads
     const fetchUserData = async () => {
-      const response = await axios.get("http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/user-profile", { // Updated API URL
+      const response = await axios.get("https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/user-profile", { // Updated API URL
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -34,7 +35,7 @@ const ProfilePage = () => {
     }
 
     await axios.put(
-      "http://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/update-profile", // Updated API URL
+      "https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/update-profile", // Updated API URL
       formData,
       {
         headers: {
@@ -50,6 +51,9 @@ const ProfilePage = () => {
       <h1>Profile</h1>
       <Card className="p-3">
         <Card.Body>
+          <div className="text-center mb-4">
+            <img src={profileImage} alt="Profile" style={{ width: "150px" }} />
+          </div>
           <Card.Title>{editable ? "Edit Profile" : "Profile"}</Card.Title>
           <Form>
             <Form.Group controlId="formUsername" className="mb-3">
