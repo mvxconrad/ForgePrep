@@ -92,3 +92,14 @@ button:focus-visible {
   color: #343a40 !important; /* Dark text color on hover */
   border: none; /* Remove border on hover */
 }
+
+/* Ensure the Navbar dropdown goes over the page content */
+.custom-navbar .navbar-collapse {
+  position: absolute;
+  width: 100%;
+  z-index: 1000;
+}
+
+.custom-navbar .navbar-collapse.collapse.show {
+  display: block !important;
+}
