@@ -18,11 +18,12 @@ const Quizzes = () => {
   const handleAddQuiz = async () => {
     if (!newQuiz || !className || !template) return;
 
-    const response = await fetch("https://forgeprep.net/quizzes/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newQuiz, className, template }),
-    });
+    try {
+      const response = await fetch("https://forgeprep.net/quizzes/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newQuiz, className, template }),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -16,11 +16,12 @@ const Templates = () => {
   const handleAddTemplate = async () => {
     if (!newTemplate) return;
 
-    const response = await fetch("https://forgeprep.net/templates/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newTemplate }),
-    });
+    try {
+      const response = await fetch("https://forgeprep.net/templates/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newTemplate }),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

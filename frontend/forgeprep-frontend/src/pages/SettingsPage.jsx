@@ -30,7 +30,13 @@ const SettingsPage = () => {
         const correct = results.map((test) => test.correctAnswers);
         const incorrect = results.map((test) => test.incorrectAnswers);
 
-    setPerformanceData({ dates, correct, incorrect });
+        setPerformanceData({ dates, correct, incorrect });
+      } catch (err) {
+        console.error("Error fetching test results:", err);
+      }
+    };
+
+    fetchTestResults();
   }, []);
 
   return (

@@ -21,10 +21,11 @@ const Classes = () => {
     formData.append("name", newClass);
     if (syllabus) formData.append("syllabus", syllabus);
 
-    const response = await fetch("https://forgeprep.net/auth/classes/", {  // ✅ Fix API URL
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const response = await fetch("https://forgeprep.net/auth/classes/", {  // ✅ Fix API URL
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -99,6 +100,6 @@ const Classes = () => {
       </Row>
     </Container>
   );
-};
+}
 
 export default Classes;
