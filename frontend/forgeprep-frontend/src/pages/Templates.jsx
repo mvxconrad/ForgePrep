@@ -7,25 +7,20 @@ const Templates = () => {
   const [newTemplate, setNewTemplate] = useState("");
 
   useEffect(() => {
-    // Mock data for testing
-    const mockTemplates = [
-      { id: 1, name: "Math Template" },
-      { id: 2, name: "Science Template" },
-      { id: 3, name: "History Template" },
-    ];
-
-    setTemplates(mockTemplates);
+    fetch("https://forgeprep.net/templates/")
+      .then((res) => res.json())
+      .then((data) => setTemplates(data))
+      .catch((err) => console.error("Error fetching templates:", err));
   }, []);
 
   const handleAddTemplate = async () => {
     if (!newTemplate) return;
 
-    try {
-      const response = await fetch("https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/templates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newTemplate }),
-      });
+    const response = await fetch("https://forgeprep.net/templates/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newTemplate }),
+    });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

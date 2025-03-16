@@ -7,7 +7,7 @@ const GitHubCallback = () => {
   useEffect(() => {
     const fetchAccessToken = async (code) => {
       try {
-        const response = await fetch("https://18.221.47.222:5173/auth/github/callback", {
+        const response = await fetch("https://forgeprep.net/auth/files/github/callback/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),
@@ -17,10 +17,10 @@ const GitHubCallback = () => {
         if (!response.ok) throw new Error(data.message || "GitHub login failed");
 
         localStorage.setItem("token", data.token);
-        navigate("/dashboard");
+        navigate("/dashboard/");
       } catch (err) {
         console.error("GitHub login error:", err);
-        navigate("/login");
+        navigate("/login/");
       }
     };
 
@@ -29,7 +29,7 @@ const GitHubCallback = () => {
     if (code) {
       fetchAccessToken(code);
     } else {
-      navigate("/login");
+      navigate("/login/");
     }
   }, [navigate]);
 

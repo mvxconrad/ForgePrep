@@ -7,6 +7,7 @@ import GitHubAuth from "../components/GitHubAuth";
 import signupImage from "../assets/signup.png"; // Import the image
 
 const SignupPage = () => {
+  const [username, setUsername] = useState(""); // ✅ Add username state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,14 +18,14 @@ const SignupPage = () => {
     setError("");
 
     try {
-      const response = await fetch("https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/register", { // Updated API URL
+      const response = await fetch("https://forgeprep.net/auth/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, email, password }), // ✅ Include username
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Registration failed");
+      if (!response.ok) throw new Error(data.detail || "Registration failed");
 
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
@@ -47,6 +48,16 @@ const SignupPage = () => {
               <h2 className="mb-4 text-center">Sign Up</h2>
               {error && <p className="text-danger text-center">{error}</p>}
               <Form onSubmit={handleSignup}>
+                <Form.Group className="mb-3" controlId="formUsername">
+                  <Form.Label>Username</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Enter username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </Form.Group>
                 <Form.Group className="mb-3" controlId="formEmail">
                   <Form.Label>Email</Form.Label>
                   <Form.Control

@@ -9,28 +9,25 @@ const Dashboard = () => {
   const [username, setUsername] = useState("John Doe"); // Mock username
 
   useEffect(() => {
-    // Mock data for testing
-    const mockRecentTests = [
-      { id: 1, name: "Math Test 1", score: 85 },
-      { id: 2, name: "Science Test 1", score: 90 },
-      { id: 3, name: "History Test 1", score: 78 },
-    ];
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch("https://forgeprep.net/dashboard/", { // Updated API URL
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
-    const mockGoals = [
-      { id: 1, title: "Complete Math Module", progress: 50 },
-      { id: 2, title: "Read Science Chapter 3", progress: 80 },
-      { id: 3, title: "Finish History Assignment", progress: 30 },
-    ];
-
-    const mockStatistics = {
-      averageScore: 84,
-      bestScore: 95,
-      worstScore: 70,
+        const data = await response.json();
+        setUsername(data.user); // Set the user's name
+        setRecentTests(data.recentTests || []);
+        setGoals(data.goals || []);
+        setStatistics(data.statistics || null);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
     };
 
-    setRecentTests(mockRecentTests);
-    setGoals(mockGoals);
-    setStatistics(mockStatistics);
+    fetchDashboardData();
   }, []);
 
   return (

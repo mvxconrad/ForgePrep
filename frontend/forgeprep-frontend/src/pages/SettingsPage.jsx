@@ -13,18 +13,22 @@ const SettingsPage = () => {
   });
 
   useEffect(() => {
-    // Mock data for testing
-    const mockTestResults = [
-      { date: new Date('2023-01-01'), testName: "Math Test 1", score: 85, correctAnswers: 17, incorrectAnswers: 3 },
-      { date: new Date('2023-02-01'), testName: "Science Test 1", score: 90, correctAnswers: 18, incorrectAnswers: 2 },
-      { date: new Date('2023-03-01'), testName: "History Test 1", score: 78, correctAnswers: 15, incorrectAnswers: 5 },
-    ];
+    const fetchTestResults = async () => {
+      try {
+        const response = await axios.get(
+          `https://forgeprep.net/test-results/`, // Updated API URL
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        );
+        console.log("API response:", response.data); // Debugging log
 
-    setTestResults(mockTestResults);
+        const results = Array.isArray(response.data) ? response.data.slice(0, 5) : []; // Ensure response data is an array
+        setTestResults(results);
 
-    const dates = mockTestResults.map((test) => test.date.toLocaleDateString());
-    const correct = mockTestResults.map((test) => test.correctAnswers);
-    const incorrect = mockTestResults.map((test) => test.incorrectAnswers);
+        const dates = results.map((test) => test.date);
+        const correct = results.map((test) => test.correctAnswers);
+        const incorrect = results.map((test) => test.incorrectAnswers);
 
     setPerformanceData({ dates, correct, incorrect });
   }, []);

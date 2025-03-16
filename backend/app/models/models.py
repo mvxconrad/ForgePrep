@@ -1,24 +1,8 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Float, DateTime, JSON
 from sqlalchemy.orm import relationship
+from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
-from database.database import Base  # ✅ Use the existing Base
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, nullable=False, index=True)
-    email = Column(String, unique=True, nullable=False, index=True)
-    hashed_password = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    sets = relationship("StudySet", back_populates="owner")
-    progress = relationship("UserProgress", back_populates="user")  # ✅ Fixed reference
-    study_materials = relationship("StudyMaterial", back_populates="user")
-    tests = relationship("Test", back_populates="user")
-
-    def __repr__(self):
-        return f"<User(id={self.id}, username={self.username}, email={self.email})>"
+from database.database import Base
 
 class UserProgress(Base):
     __tablename__ = "user_progress"
@@ -28,8 +12,8 @@ class UserProgress(Base):
     study_set_id = Column(Integer, ForeignKey("study_sets.id"))
     progress = Column(Float, default=0.0)  # Percentage of completion
 
-    user = relationship("User", back_populates="progress")  # ✅ Fixed reference
-    study_set = relationship("StudySet", back_populates="user_progress")  # ✅ Fixed reference
+    user = relationship("User", back_populates="progress")
+    study_set = relationship("StudySet", back_populates="progress")
 
 class StudySet(Base):
     __tablename__ = "study_sets"
@@ -41,7 +25,7 @@ class StudySet(Base):
 
     owner = relationship("User", back_populates="sets")
     cards = relationship("Flashcard", back_populates="set")
-    user_progress = relationship("UserProgress", back_populates="study_set")  # ✅ Added
+    progress = relationship("UserProgress", back_populates="study_set")
 
 class Flashcard(Base):
     __tablename__ = "flashcards"
@@ -59,6 +43,20 @@ class File(Base):
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, nullable=False)
     content = Column(LargeBinary, nullable=False)  # Stores file data as binary
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    sets = relationship("StudySet", back_populates="owner")
+    progress = relationship("UserProgress", back_populates="user")  # ✅ Fixed reference
+    study_materials = relationship("StudyMaterial", back_populates="user")
+    tests = relationship("Test", back_populates="user")
 
 class StudyMaterial(Base):
     __tablename__ = "study_materials"

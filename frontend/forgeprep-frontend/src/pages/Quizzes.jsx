@@ -9,25 +9,20 @@ const Quizzes = () => {
   const [template, setTemplate] = useState("");
 
   useEffect(() => {
-    // Mock data for testing
-    const mockQuizzes = [
-      { id: 1, name: "Math Quiz 1", className: "Math 101", template: "Math Template" },
-      { id: 2, name: "Science Quiz 1", className: "Science 101", template: "Science Template" },
-      { id: 3, name: "History Quiz 1", className: "History 101", template: "History Template" },
-    ];
-
-    setQuizzes(mockQuizzes);
+    fetch("https://forgeprep.net/quizzes/")  // ✅ Fix API URL
+      .then((res) => res.json())
+      .then((data) => setQuizzes(data))
+      .catch((err) => console.error("Error fetching quizzes:", err));
   }, []);
 
   const handleAddQuiz = async () => {
     if (!newQuiz || !className || !template) return;
 
-    try {
-      const response = await fetch("https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/quizzes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newQuiz, className, template }),
-      });
+    const response = await fetch("https://forgeprep.net/quizzes/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newQuiz, className, template }),
+    });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

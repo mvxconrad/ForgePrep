@@ -19,6 +19,22 @@ const FileUpload = () => {
     setFileHistory(mockFileHistory);
   }, []);
 
+  const fetchFileHistory = async () => {
+    try {
+      const response = await axios.get(
+        `https://forgeprep.net/auth/files/`, // Updated API URL
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+      console.log("API response:", response.data); // Debugging log
+      setFileHistory(Array.isArray(response.data) ? response.data : []); // Ensure response data is an array
+    } catch (error) {
+      console.error("Error fetching file history:", error);
+      setFileHistory([]); // Set to empty array on error
+    }
+  };
+
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files[0]);
   };
@@ -34,7 +50,7 @@ const FileUpload = () => {
 
     try {
       const response = await axios.post(
-        `https://ec2-18-221-47-222.us-east-2.compute.amazonaws.com/api/upload`, // Updated API URL
+        `https://forgeprep.net/auth/files/upload/`, // Updated API URL
         formData,
         {
           headers: {
