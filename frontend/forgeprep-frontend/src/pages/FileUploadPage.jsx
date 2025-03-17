@@ -10,21 +10,21 @@ const FileUploadPage = () => {
   const [fileHistory, setFileHistory] = useState([]); // Initialize as an empty array
 
   useEffect(() => {
-      const fetchFileHistory = async () => {
-    try {
-      const response = await axios.get(
-        `https://forgeprep.net/files/`, // Updated API URL
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      console.log("API response:", response.data); // Debugging log
-      setFileHistory(Array.isArray(response.data) ? response.data : []); // Ensure response data is an array
-    } catch (error) {
-      console.error("Error fetching file history:", error);
-      setFileHistory([]); // Set to empty array on error
-    }
-  };
+    const fetchFileHistory = async () => {
+      try {
+        const response = await axios.get(
+          `https://forgeprep.net/files/`, // Updated API URL
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          }
+        );
+        console.log("API response:", response.data); // Debugging log
+        setFileHistory(Array.isArray(response.data) ? response.data : []); // Ensure response data is an array
+      } catch (error) {
+        console.error("Error fetching file history:", error);
+        setFileHistory([]); // Set to empty array on error
+      }
+    };
 
     fetchFileHistory();
   }, []);
@@ -142,62 +142,5 @@ const FileUploadPage = () => {
     </Container>
   );
 };
-      <Card className="p-3 mb-4">
-        <div className="text-center mb-4">
-          <img src={studyGuideImage} alt="Study Guide" style={{ width: "150px" }} />
-        </div>
-        <h3>Upload a File</h3>
-        <Form.Group controlId="formFile" className="mb-3">
-          <Form.Label>Accepted file types: PDF, DOCX, TXT</Form.Label>
-          <Form.Control
-            type="file"
-            accept=".pdf,.docx,.txt"
-            onChange={handleFileChange}
-          />
-        </Form.Group>
-        <Button onClick={handleFileUpload} disabled={!file}>
-          Upload
-        </Button>
-
-        {uploadProgress > 0 && (
-          <ProgressBar
-            now={uploadProgress}
-            label={`${uploadProgress}%`}
-            className="mt-3"
-          />
-        )}
-      </Card>
-
-      {/* File Upload History */}
-      <Card className="p-3">
-        <h3>Upload History</h3>
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>Filename</th>
-              <th>Uploaded On</th>
-              <th>Size</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fileHistory.length > 0 ? (
-              fileHistory.map((file, index) => (
-                <tr key={index}>
-                  <td>{file.filename}</td>
-                  <td>{new Date(file.uploadedAt).toLocaleString()}</td>
-                  <td>{file.size.toFixed(2)} KB</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="3" className="text-center">
-                  No files uploaded yet
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </Table>
-      </Card>
-
 
 export default FileUploadPage;

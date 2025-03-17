@@ -4,6 +4,7 @@ import { Navbar, Nav, Container, Button } from "react-bootstrap";
 
 const CustomNavbar = () => {
   const navigate = useNavigate();
+  const isAuthenticated = !!localStorage.getItem("token");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -17,16 +18,25 @@ const CustomNavbar = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Button as={Link} to="/dashboard" variant="outline-light" className="me-2">Dashboard</Button>
-            <Button as={Link} to="/upload" variant="outline-light" className="me-2">File Upload</Button>
-            <Button as={Link} to="/testgenerator" variant="outline-light" className="me-2">Test Generator</Button>
-            <Button as={Link} to="/classes" variant="outline-light" className="me-2">Classes</Button>
-            <Button as={Link} to="/quizzes" variant="outline-light" className="me-2">Quizzes</Button>
-            <Button as={Link} to="/templates" variant="outline-light" className="me-2">Templates</Button>
-            <Button as={Link} to="/profile" variant="outline-light" className="me-2">Profile</Button>
-            <Button as={Link} to="/settings" variant="outline-light" className="me-2">Settings</Button>
+            {isAuthenticated ? (
+              <>
+                <Button as={Link} to="/dashboard" variant="outline-light" className="me-2">Dashboard</Button>
+                <Button as={Link} to="/upload" variant="outline-light" className="me-2">File Upload</Button>
+                <Button as={Link} to="/testgenerator" variant="outline-light" className="me-2">Test Generator</Button>
+                <Button as={Link} to="/classes" variant="outline-light" className="me-2">Classes</Button>
+                <Button as={Link} to="/quizzes" variant="outline-light" className="me-2">Quizzes</Button>
+                <Button as={Link} to="/templates" variant="outline-light" className="me-2">Templates</Button>
+                <Button as={Link} to="/profile" variant="outline-light" className="me-2">Profile</Button>
+                <Button as={Link} to="/settings" variant="outline-light" className="me-2">Settings</Button>
+              </>
+            ) : (
+              <>
+                <Button as={Link} to="/login" variant="outline-light" className="me-2">Login</Button>
+                <Button as={Link} to="/register" variant="outline-light" className="me-2">Sign Up</Button>
+              </>
+            )}
           </Nav>
-          <Button variant="danger" onClick={handleLogout}>Logout</Button>
+          {isAuthenticated && <Button variant="danger" onClick={handleLogout}>Logout</Button>}
         </Navbar.Collapse>
       </Container>
     </Navbar>
