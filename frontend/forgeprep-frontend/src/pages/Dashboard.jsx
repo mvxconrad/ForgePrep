@@ -6,7 +6,7 @@ const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState(null);
-  const [username, setUsername] = useState("John Doe"); // Mock username
+  const [username, setUsername] = useState(""); // Remove mock username
 
   useEffect(() => {
     const fetchDashboardData = async () => {

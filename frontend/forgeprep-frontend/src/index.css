@@ -73,6 +73,7 @@ button:focus-visible {
   background-color: #343a40; /* Dark background color */
   width: 100%;
   margin: 0;
+  padding: 0; /* Remove any padding */
 }
 
 .custom-navbar .navbar-brand,
