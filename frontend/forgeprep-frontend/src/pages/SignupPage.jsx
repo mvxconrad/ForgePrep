@@ -7,7 +7,7 @@ import GitHubAuth from "../components/GitHubAuth";
 import signupImage from "../assets/signup.png"; // Import the image
 
 const SignupPage = () => {
-  const [username, setUsername] = useState(""); // ✅ Add username state
+  const [username, setUsername] = useState(""); // Add username state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,7 +21,7 @@ const SignupPage = () => {
       const response = await fetch("https://forgeprep.net/auth/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }), // ✅ Include username
+        body: JSON.stringify({ username, email, password }), // Include username
       });
 
       const data = await response.json();

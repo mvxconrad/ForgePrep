@@ -11,5 +11,10 @@ export default defineConfig({
     hmr:{
       clientPort: 5173,
     }
-  }
+  },
+  define: {
+    'process.env': {
+      VITE_API_BASE_URL: 'https://forgeprep.net',
+    },
+  },
 })

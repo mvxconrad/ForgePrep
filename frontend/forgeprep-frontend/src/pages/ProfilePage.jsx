@@ -1,102 +1,82 @@
 import React, { useState, useEffect } from "react";
-import { Container, Card, Button, Form } from "react-bootstrap";
-import axios from "axios";
-import profileImage from "../assets/profile.png"; // Import the image
+import { Container, Card, Form, Button } from "react-bootstrap";
 
 const ProfilePage = () => {
-  const [userData, setUserData] = useState({});
-  const [editable, setEditable] = useState(false);
-  const [formData, setFormData] = useState({ email: "", username: "", password: "", confirmPassword: "" });
+  const [profile, setProfile] = useState({ username: "", email: "" });
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Fetch user data when the page loads
-    const fetchUserData = async () => {
-      const response = await axios.get("https://forgeprep.net/user-profile/", { // Updated API URL
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      setUserData(response.data);
-      setFormData({ email: response.data.email, username: response.data.username, password: "", confirmPassword: "" });
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch("https://forgeprep.net/users/profile", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || "Error fetching profile");
+
+        setProfile(data);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        setError(err.message);
+      }
     };
 
-    fetchUserData();
+    fetchProfile();
   }, []);
 
-  const handleEdit = () => {
-    setEditable(!editable);
-  };
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  const handleSave = async () => {
-    // Save updated data
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
-    await axios.put(
-      "https://forgeprep.net/update-profile/", // Updated API URL
-      formData,
-      {
+    try {
+      const response = await fetch("https://forgeprep.net/users/profile", {
+        method: "PUT",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      }
-    );
-    setEditable(false);
+        body: JSON.stringify(profile),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "Error updating profile");
+
+      setProfile(data);
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      setError(err.message);
+    }
   };
 
   return (
     <Container className="mt-4">
-      <h1>Profile</h1>
-      <Card className="p-3">
+      <Card className="shadow">
         <Card.Body>
-          <div className="text-center mb-4">
-            <img src={profileImage} alt="Profile" style={{ width: "150px" }} />
-          </div>
-          <Card.Title>{editable ? "Edit Profile" : "Profile"}</Card.Title>
-          <Form>
+          <h2>Profile</h2>
+          {error && <p className="text-danger">{error}</p>}
+          <Form onSubmit={handleUpdateProfile}>
             <Form.Group controlId="formUsername" className="mb-3">
               <Form.Label>Username</Form.Label>
               <Form.Control
                 type="text"
-                value={editable ? formData.username : userData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                disabled={!editable}
+                placeholder="Enter username"
+                value={profile.username}
+                onChange={(e) => setProfile({ ...profile, username: e.target.value })}
+                required
               />
             </Form.Group>
             <Form.Group controlId="formEmail" className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
-                value={editable ? formData.email : userData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={!editable}
+                placeholder="Enter email"
+                value={profile.email}
+                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                required
               />
             </Form.Group>
-            {editable && (
-              <>
-                <Form.Group controlId="formPassword" className="mb-3">
-                  <Form.Label>New Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
-                </Form.Group>
-                <Form.Group controlId="formConfirmPassword" className="mb-3">
-                  <Form.Label>Confirm New Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  />
-                </Form.Group>
-              </>
-            )}
-            <Button variant="primary" onClick={editable ? handleSave : handleEdit}>
-              {editable ? "Save" : "Edit"}
-            </Button>
+            <Button variant="primary" type="submit">Update Profile</Button>
           </Form>
         </Card.Body>
       </Card>

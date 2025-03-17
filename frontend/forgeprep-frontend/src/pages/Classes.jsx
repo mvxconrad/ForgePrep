@@ -8,7 +8,7 @@ const Classes = () => {
   const [syllabus, setSyllabus] = useState(null);
 
   useEffect(() => {
-    fetch("https://forgeprep.net/auth/classes/")  // ✅ Fix API URL
+    fetch("https://forgeprep.net/study_sets/")  // Updated API URL
       .then((res) => res.json())
       .then((data) => setClasses(data))
       .catch((err) => console.error("Error fetching classes:", err));
@@ -18,11 +18,12 @@ const Classes = () => {
     if (!newClass) return;
 
     const formData = new FormData();
-    formData.append("name", newClass);
+    formData.append("title", newClass);
+    formData.append("description", ""); // Add description if needed
     if (syllabus) formData.append("syllabus", syllabus);
 
     try {
-      const response = await fetch("https://forgeprep.net/auth/classes/", {  // ✅ Fix API URL
+      const response = await fetch("https://forgeprep.net/study_sets/", {  // Updated API URL
         method: "POST",
         body: formData,
       });
@@ -41,7 +42,7 @@ const Classes = () => {
   };
 
   const handleRemoveClass = async (id) => {
-    await fetch(`https://forgeprep.net/auth/classes/${id}`, { method: "DELETE" });
+    await fetch(`https://forgeprep.net/study_sets/${id}`, { method: "DELETE" });
     setClasses(classes.filter((c) => c.id !== id));
   };
 
@@ -86,7 +87,7 @@ const Classes = () => {
                 {classes.length > 0 ? (
                   classes.map((c) => (
                     <ListGroup.Item key={c.id}>
-                      {c.name}
+                      {c.title}
                       <Button variant="danger" size="sm" onClick={() => handleRemoveClass(c.id)} className="float-end">Remove</Button>
                     </ListGroup.Item>
                   ))
