@@ -23,12 +23,19 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Invalid credentials");
+      // Check if the response is not OK
+      if (!response.ok) {
+        const errorText = await response.text(); // Read the response as text
+        console.error("Error response:", errorText); // Log the error response
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
+      const data = await response.json();
+      console.log("Login successful, token:", data.token); // Debugging log
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
     } catch (err) {
+      console.error("Login error:", err); // Log the error
       setError(err.message);
     }
   };

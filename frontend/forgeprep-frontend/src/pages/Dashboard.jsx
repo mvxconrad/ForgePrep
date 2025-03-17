@@ -17,7 +17,13 @@ const Dashboard = () => {
           },
         });
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
+        console.log("Dashboard data:", data); // Debugging log
+
         setUsername(data.user); // Set the user's name
         setRecentTests(data.recentTests || []);
         setGoals(data.goals || []);

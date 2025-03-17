@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -19,10 +19,15 @@ const ProtectedRoute = ({ isAuthenticated, children }) => {
 };
 
 const AppContent = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
 
   const location = useLocation();
   const showNavbar = !["/", "/login", "/register"].includes(location.pathname);
+
+  useEffect(() => {
+    // Update isAuthenticated state based on token presence
+    setIsAuthenticated(!!localStorage.getItem("token"));
+  }, [location]);
 
   return (
     <>
