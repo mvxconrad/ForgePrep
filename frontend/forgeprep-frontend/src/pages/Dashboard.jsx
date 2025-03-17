@@ -24,7 +24,15 @@ const Dashboard = () => {
         const data = await response.json();
         console.log("Dashboard data:", data); // Debugging log
 
-        setUsername(data.user); // Set the user's name
+        // Check the structure of the data and set the username accordingly
+        if (data.user && data.user.username) {
+          setUsername(data.user.username); // Assuming the username is nested under data.user
+        } else if (data.username) {
+          setUsername(data.username); // Assuming the username is directly under data
+        } else {
+          console.warn("Username not found in the response data");
+        }
+
         setRecentTests(data.recentTests || []);
         setGoals(data.goals || []);
         setStatistics(data.statistics || null);

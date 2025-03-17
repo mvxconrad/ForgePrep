@@ -25,8 +25,7 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  justify-content: center; /* Horizontally centers content */
-  align-items: center; /* Vertically centers content */
+  flex-direction: column;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -103,4 +102,11 @@ button:focus-visible {
 
 .custom-navbar .navbar-collapse.collapse.show {
   display: block !important;
+}
+
+/* Container styles for pages */
+.container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
