@@ -95,7 +95,7 @@ button:focus-visible {
 
 /* Ensure the Navbar dropdown goes over the page content */
 .custom-navbar .navbar-collapse {
-  position: absolute;
+  position: relative;
   width: 100%;
   z-index: 1000;
 }
