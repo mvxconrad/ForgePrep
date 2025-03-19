@@ -91,31 +91,7 @@ const FileUploadPage = () => {
         </Card.Body>
       </Card>
 
-      <Card className="p-3 mb-4">
-        <div className="text-center mb-4">
-          <img src={studyGuideImage} alt="Study Guide" style={{ width: "150px" }} />
-        </div>
-        <h3>Upload a File</h3>
-        <Form.Group controlId="formFile" className="mb-3">
-          <Form.Label>Accepted file types: PDF, DOCX, TXT</Form.Label>
-          <Form.Control
-            type="file"
-            accept=".pdf,.docx,.txt"
-            onChange={handleFileChange}
-          />
-        </Form.Group>
-        <Button onClick={handleFileUpload} disabled={!file}>
-          Upload
-        </Button>
-
-        {uploadProgress > 0 && (
-          <ProgressBar
-            now={uploadProgress}
-            label={`${uploadProgress}%`}
-            className="mt-3"
-          />
-        )}
-      </Card>
+      
 
       {/* File Upload History */}
       <Card className="p-3">
