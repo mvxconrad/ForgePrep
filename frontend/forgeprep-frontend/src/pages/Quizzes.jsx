@@ -7,12 +7,28 @@ const Quizzes = () => {
   const [newQuiz, setNewQuiz] = useState("");
   const [className, setClassName] = useState("");
   const [template, setTemplate] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("https://forgeprep.net/quizzes/")  // ✅ Fix API URL
-      .then((res) => res.json())
-      .then((data) => setQuizzes(data))
-      .catch((err) => console.error("Error fetching quizzes:", err));
+    const fetchQuizzes = async () => {
+      try {
+        const response = await fetch("https://forgeprep.net/quizzes/"); // ✅ Fix API URL
+
+        if (!response.ok) {
+          const errorText = await response.text(); // Read the response as text
+          console.error("Error response:", errorText); // Log the error response
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setQuizzes(data);
+      } catch (err) {
+        console.error("Error fetching quizzes:", err);
+        setError(err.message);
+      }
+    };
+
+    fetchQuizzes();
   }, []);
 
   const handleAddQuiz = async () => {
@@ -26,6 +42,8 @@ const Quizzes = () => {
       });
 
       if (!response.ok) {
+        const errorText = await response.text(); // Read the response as text
+        console.error("Error response:", errorText); // Log the error response
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -36,12 +54,14 @@ const Quizzes = () => {
       setTemplate("");
     } catch (err) {
       console.error("Error adding quiz:", err);
+      setError(err.message);
     }
   };
 
   return (
     <Container className="mt-4">
       <h2>Quizzes</h2>
+      {error && <p className="text-danger">{error}</p>}
       <Row>
         <Col md={6}>
           <Card className="mb-4">

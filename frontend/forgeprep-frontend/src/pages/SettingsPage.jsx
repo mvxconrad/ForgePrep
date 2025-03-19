@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import PerformanceChart from "../components/PerformanceChart";
-import { Container, Table, Card } from "react-bootstrap";
+import { Container, Table, Card, Form, Button } from "react-bootstrap";
 import settingsImage from "../assets/settings.png"; // Import the image
 
 const SettingsPage = () => {
@@ -11,6 +11,8 @@ const SettingsPage = () => {
     correct: [],
     incorrect: [],
   });
+  const [settings, setSettings] = useState({ theme: "", notifications: false });
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchTestResults = async () => {
@@ -39,6 +41,62 @@ const SettingsPage = () => {
     fetchTestResults();
   }, []);
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("https://forgeprep.net/users/settings", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+
+        // Check if the response is not OK
+        if (!response.ok) {
+          const errorText = await response.text(); // Read the response as text
+          console.error("Error response:", errorText); // Log the error response
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Settings data fetched:", data); // Debugging log
+        setSettings(data);
+      } catch (err) {
+        console.error("Error fetching settings:", err);
+        setError(err.message);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleUpdateSettings = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const response = await fetch("https://forgeprep.net/users/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(settings),
+      });
+
+      // Check if the response is not OK
+      if (!response.ok) {
+        const errorText = await response.text(); // Read the response as text
+        console.error("Error response:", errorText); // Log the error response
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Settings data updated:", data); // Debugging log
+      setSettings(data);
+    } catch (err) {
+      console.error("Error updating settings:", err);
+      setError(err.message);
+    }
+  };
+
   return (
     <Container className="mt-4">
       <h1 className="mb-4">Settings</h1>
@@ -51,7 +109,7 @@ const SettingsPage = () => {
         <PerformanceChart performanceData={performanceData} />
       </Card>
 
-      <Card className="p-3">
+      <Card className="p-3 mb-4">
         <h3>Recent Test Results</h3>
         <Table striped bordered hover>
           <thead>

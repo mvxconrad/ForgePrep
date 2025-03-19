@@ -24,12 +24,23 @@ const TestGenerator = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
-      );
-      setGeneratedTest(response.data);
-    } catch (error) {
-      console.error("Error generating test:", error);
-      alert("Failed to generate test. Please try again.");
+        body: JSON.stringify(newTest),
+      });
+
+      // Check if the response is not OK
+      if (!response.ok) {
+        const errorText = await response.text(); // Read the response as text
+        console.error("Error response:", errorText); // Log the error response
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const addedTest = await response.json();
+      console.log("Test added:", addedTest); // Debugging log
+      setTests([...tests, addedTest]);
+      setNewTest({ name: "", subject: "", questions: [] });
+    } catch (err) {
+      console.error("Error adding test:", err);
+      setError(err.message);
     }
   };
 

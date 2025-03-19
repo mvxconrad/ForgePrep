@@ -12,9 +12,15 @@ const ProfilePage = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.detail || "Error fetching profile");
+        // Check if the response is not OK
+        if (!response.ok) {
+          const errorText = await response.text(); // Read the response as text
+          console.error("Error response:", errorText); // Log the error response
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
+        const data = await response.json();
+        console.log("Profile data fetched:", data); // Debugging log
         setProfile(data);
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -39,9 +45,15 @@ const ProfilePage = () => {
         body: JSON.stringify(profile),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Error updating profile");
+      // Check if the response is not OK
+      if (!response.ok) {
+        const errorText = await response.text(); // Read the response as text
+        console.error("Error response:", errorText); // Log the error response
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
+      const data = await response.json();
+      console.log("Profile data updated:", data); // Debugging log
       setProfile(data);
     } catch (err) {
       console.error("Error updating profile:", err);

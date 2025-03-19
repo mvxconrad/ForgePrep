@@ -6,12 +6,28 @@ const Classes = () => {
   const [classes, setClasses] = useState([]); // Initialize as an empty array
   const [newClass, setNewClass] = useState("");
   const [syllabus, setSyllabus] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("https://forgeprep.net/study_sets/")  // Updated API URL
-      .then((res) => res.json())
-      .then((data) => setClasses(data))
-      .catch((err) => console.error("Error fetching classes:", err));
+    const fetchClasses = async () => {
+      try {
+        const response = await fetch("https://forgeprep.net/study_sets/"); // Updated API URL
+
+        if (!response.ok) {
+          const errorText = await response.text(); // Read the response as text
+          console.error("Error response:", errorText); // Log the error response
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setClasses(data);
+      } catch (err) {
+        console.error("Error fetching classes:", err);
+        setError(err.message);
+      }
+    };
+
+    fetchClasses();
   }, []);
 
   const handleAddClass = async () => {
@@ -23,12 +39,14 @@ const Classes = () => {
     if (syllabus) formData.append("syllabus", syllabus);
 
     try {
-      const response = await fetch("https://forgeprep.net/study_sets/", {  // Updated API URL
+      const response = await fetch("https://forgeprep.net/study_sets/", { // Updated API URL
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
+        const errorText = await response.text(); // Read the response as text
+        console.error("Error response:", errorText); // Log the error response
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -38,17 +56,31 @@ const Classes = () => {
       setSyllabus(null);
     } catch (err) {
       console.error("Error adding class:", err);
+      setError(err.message);
     }
   };
 
   const handleRemoveClass = async (id) => {
-    await fetch(`https://forgeprep.net/study_sets/${id}`, { method: "DELETE" });
-    setClasses(classes.filter((c) => c.id !== id));
+    try {
+      const response = await fetch(`https://forgeprep.net/study_sets/${id}`, { method: "DELETE" });
+
+      if (!response.ok) {
+        const errorText = await response.text(); // Read the response as text
+        console.error("Error response:", errorText); // Log the error response
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setClasses(classes.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error("Error removing class:", err);
+      setError(err.message);
+    }
   };
 
   return (
     <Container className="mt-4">
       <h2>Classes</h2>
+      {error && <p className="text-danger">{error}</p>}
       <Row>
         <Col md={6}>
           <Card className="mb-4">

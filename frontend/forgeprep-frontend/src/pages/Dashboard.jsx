@@ -18,6 +18,8 @@ const Dashboard = () => {
         });
 
         if (!response.ok) {
+          const errorText = await response.text(); // Read the response as text
+          console.error("Error response:", errorText); // Log the error response
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 

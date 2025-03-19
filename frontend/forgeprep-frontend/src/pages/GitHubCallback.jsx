@@ -7,15 +7,19 @@ const GitHubCallback = () => {
   useEffect(() => {
     const fetchAccessToken = async (code) => {
       try {
-        const response = await fetch("https://forgeprep.net/auth/files/github/callback/", {
+        const response = await fetch("https://forgeprep.net/auth/github/callback/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),
         });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "GitHub login failed");
+        if (!response.ok) {
+          const errorText = await response.text(); // Read the response as text
+          console.error("Error response:", errorText); // Log the error response
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
+        const data = await response.json();
         localStorage.setItem("token", data.token);
         navigate("/dashboard/");
       } catch (err) {
