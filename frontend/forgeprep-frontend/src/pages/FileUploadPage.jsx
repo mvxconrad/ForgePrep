@@ -44,6 +44,7 @@ const FileUploadPage = () => {
       const response = await fetch("https://forgeprep.net/files/upload/", {
         method: "POST",
         body: formData,
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
       if (!response.ok) {
@@ -75,11 +76,18 @@ const FileUploadPage = () => {
           <Form onSubmit={handleFileUpload}>
             <Form.Group controlId="formFile" className="mb-3">
               <Form.Label>Choose file</Form.Label>
-              <Form.Control type="file" onChange={handleFileChange} />
+              <Form.Control type="file" onChange={handleFileChange} accept=".pdf,.docx,.txt" />
             </Form.Group>
-            <Button variant="primary" type="submit">Upload</Button>
+            <Button variant="primary" type="submit" disabled={!file}>Upload</Button>
           </Form>
           {message && <p className="mt-3">{message}</p>}
+          {uploadProgress > 0 && (
+            <ProgressBar
+              now={uploadProgress}
+              label={`${uploadProgress}%`}
+              className="mt-3"
+            />
+          )}
         </Card.Body>
       </Card>
 
