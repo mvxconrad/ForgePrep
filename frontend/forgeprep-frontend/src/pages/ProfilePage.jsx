@@ -12,15 +12,14 @@ const ProfilePage = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
-        // Check if the response is not OK
         if (!response.ok) {
-          const errorText = await response.text(); // Read the response as text
-          console.error("Error response:", errorText); // Log the error response
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("Profile data fetched:", data); // Debugging log
+        console.log("Profile data fetched:", data);
         setProfile(data);
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -28,7 +27,28 @@ const ProfilePage = () => {
       }
     };
 
+    const checkAllowedMethods = async () => {
+      try {
+        const response = await fetch("https://forgeprep.net/users/profile", {
+          method: "OPTIONS",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const allowedMethods = response.headers.get("Allow");
+        console.log("Allowed methods:", allowedMethods);
+      } catch (err) {
+        console.error("Error checking allowed methods:", err);
+      }
+    };
+
     fetchProfile();
+    checkAllowedMethods();
   }, []);
 
   const handleUpdateProfile = async (e) => {
@@ -45,15 +65,14 @@ const ProfilePage = () => {
         body: JSON.stringify(profile),
       });
 
-      // Check if the response is not OK
       if (!response.ok) {
-        const errorText = await response.text(); // Read the response as text
-        console.error("Error response:", errorText); // Log the error response
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Profile data updated:", data); // Debugging log
+      console.log("Profile data updated:", data);
       setProfile(data);
     } catch (err) {
       console.error("Error updating profile:", err);
