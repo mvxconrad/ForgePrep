@@ -27,28 +27,7 @@ const ProfilePage = () => {
       }
     };
 
-    const checkAllowedMethods = async () => {
-      try {
-        const response = await fetch("https://forgeprep.net/users/profile", {
-          method: "OPTIONS",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const allowedMethods = response.headers.get("Allow");
-        console.log("Allowed methods:", allowedMethods);
-      } catch (err) {
-        console.error("Error checking allowed methods:", err);
-      }
-    };
-
     fetchProfile();
-    checkAllowedMethods();
   }, []);
 
   const handleUpdateProfile = async (e) => {

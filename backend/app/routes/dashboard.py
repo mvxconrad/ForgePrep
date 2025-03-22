@@ -6,8 +6,7 @@ from app.security.security import decode_access_token
 
 router = APIRouter()
 
-@router.get("/")
-
+@router.get("/dashboard/")
 async def get_dashboard(token: str = Security(decode_access_token), db: Session = Depends(get_db)):
     """Retrieve user dashboard information"""
     user_data = decode_access_token(token)
@@ -17,4 +16,4 @@ async def get_dashboard(token: str = Security(decode_access_token), db: Session 
         raise HTTPException(status_code=404, detail="User not found")
 
     study_sets = db.query(StudySet).filter(StudySet.user_id == user.id).all()
-    return {"user": user.username, "study_sets": study_sets}
+    return {"username": user.username, "study_sets": study_sets}
