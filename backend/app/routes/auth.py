@@ -22,6 +22,7 @@ oauth.register(
     authorize_url="https://accounts.google.com/o/oauth2/auth",
     access_token_url="https://oauth2.googleapis.com/token",
     client_kwargs={"scope": "openid email profile"},
+    redirect_uri="https://localhost:5173/auth/google/callback/"  # Ensure this matches Google Cloud Console
 )
 
 # Facebook OAuth Configuration
