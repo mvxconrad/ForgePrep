@@ -16,4 +16,26 @@ async def get_dashboard(token: str = Security(decode_access_token), db: Session 
         raise HTTPException(status_code=404, detail="User not found")
 
     study_sets = db.query(StudySet).filter(StudySet.user_id == user.id).all()
-    return {"username": user.username, "study_sets": study_sets}
+
+    # Example data for recent tests, goals, and statistics
+    recent_tests = [
+        {"id": 1, "name": "Math Test", "score": 85},
+        {"id": 2, "name": "Science Test", "score": 90},
+    ]
+    goals = [
+        {"id": 1, "title": "Complete 5 tests", "progress": 60},
+        {"id": 2, "title": "Study Math", "progress": 80},
+    ]
+    statistics = {
+        "averageScore": 87,
+        "bestScore": 95,
+        "worstScore": 70,
+    }
+
+    return {
+        "username": user.username,
+        "study_sets": study_sets,
+        "recentTests": recent_tests,
+        "goals": goals,
+        "statistics": statistics,
+    }

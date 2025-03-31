@@ -11,24 +11,23 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/api/dashboard/", { // Updated API URL
+        const response = await fetch("https://forgeprep.net/api/dashboard/", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
 
         if (!response.ok) {
-          const errorText = await response.text(); // Read the response as text
-          console.error("Error response:", errorText); // Log the error response
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log("Dashboard data:", data); // Debugging log
+        console.log("Dashboard data:", data);
 
-        // Check the structure of the data and set the username accordingly
         if (data.username) {
-          setUsername(data.username); // Assuming the username is directly under data
+          setUsername(data.username);
         } else {
           console.warn("Username not found in the response data");
         }
