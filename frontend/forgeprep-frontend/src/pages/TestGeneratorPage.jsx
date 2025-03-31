@@ -13,7 +13,7 @@ const TestGenerator = () => {
   const handleGenerateTest = async () => {
     try {
       const response = await axios.post(
-        `https://forgeprep.net/generate-test/`, // Updated API URL
+        `https://forgeprep.net/api/generate-test/`, // Updated API URL
         {
           difficulty,
           numQuestions,

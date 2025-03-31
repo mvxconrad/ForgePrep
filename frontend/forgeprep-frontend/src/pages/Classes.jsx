@@ -11,7 +11,7 @@ const Classes = () => {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/study_sets/"); // Updated API URL
+        const response = await fetch("https://forgeprep.net/api/study_sets/"); // Updated API URL
 
         if (!response.ok) {
           const errorText = await response.text(); // Read the response as text
@@ -39,7 +39,7 @@ const Classes = () => {
     if (syllabus) formData.append("syllabus", syllabus);
 
     try {
-      const response = await fetch("https://forgeprep.net/study_sets/", { // Updated API URL
+      const response = await fetch("https://forgeprep.net/api/study_sets/", { // Updated API URL
         method: "POST",
         body: formData,
       });
@@ -62,7 +62,7 @@ const Classes = () => {
 
   const handleRemoveClass = async (id) => {
     try {
-      const response = await fetch(`https://forgeprep.net/study_sets/${id}`, { method: "DELETE" });
+      const response = await fetch(`https://forgeprep.net/api/study_sets/${id}`, { method: "DELETE" });
 
       if (!response.ok) {
         const errorText = await response.text(); // Read the response as text

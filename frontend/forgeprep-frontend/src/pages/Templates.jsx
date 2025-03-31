@@ -7,7 +7,7 @@ const Templates = () => {
   const [newTemplate, setNewTemplate] = useState("");
 
   useEffect(() => {
-    fetch("https://forgeprep.net/templates/")
+    fetch("https://forgeprep.net/api/templates/")
       .then((res) => res.json())
       .then((data) => setTemplates(data))
       .catch((err) => console.error("Error fetching templates:", err));
@@ -17,7 +17,7 @@ const Templates = () => {
     if (!newTemplate) return;
 
     try {
-      const response = await fetch("https://forgeprep.net/templates/", {
+      const response = await fetch("https://forgeprep.net/api/templates/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newTemplate }),

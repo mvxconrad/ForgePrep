@@ -17,9 +17,14 @@ const GoogleAuth = () => {
 
     const initializeGoogleSignIn = () => {
       window.google.accounts.id.initialize({
-        client_id: "588883044961-15sl1jthtte8vqsh2aodu7lqf16r3i55.apps.googleusercontent.com",
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID, // Use environment variable
         callback: handleGoogleSignIn,
       });
+
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleSignInDiv"),
+        { theme: "outline", size: "large" }
+      );
     };
 
     loadGoogleScript();
@@ -40,7 +45,7 @@ const GoogleAuth = () => {
       if (!res.ok) throw new Error(data.message || "Google login failed");
 
       localStorage.setItem("token", data.token);
-      window.location.href = "/dashboard";
+      window.location.href = "/dashboard"; // Redirect after login
     } catch (err) {
       console.error("Google login error:", err);
     }
@@ -48,12 +53,7 @@ const GoogleAuth = () => {
 
   return (
     <div>
-      <div id="g_id_onload"
-        data-client_id="588883044961-15sl1jthtte8vqsh2aodu7lqf16r3i55.apps.googleusercontent.com"
-        data-callback="handleGoogleSignIn"
-        data-auto_prompt="false">
-      </div>
-      <div className="g_id_signin" data-type="standard"></div>
+      <div id="googleSignInDiv"></div>
     </div>
   );
 };

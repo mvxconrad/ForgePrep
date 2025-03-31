@@ -6,7 +6,7 @@ const StudySetsPage = () => {
   const [newStudySet, setNewStudySet] = useState({ title: "", description: "" });
 
   useEffect(() => {
-    fetch("https://forgeprep.net/study_sets/")
+    fetch("https://forgeprep.net/api/study_sets/")
       .then((res) => res.json())
       .then((data) => setStudySets(data))
       .catch((err) => console.error("Error fetching study sets:", err));
@@ -17,7 +17,7 @@ const StudySetsPage = () => {
     if (!newStudySet.title || !newStudySet.description) return;
 
     try {
-      const response = await fetch("https://forgeprep.net/study_sets/", {
+      const response = await fetch("https://forgeprep.net/api/study_sets/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newStudySet),

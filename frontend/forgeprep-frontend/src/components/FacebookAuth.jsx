@@ -2,36 +2,53 @@ import React, { useEffect } from "react";
 
 const FacebookAuth = () => {
   useEffect(() => {
-    window.fbAsyncInit = function () {
-      window.FB.init({
-        appId: "981364820569168", // Replace with your Facebook App ID
-        cookie: true,
-        xfbml: true,
-        version: "v12.0",
-      });
+    const loadFacebookSDK = () => {
+      if (window.FB) {
+        return; // SDK is already loaded
+      }
+
+      window.fbAsyncInit = function () {
+        window.FB.init({
+          appId: import.meta.env.VITE_FACEBOOK_APP_ID, // Use environment variable
+          cookie: true,
+          xfbml: true,
+          version: "v12.0",
+        });
+      };
+
+      const script = document.createElement("script");
+      script.id = "facebook-jssdk";
+      script.src = "https://connect.facebook.net/en_US/sdk.js";
+      script.async = true;
+      script.onload = () => {
+        if (window.FB) {
+          window.FB.init({
+            appId: import.meta.env.VITE_FACEBOOK_APP_ID, // Use environment variable
+            cookie: true,
+            xfbml: true,
+            version: "v12.0",
+          });
+        }
+      };
+
+      document.body.appendChild(script);
     };
 
-    // Load the Facebook SDK script
-    (function (d, s, id) {
-      var js,
-        fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) {
-        return;
-      }
-      js = d.createElement(s);
-      js.id = id;
-      js.src = "https://connect.facebook.net/en_US/sdk.js";
-      fjs.parentNode.insertBefore(js, fjs);
-    })(document, "script", "facebook-jssdk");
+    loadFacebookSDK();
   }, []);
 
-  const handleFacebookSignIn = async () => {
+  const handleFacebookSignIn = () => {
+    if (!window.FB) {
+      console.error("Facebook SDK not loaded");
+      return;
+    }
+
     window.FB.login(
-      async function (response) {
+      async (response) => {
         if (response.authResponse) {
           console.log("Facebook login success:", response);
-          // Send the access token to your backend for verification and authentication
           const accessToken = response.authResponse.accessToken;
+
           try {
             const res = await fetch("https://forgeprep.net/auth/facebook", {
               method: "POST",

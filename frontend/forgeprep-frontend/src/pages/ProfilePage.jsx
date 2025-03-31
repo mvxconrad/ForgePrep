@@ -8,7 +8,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/users/profile", {
+        const response = await fetch("https://forgeprep.net/api/users/profile", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
@@ -35,7 +35,7 @@ const ProfilePage = () => {
     setError("");
 
     try {
-      const response = await fetch("https://forgeprep.net/users/profile", {
+      const response = await fetch("https://forgeprep.net/api/users/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -13,12 +13,15 @@ const SettingsPage = () => {
   });
   const [settings, setSettings] = useState({ theme: "", notifications: false });
   const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
+  const [notifications, setNotifications] = useState(true);
+  const [theme, setTheme] = useState("light");
 
   useEffect(() => {
     const fetchTestResults = async () => {
       try {
         const response = await axios.get(
-          `https://forgeprep.net/test-results/`, // Updated API URL
+          `https://forgeprep.net/api/test-results/`, // Updated API URL
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }
@@ -44,7 +47,7 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/users/settings", {
+        const response = await fetch("https://forgeprep.net/api/users/settings", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
@@ -72,7 +75,7 @@ const SettingsPage = () => {
     setError("");
 
     try {
-      const response = await fetch("https://forgeprep.net/users/settings", {
+      const response = await fetch("https://forgeprep.net/api/users/settings", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -94,6 +97,28 @@ const SettingsPage = () => {
     } catch (err) {
       console.error("Error updating settings:", err);
       setError(err.message);
+    }
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("https://forgeprep.net/api/users/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ password, notifications, theme }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save settings");
+      }
+
+      alert("Settings updated successfully!");
+    } catch (error) {
+      console.error("Error updating settings:", error);
     }
   };
 
@@ -142,6 +167,34 @@ const SettingsPage = () => {
           </tbody>
         </Table>
       </Card>
+
+      <Form onSubmit={handleSaveSettings}>
+        <Form.Group controlId="formPassword" className="mb-3">
+          <Form.Label>Change Password</Form.Label>
+          <Form.Control
+            type="password"
+            placeholder="Enter new password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group controlId="formNotifications" className="mb-3">
+          <Form.Check
+            type="checkbox"
+            label="Enable Email Notifications"
+            checked={notifications}
+            onChange={(e) => setNotifications(e.target.checked)}
+          />
+        </Form.Group>
+        <Form.Group controlId="formTheme" className="mb-3">
+          <Form.Label>Preferred Theme</Form.Label>
+          <Form.Select value={theme} onChange={(e) => setTheme(e.target.value)}>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </Form.Select>
+        </Form.Group>
+        <Button variant="primary" type="submit">Save Settings</Button>
+      </Form>
     </Container>
   );
 };

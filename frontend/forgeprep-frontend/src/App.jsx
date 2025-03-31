@@ -13,6 +13,8 @@ import Templates from "./pages/Templates";
 import Quizzes from "./pages/Quizzes";
 import LandingPage from "./pages/LandingPage"; // Import the LandingPage
 import Navbar from "./components/Navbar";
+import AdminDashboard from "./pages/AdminDashboard"; // Import the AdminDashboard
+import TestResults from "./pages/TestResults"; // Import the TestResults
 
 const ProtectedRoute = ({ isAuthenticated, children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -45,6 +47,9 @@ const AppContent = () => {
         <Route path="/templates" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Templates /></ProtectedRoute>} />
         <Route path="/quizzes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Quizzes /></ProtectedRoute>} />
         <Route path="/classes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Classes /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/test-results" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TestResults /></ProtectedRoute>} />
+        
       </Routes>
     </>
   );

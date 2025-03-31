@@ -12,7 +12,7 @@ const Quizzes = () => {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/quizzes/"); // ✅ Fix API URL
+        const response = await fetch("https://forgeprep.net/api/quizzes/"); // ✅ Fix API URL
 
         if (!response.ok) {
           const errorText = await response.text(); // Read the response as text
@@ -35,7 +35,7 @@ const Quizzes = () => {
     if (!newQuiz || !className || !template) return;
 
     try {
-      const response = await fetch("https://forgeprep.net/quizzes/", {
+      const response = await fetch("https://forgeprep.net/api/quizzes/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newQuiz, className, template }),

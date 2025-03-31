@@ -41,7 +41,7 @@ const FileUploadPage = () => {
     formData.append("file", file);
 
     try {
-      const response = await fetch("https://forgeprep.net/files/upload/", {
+      const response = await fetch("https://forgeprep.net/api/files/upload/", {
         method: "POST",
         body: formData,
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
