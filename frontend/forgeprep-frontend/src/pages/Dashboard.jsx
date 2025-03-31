@@ -36,7 +36,7 @@ const Dashboard = () => {
         setGoals(data.goals || []);
         setStatistics(data.statistics || null);
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        throw console.error("Error fetching dashboard data:", error);
       }
     };
 
