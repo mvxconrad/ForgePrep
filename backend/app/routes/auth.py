@@ -7,6 +7,7 @@ from app.models.models import User
 from app.schemas.schemas import UserCreate, LoginRequest
 from authlib.integrations.starlette_client import OAuth
 from starlette.requests import Request
+from jose import JWTError, jwt
 import os
 
 router = APIRouter()
@@ -43,6 +44,9 @@ oauth.register(
     access_token_url="https://github.com/login/oauth/access_token",
     client_kwargs={"scope": "user:email"},
 )
+
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")  
+ALGORITHM = "HS256"
 
 @router.post("/register/")
 async def register_user(request: UserCreate, db: Session = Depends(get_db)):
@@ -95,3 +99,16 @@ async def protected_route(token: str = Security(oauth2_scheme)):
     """A protected route that requires authentication"""
     user_data = decode_access_token(token)
     return {"message": f"Hello, {user_data['sub']}!"}
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        user = db.query(User).filter(User.username == username).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
