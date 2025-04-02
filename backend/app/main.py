@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import auth, users, study_sets, files, dashboard, upload
+from app.routes import gpt
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -21,6 +25,7 @@ app.include_router(study_sets.router, prefix="/study_sets", tags=["Study Sets"])
 app.include_router(files.router, prefix="/files", tags=["File Management"])
 app.include_router(dashboard.router, prefix="", tags=["Dashboard"]) 
 app.include_router(upload.router, tags=["File Upload"])
+app.include_router(gpt.router)
 
 @app.get("/")
 def root():
