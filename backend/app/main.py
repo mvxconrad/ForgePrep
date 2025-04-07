@@ -20,7 +20,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/users", tags=["Users"])
-app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])  # Correct registration
+app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])  # Correct registration
 app.include_router(study_sets.router, prefix="/study_sets", tags=["Study Sets"])
 app.include_router(files.router, prefix="/files", tags=["File Management"])
 app.include_router(upload.router, tags=["File Upload"])

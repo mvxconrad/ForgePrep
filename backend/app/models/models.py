@@ -57,6 +57,7 @@ class User(Base):
     progress = relationship("UserProgress", back_populates="user")  # ✅ Fixed reference
     study_materials = relationship("StudyMaterial", back_populates="user")
     tests = relationship("Test", back_populates="user")
+    goals = relationship("Goal", back_populates="user")
 
 class StudyMaterial(Base):
     __tablename__ = "study_materials"
@@ -80,3 +81,13 @@ class Test(Base):
 
     user = relationship("User", back_populates="tests")
     study_material = relationship("StudyMaterial", back_populates="tests")
+
+class Goal(Base):
+    __tablename__ = "goals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    progress = Column(Integer, default=0)
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    user = relationship("User", back_populates="goals")
