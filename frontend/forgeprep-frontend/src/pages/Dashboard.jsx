@@ -24,13 +24,14 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    console.log("Username state updated:", username); // Debugging log
+  }, [username]);
+
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch("https://forgeprep.net/api/dashboard/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const token = localStorage.getItem("token"); // Retrieve the token from localStorage
+      const response = await fetch(`https://forgeprep.net/api/dashboard/?token=${token}`); // Add token as a query parameter
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -39,7 +40,7 @@ const Dashboard = () => {
       }
 
       const data = await response.json();
-      console.log("Dashboard data:", data);
+      console.log("Dashboard data:", data); // Debugging log
 
       if (data.username) {
         setUsername(data.username);
@@ -47,10 +48,10 @@ const Dashboard = () => {
         console.warn("Username not found in the response data");
       }
 
-      setRecentTests(data.recentTests || []);
+      setRecentTests(data.recent_tests || []); // Ensure correct field names
       setGoals(data.goals || []);
       setStatistics(data.statistics || null);
-      setNotifications(data.notifications || []); // Set notifications
+      setNotifications(data.notifications || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
@@ -78,7 +79,7 @@ const Dashboard = () => {
   return (
     <Container className="mt-4">
       <h1 className="mb-4">Dashboard</h1>
-      <h2>{`${getGreeting()}, ${username || "User"}!`}</h2> {/* Display the user's name */}
+      <h2>{`${getGreeting()}, ${username || "User"}!`}</h2>
 
       <Row>
         <Col md={6}>

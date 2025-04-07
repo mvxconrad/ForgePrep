@@ -1,41 +1,35 @@
-from fastapi import APIRouter, Security, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from database.database import get_db
-from app.models.models import User, StudySet
+from app.models.models import User, Test, Goal
 from app.security.security import decode_access_token
 
 router = APIRouter()
 
 @router.get("/")
-async def get_dashboard(token: str = Security(decode_access_token), db: Session = Depends(get_db)):
+async def get_dashboard(token: str = Query(...), db: Session = Depends(get_db)):
     """Retrieve user dashboard information"""
     user_data = decode_access_token(token)
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
+    print("Decoded user data:", user_data)  # Debugging log
 
+    user = db.query(User).filter(User.email == user_data["sub"]).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    study_sets = db.query(StudySet).filter(StudySet.user_id == user.id).all()
+    print("Retrieved user:", user.username)  # Debugging log
 
-    # Example data for recent tests, goals, and statistics
-    recent_tests = [
-        {"id": 1, "name": "Math Test", "score": 85},
-        {"id": 2, "name": "Science Test", "score": 90},
-    ]
-    goals = [
-        {"id": 1, "title": "Complete 5 tests", "progress": 60},
-        {"id": 2, "title": "Study Math", "progress": 80},
-    ]
+    recent_tests = db.query(Test).filter(Test.user_id == user.id).order_by(Test.date.desc()).limit(5).all()
+    goals = db.query(Goal).filter(Goal.user_id == user.id).all()
     statistics = {
-        "averageScore": 87,
-        "bestScore": 95,
-        "worstScore": 70,
+        "average_score": db.query(func.avg(Test.score)).filter(Test.user_id == user.id).scalar(),
+        "best_score": db.query(func.max(Test.score)).filter(Test.user_id == user.id).scalar(),
+        "worst_score": db.query(func.min(Test.score)).filter(Test.user_id == user.id).scalar(),
     }
 
     return {
         "username": user.username,
-        "study_sets": study_sets,
-        "recentTests": recent_tests,
-        "goals": goals,
+        "recent_tests": [{"id": t.id, "name": t.name, "score": t.score} for t in recent_tests],
+        "goals": [{"id": g.id, "title": g.title, "progress": g.progress} for g in goals],
         "statistics": statistics,
     }
