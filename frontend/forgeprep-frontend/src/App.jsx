@@ -10,11 +10,15 @@ import TestGenerator from "./pages/TestGeneratorPage";
 import GitHubCallback from "./pages/GitHubCallback";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
-import Quizzes from "./pages/Quizzes";
 import LandingPage from "./pages/LandingPage"; // Import the LandingPage
 import Navbar from "./components/Navbar";
 import AdminDashboard from "./pages/AdminDashboard"; // Import the AdminDashboard
 import TestResults from "./pages/TestResults"; // Import the TestResults
+import StudySetDetailsPage from "./pages/StudySetDetailsPage";
+import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
+import AITestInsightsPage from "./pages/AITestInsightsPage"; // Import the AITestInsightsPage
+import TakeTestPage from "./pages/TakeTestPage";
+import GeneratedTestPage from "./pages/GeneratedTestPage";
 
 const ProtectedRoute = ({ isAuthenticated, children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -45,11 +49,17 @@ const AppContent = () => {
         <Route path="/testgenerator" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TestGenerator /></ProtectedRoute>} />
         <Route path="/auth/github/callback" element={<GitHubCallback />} />
         <Route path="/templates" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Templates /></ProtectedRoute>} />
-        <Route path="/quizzes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Quizzes /></ProtectedRoute>} />
+        {/* <Route path="/quizzes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Quizzes /></ProtectedRoute>} /> */}
         <Route path="/classes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Classes /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/test-results" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TestResults /></ProtectedRoute>} />
-        
+        <Route path="/study-sets/:id" element={<ProtectedRoute isAuthenticated={isAuthenticated}><StudySetDetailsPage /></ProtectedRoute>} />
+        <Route path="/admin-analytics" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/admin/dashboard" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/analytics" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/ai-insights" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AITestInsightsPage /></ProtectedRoute>} /> {/* Add AITestInsightsPage route */}
+        <Route path="/generated-test" element={<ProtectedRoute isAuthenticated={isAuthenticated}><GeneratedTestPage /></ProtectedRoute>} />
+        <Route path="/take-test" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TakeTestPage /></ProtectedRoute>} />
       </Routes>
     </>
   );

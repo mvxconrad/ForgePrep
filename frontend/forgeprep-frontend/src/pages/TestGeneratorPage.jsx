@@ -1,132 +1,107 @@
-import React, { useState, useEffect } from "react";
-import { Container, Form, Button, Card, Dropdown, DropdownButton } from "react-bootstrap";
+import React, { useState } from "react";
+import { Container, Form, Button, Card, ListGroup } from "react-bootstrap";
 import axios from "axios";
-import testImage from "../assets/test.png"; // Import the image
+import { useNavigate } from "react-router-dom";
 
-const TestGenerator = () => {
-  const [difficulty, setDifficulty] = useState("Medium");
-  const [numQuestions, setNumQuestions] = useState(10);
-  const [questionType, setQuestionType] = useState("Multiple Choice");
-  const [category, setCategory] = useState("Math");
-  const [generatedTest, setGeneratedTest] = useState(null);
+const TestGeneratorPage = () => {
+  const [difficulty, setDifficulty] = useState("easy");
+  const [numQuestions, setNumQuestions] = useState(5);
+  const [category, setCategory] = useState("General Knowledge");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleGenerateTest = async () => {
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.post(
-        `https://forgeprep.net/api/generate-test/`, // Updated API URL
-        {
-          difficulty,
-          numQuestions,
-          questionType,
-          category,
-        },
+        "/api/tests/generate",
+        { difficulty, numQuestions, category },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
-        body: JSON.stringify(newTest),
-      });
+        }
+      );
 
-      // Check if the response is not OK
-      if (!response.ok) {
-        const errorText = await response.text(); // Read the response as text
-        console.error("Error response:", errorText); // Log the error response
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const addedTest = await response.json();
-      console.log("Test added:", addedTest); // Debugging log
-      setTests([...tests, addedTest]);
-      setNewTest({ name: "", subject: "", questions: [] });
+      const test = response.data;
+      navigate("/generated-test", { state: { test } }); // Redirect to GeneratedTestPage
     } catch (err) {
-      console.error("Error adding test:", err);
-      setError(err.message);
+      console.error("Error generating test:", err);
+      setError("Failed to generate the test. Please try again.");
     }
+  };
+
+  const handleSaveTemplate = () => {
+    // Logic for saving the template
+    console.log("Template saved!");
   };
 
   return (
     <Container className="mt-4">
       <h1 className="mb-4">Test Generator</h1>
-
       <Card className="p-3 mb-4">
-        <div className="text-center mb-4">
-          <img src={testImage} alt="Test Generator" style={{ width: "150px" }} />
-        </div>
-        <h3>Generate Your Test</h3>
-        <Form.Group controlId="formDifficulty" className="mb-3">
-          <Form.Label>Difficulty Level</Form.Label>
-          <Form.Control
-            as="select"
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-          >
-            <option>Easy</option>
-            <option>Medium</option>
-            <option>Hard</option>
-          </Form.Control>
-        </Form.Group>
+        <h3>Generate a Test</h3>
+        <Form>
+          {/* Difficulty Selection */}
+          <Form.Group controlId="formDifficulty" className="mb-3">
+            <Form.Label>Select Difficulty</Form.Label>
+            <Form.Select
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+            >
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </Form.Select>
+          </Form.Group>
 
-        <Form.Group controlId="formNumQuestions" className="mb-3">
-          <Form.Label>Number of Questions</Form.Label>
-          <Form.Control
-            type="number"
-            value={numQuestions}
-            onChange={(e) => setNumQuestions(e.target.value)}
-            min={1}
-            max={50}
-          />
-        </Form.Group>
+          {/* Number of Questions */}
+          <Form.Group controlId="formNumQuestions" className="mb-3">
+            <Form.Label>Number of Questions</Form.Label>
+            <Form.Control
+              type="number"
+              min="1"
+              max="50"
+              value={numQuestions}
+              onChange={(e) => setNumQuestions(e.target.value)}
+            />
+          </Form.Group>
 
-        <Form.Group controlId="formQuestionType" className="mb-3">
-          <Form.Label>Question Type</Form.Label>
-          <DropdownButton
-            id="dropdown-basic-button"
-            title={questionType}
-            onSelect={(e) => setQuestionType(e)}
-          >
-            <Dropdown.Item eventKey="Multiple Choice">Multiple Choice</Dropdown.Item>
-            <Dropdown.Item eventKey="True/False">True/False</Dropdown.Item>
-            <Dropdown.Item eventKey="Short Answer">Short Answer</Dropdown.Item>
-          </DropdownButton>
-        </Form.Group>
+          {/* Category Selection */}
+          <Form.Group controlId="formCategory" className="mb-3">
+            <Form.Label>Select Category</Form.Label>
+            <Form.Select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="General Knowledge">General Knowledge</option>
+              <option value="Science">Science</option>
+              <option value="Math">Math</option>
+              <option value="History">History</option>
+              <option value="Literature">Literature</option>
+            </Form.Select>
+          </Form.Group>
 
-        <Form.Group controlId="formCategory" className="mb-3">
-          <Form.Label>Category</Form.Label>
-          <Form.Control
-            as="select"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option>Math</option>
-            <option>Science</option>
-            <option>History</option>
-            <option>Literature</option>
-          </Form.Control>
-        </Form.Group>
-
-        <Button onClick={handleGenerateTest}>Generate Test</Button>
+          <Button onClick={handleGenerateTest} variant="primary">
+            Generate Test
+          </Button>
+          <Button variant="secondary" onClick={handleSaveTemplate}>
+            Save as Template
+          </Button>
+        </Form>
+        {error && <p className="text-danger mt-3">{error}</p>}
       </Card>
 
-      {/* Display generated test */}
-      {generatedTest && (
-        <Card className="p-3">
-          <h3>Generated Test</h3>
-          <ul>
-            {generatedTest.questions.map((question, index) => (
-              <li key={index}>
-                <strong>{question.questionText}</strong>
-                <ul>
-                  {question.options.map((option, idx) => (
-                    <li key={idx}>{option}</li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <Card className="mb-4">
+        <Card.Header>Test Preview</Card.Header>
+        <Card.Body>
+          <p>Difficulty: {difficulty}</p>
+          <p>Number of Questions: {numQuestions}</p>
+          <p>Category: {category}</p>
+        </Card.Body>
+      </Card>
     </Container>
   );
 };
 
-export default TestGenerator;
+export default TestGeneratorPage;

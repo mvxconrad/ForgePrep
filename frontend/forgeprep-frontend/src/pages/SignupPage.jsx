@@ -7,7 +7,7 @@ import GitHubAuth from "../components/GitHubAuth";
 import signupImage from "../assets/signup.png"; // Import the image
 
 const SignupPage = () => {
-  const [username, setUsername] = useState(""); // Add username state
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,36 +21,42 @@ const SignupPage = () => {
       const response = await fetch("https://forgeprep.net/auth/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }), // Include username
+        body: JSON.stringify({ username, email, password }),
       });
 
-      // Check if the response is not OK
       if (!response.ok) {
-        const errorText = await response.text(); // Read the response as text
-        console.error("Error response:", errorText); // Log the error response
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Signup successful, token:", data.token); // Debugging log
+      console.log("Signup successful, token:", data.token);
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
     } catch (err) {
-      console.error("Signup error:", err); // Log the error
+      console.error("Signup error:", err);
       setError(err.message);
     }
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+    <Container
+      className="d-flex justify-content-center align-items-center"
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(to right, #ff7e5f, #feb47b)",
+        color: "#fff",
+      }}
+    >
       <Row className="w-100">
         <Col lg={12} md={12}>
           <Card className="shadow mx-auto" style={{ maxWidth: "900px", width: "100%" }}>
             <Card.Body className="p-5">
               <div className="text-center mb-4">
                 <img src={signupImage} alt="Signup Illustration" style={{ width: "150px" }} />
-                <h1>Welcome to ForgePrep</h1>
-                <p>Your ultimate platform for test preparation and academic success.</p>
+                <h1>Join ForgePrep Today</h1>
+                <p>Start your journey to academic success with us.</p>
               </div>
               <h2 className="mb-4 text-center">Sign Up</h2>
               {error && <p className="text-danger text-center">{error}</p>}
@@ -85,14 +91,18 @@ const SignupPage = () => {
                     required
                   />
                 </Form.Group>
-                <Button variant="primary" type="submit" className="w-100">Sign Up</Button>
+                <Button variant="primary" type="submit" className="w-100">
+                  Sign Up
+                </Button>
               </Form>
               <div className="mt-3">
                 <GoogleAuth />
                 <FacebookAuth />
                 <GitHubAuth />
               </div>
-              <p className="mt-3 text-center">Already have an account? <a href="/login">Login</a></p>
+              <p className="mt-3 text-center">
+                Already have an account? <a href="/login">Login</a>
+              </p>
             </Card.Body>
           </Card>
         </Col>

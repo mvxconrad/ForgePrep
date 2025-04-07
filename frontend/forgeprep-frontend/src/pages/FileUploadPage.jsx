@@ -35,12 +35,16 @@ const FileUploadPage = () => {
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file) {
+      setMessage("No file selected.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
+      console.log("Uploading file:", file.name); // Debugging log
       const response = await fetch("https://forgeprep.net/api/files/upload/", {
         method: "POST",
         body: formData,
@@ -48,13 +52,17 @@ const FileUploadPage = () => {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText); // Debugging log
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log("File uploaded successfully:", data); // Debugging log
       setMessage("File uploaded successfully!");
       setFile(null);
       setUploadProgress(0);
+
       // Add the uploaded file to the file history
       const newFile = {
         filename: file.name,
@@ -63,7 +71,7 @@ const FileUploadPage = () => {
       };
       setFileHistory([...fileHistory, newFile]);
     } catch (err) {
-      console.error("Error uploading file:", err);
+      console.error("Error uploading file:", err); // Debugging log
       setMessage("Error uploading file.");
     }
   };
@@ -78,6 +86,22 @@ const FileUploadPage = () => {
               <Form.Label>Choose file</Form.Label>
               <Form.Control type="file" onChange={handleFileChange} accept=".pdf,.docx,.txt" />
             </Form.Group>
+            <Form.Group controlId="formFileCategory" className="mb-3">
+              <Form.Label>File Category</Form.Label>
+              <Form.Select>
+                <option value="study-material">Study Material</option>
+                <option value="assignments">Assignments</option>
+                <option value="notes">Notes</option>
+              </Form.Select>
+            </Form.Group>
+            {file && (
+              <Card className="mb-3">
+                <Card.Body>
+                  <p><strong>File Name:</strong> {file.name}</p>
+                  <p><strong>File Size:</strong> {(file.size / 1024).toFixed(2)} KB</p>
+                </Card.Body>
+              </Card>
+            )}
             <Button variant="primary" type="submit" disabled={!file}>Upload</Button>
           </Form>
           {message && <p className="mt-3">{message}</p>}

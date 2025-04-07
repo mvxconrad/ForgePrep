@@ -54,7 +54,30 @@ const ProfilePage = () => {
       console.log("Profile data updated:", data);
       setProfile(data);
     } catch (err) {
-      console.error("Error updating profile:", err);
+      throw console.error("Error updating profile:", err);
+      setError(err.message);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const response = await fetch("https://forgeprep.net/api/users/profile", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      console.log("Account deleted successfully");
+      // Redirect or perform any other action after account deletion
+    } catch (err) {
+      console.error("Error deleting account:", err);
       setError(err.message);
     }
   };
@@ -65,6 +88,9 @@ const ProfilePage = () => {
         <Card.Body>
           <h2>Profile</h2>
           {error && <p className="text-danger">{error}</p>}
+          {profile.profilePicture && (
+            <img src={URL.createObjectURL(profile.profilePicture)} alt="Profile" style={{ width: "100px", height: "100px", borderRadius: "50%" }} />
+          )}
           <Form onSubmit={handleUpdateProfile}>
             <Form.Group controlId="formUsername" className="mb-3">
               <Form.Label>Username</Form.Label>
@@ -86,8 +112,26 @@ const ProfilePage = () => {
                 required
               />
             </Form.Group>
+            <Form.Group controlId="formPassword" className="mb-3">
+              <Form.Label>New Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Enter new password"
+                onChange={(e) => setProfile({ ...profile, password: e.target.value })}
+              />
+            </Form.Group>
+            <Form.Group controlId="formProfilePicture" className="mb-3">
+              <Form.Label>Profile Picture</Form.Label>
+              <Form.Control
+                type="file"
+                onChange={(e) => setProfile({ ...profile, profilePicture: e.target.files[0] })}
+              />
+            </Form.Group>
             <Button variant="primary" type="submit">Update Profile</Button>
           </Form>
+          <Button variant="danger" onClick={handleDeleteAccount}>
+            Delete Account
+          </Button>
         </Card.Body>
       </Card>
     </Container>

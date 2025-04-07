@@ -4,6 +4,7 @@ import { Container, Row, Col, Form, Button, ListGroup, Card } from "react-bootst
 const StudySetsPage = () => {
   const [studySets, setStudySets] = useState([]);
   const [newStudySet, setNewStudySet] = useState({ title: "", description: "" });
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetch("https://forgeprep.net/api/study_sets/")
@@ -72,6 +73,13 @@ const StudySetsPage = () => {
           <Card>
             <Card.Body>
               <h2>Study Sets</h2>
+              <Form.Group controlId="formSearchStudySets" className="mb-3">
+                <Form.Control
+                  type="text"
+                  placeholder="Search study sets..."
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </Form.Group>
               <ListGroup>
                 {studySets.length > 0 ? (
                   studySets.map((set) => (
