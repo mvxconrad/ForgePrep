@@ -40,8 +40,7 @@ async def get_study_sets(db: Session = Depends(get_db)):
     return db.query(StudySet).all()
 
 @router.post("/generate-test/")
-async def generate_test(set_id: int, num_questions: int, token: str = Security(decode_access_token), db: Session = Depends(get_db)):
-    """Generate a test from a study set"""
+async def generate_test(set_id: int, num_questions: int, difficulty: str, category: str, token: str = Security(decode_access_token), db: Session = Depends(get_db)):
     user_data = decode_access_token(token)
     user = db.query(User).filter(User.email == user_data["sub"]).first()
 
@@ -52,7 +51,12 @@ async def generate_test(set_id: int, num_questions: int, token: str = Security(d
     if not study_set:
         raise HTTPException(status_code=404, detail="Study set not found")
 
-    flashcards = db.query(Flashcard).filter(Flashcard.set_id == set_id).limit(num_questions).all()
+    flashcards = db.query(Flashcard).filter(
+        Flashcard.set_id == set_id,
+        Flashcard.difficulty == difficulty,
+        Flashcard.category == category
+    ).limit(num_questions).all()
+
     return {"test_questions": [{"question": fc.question, "answer": fc.answer} for fc in flashcards]}
 
 @router.get("/users/{user_id}/sets")
