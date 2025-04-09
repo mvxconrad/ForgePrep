@@ -19,14 +19,16 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-app.include_router(upload.router, prefix="/upload", tags=["File Upload"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+# app.include_router(upload.router, prefix="/api/upload", tags=["File Upload"])
 app.include_router(gpt.router, prefix="/api", tags=["AI"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(study_sets.router, prefix="/api/study_sets", tags=["Study Sets"])
-app.include_router(files.router, prefix="/files", tags=["File Management"])
+app.include_router(files.router, prefix="/api/files", tags=["File Management"])
 app.include_router(admin.router, prefix="/api", tags=["Admin"])
+
+# admin and gpt routes need to have more specific prefixes to avoid conflicts
 
 @app.get("/")
 def root():
