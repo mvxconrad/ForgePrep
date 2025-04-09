@@ -1,17 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
-from app.routes import auth, users, study_sets, files, dashboard, upload
-from app.routes import gpt
-from app.routes import admin
+from app.routes import auth, users, study_sets, files, dashboard, upload, gpt, admin
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = FastAPI()
 
-# Redirect HTTP to HTTPS
-app.add_middleware(HTTPSRedirectMiddleware)
+# Remove HTTPSRedirectMiddleware if HTTPS is already handled by a reverse proxy
+# app.add_middleware(HTTPSRedirectMiddleware)
 
 # Configure CORS
 app.add_middleware(
@@ -24,15 +21,12 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-# app.include_router(upload.router, prefix="/api/upload", tags=["File Upload"])
 app.include_router(gpt.router, prefix="/api", tags=["AI"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(study_sets.router, prefix="/api/study_sets", tags=["Study Sets"])
 app.include_router(files.router, prefix="/api/files", tags=["File Management"])
 app.include_router(admin.router, prefix="/api", tags=["Admin"])
-
-# admin and gpt routes need to have more specific prefixes to avoid conflicts
 
 @app.get("/")
 def root():
