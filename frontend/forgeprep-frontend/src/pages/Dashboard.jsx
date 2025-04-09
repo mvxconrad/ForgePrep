@@ -36,7 +36,11 @@ const Dashboard = () => {
         throw new Error("Token is missing");
       }
 
-      const response = await fetch("https://forgeprep.net/api/users/profile", {
+      // Decode the token to get the user ID
+      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      const userId = decodedToken.id; // Ensure the token includes the user ID
+
+      const response = await fetch(`https://forgeprep.net/api/users/${user_id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
