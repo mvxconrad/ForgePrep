@@ -9,7 +9,7 @@ const GitHubCallback = () => {
   useEffect(() => {
     const fetchAccessToken = async (code) => {
       try {
-        const response = await fetch("https://forgeprep.net/auth/github/callback/", {
+        const response = await fetch("https://forgeprep.net/api/auth/github/callback/", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code }),

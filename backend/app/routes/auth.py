@@ -86,7 +86,7 @@ async def login_provider(request: Request, provider: str):
     redirect_uri = request.url_for("auth_provider", provider=provider)
     return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
 
-@router.get("/auth/{provider}")
+@router.get("/{provider}")
 async def auth_provider(request: Request, provider: str):
     """OAuth authentication callback"""
     client = oauth.create_client(provider)

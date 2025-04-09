@@ -32,18 +32,16 @@ async def list_files(db: Session = Depends(get_db)):
     ]
 
 @router.post("/upload/raw/")
-async def upload_raw(
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db),
-):
-    """
-    Upload a file directly into the database (raw bytes).
-    """
+async def upload_raw(file: UploadFile = File(...), db: Session = Depends(get_db)):
     data = await file.read()
+    print(f"[DEBUG] Uploading file: {file.filename}, size: {len(data)} bytes")
+
     db_file = FileModel(filename=file.filename, content=data)
     db.add(db_file)
     db.commit()
     db.refresh(db_file)
+
+    print(f"[DEBUG] File saved with ID: {db_file.id}")
     return {"message": "File uploaded successfully", "file_id": db_file.id}
 
 

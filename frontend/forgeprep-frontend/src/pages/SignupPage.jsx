@@ -18,7 +18,7 @@ const SignupPage = () => {
     setError("");
 
     try {
-      const response = await fetch("https://forgeprep.net/auth/register/", {
+      const response = await fetch("https://forgeprep.net/api/auth/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
