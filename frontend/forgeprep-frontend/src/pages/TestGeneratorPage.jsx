@@ -1,101 +1,134 @@
-import React, { useState } from "react";
-import { Container, Form, Button, Card, ListGroup } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Container, Form, Button, Card, Alert } from "react-bootstrap";
 import axios from "axios";
 
 const TestGeneratorPage = () => {
+  const [files, setFiles] = useState([]); // List of uploaded files
+  const [selectedFileId, setSelectedFileId] = useState(null); // Selected file ID
   const [topic, setTopic] = useState("");
-  const [difficulty, setDifficulty] = useState("");
-  const [numQuestions, setNumQuestions] = useState("");
-  const [studyMaterialId, setStudyMaterialId] = useState(null); // Optional
-  const [generatedQuestions, setGeneratedQuestions] = useState([]);
+  const [difficulty, setDifficulty] = useState("medium");
+  const [numQuestions, setNumQuestions] = useState(10);
+  const [generatedTest, setGeneratedTest] = useState(null);
   const [error, setError] = useState("");
 
-  const handleGenerateTest = async () => {
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        const response = await axios.get("https://forgeprep.net/api/files/", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        console.log("Fetched files:", response.data); // Debugging log
+        setFiles(response.data);
+      } catch (err) {
+        console.error("Error fetching files:", err);
+        setError("Failed to fetch files. Please try again.");
+      }
+    };
+
+    fetchFiles();
+  }, []);
+
+  const handleGenerateTest = async (e) => {
+    e.preventDefault();
+    setError("");
+    setGeneratedTest(null);
+
+    if (!selectedFileId) {
+      setError("Please select a file to generate the test.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token"); // Retrieve the token from localStorage
       const response = await axios.post(
         "https://forgeprep.net/api/gpt/generate",
         {
           topic,
           difficulty,
-          num_questions: numQuestions ? parseInt(numQuestions) : null,
-          study_material_id: studyMaterialId,
+          num_questions: numQuestions,
+          study_material_id: selectedFileId,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
 
-      const { metadata } = response.data;
-      setGeneratedQuestions(metadata.questions || metadata.raw_text || []);
+      console.log("Generated test:", response.data); // Debugging log
+      setGeneratedTest(response.data);
     } catch (err) {
       console.error("Error generating test:", err);
-      setError("Failed to generate the test. Please try again.");
+      setError("Failed to generate test. Please try again.");
     }
   };
 
   return (
     <Container className="mt-4">
-      <h1 className="mb-4">Generate a Test</h1>
-      <Card className="p-3 mb-4">
-        <h3>Test Generator</h3>
-        <Form>
-          <Form.Group controlId="formTopic" className="mb-3">
-            <Form.Label>Topic</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter a topic"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-            />
-          </Form.Group>
-          <Form.Group controlId="formDifficulty" className="mb-3">
-            <Form.Label>Difficulty (Optional)</Form.Label>
-            <Form.Select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-            >
-              <option value="">Select Difficulty</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </Form.Select>
-          </Form.Group>
-          <Form.Group controlId="formNumQuestions" className="mb-3">
-            <Form.Label>Number of Questions (Optional)</Form.Label>
-            <Form.Control
-              type="number"
-              placeholder="Enter number of questions"
-              value={numQuestions}
-              onChange={(e) => setNumQuestions(e.target.value)}
-            />
-          </Form.Group>
-          <Form.Group controlId="formStudyMaterialId" className="mb-3">
-            <Form.Label>Study Material ID (Optional)</Form.Label>
-            <Form.Control
-              type="number"
-              placeholder="Enter study material ID"
-              value={studyMaterialId || ""}
-              onChange={(e) => setStudyMaterialId(e.target.value)}
-            />
-          </Form.Group>
-          <Button onClick={handleGenerateTest} variant="primary">
-            Generate Test
-          </Button>
-        </Form>
-        {error && <p className="text-danger mt-3">{error}</p>}
+      <Card className="shadow">
+        <Card.Body>
+          <h2>Test Generator</h2>
+          {error && <Alert variant="danger">{error}</Alert>}
+          <Form onSubmit={handleGenerateTest}>
+            <Form.Group controlId="formFile" className="mb-3">
+              <Form.Label>Select File</Form.Label>
+              <Form.Select
+                value={selectedFileId || ""}
+                onChange={(e) => setSelectedFileId(e.target.value)}
+                required
+              >
+                <option value="" disabled>
+                  -- Select a file --
+                </option>
+                {files.map((file) => (
+                  <option key={file.id} value={file.id}>
+                    {file.filename}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group controlId="formTopic" className="mb-3">
+              <Form.Label>Topic</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Enter a topic"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Form.Group controlId="formDifficulty" className="mb-3">
+              <Form.Label>Difficulty</Form.Label>
+              <Form.Select
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value)}
+              >
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </Form.Select>
+            </Form.Group>
+            <Form.Group controlId="formNumQuestions" className="mb-3">
+              <Form.Label>Number of Questions</Form.Label>
+              <Form.Control
+                type="number"
+                min="1"
+                max="50"
+                value={numQuestions}
+                onChange={(e) => setNumQuestions(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Button variant="primary" type="submit">
+              Generate Test
+            </Button>
+          </Form>
+        </Card.Body>
       </Card>
 
-      {generatedQuestions.length > 0 && (
-        <Card className="p-3">
-          <h3>Generated Questions</h3>
-          <ListGroup>
-            {generatedQuestions.map((question, index) => (
-              <ListGroup.Item key={index}>{question}</ListGroup.Item>
-            ))}
-          </ListGroup>
+      {generatedTest && (
+        <Card className="mt-4">
+          <Card.Body>
+            <h3>Generated Test</h3>
+            <pre>{JSON.stringify(generatedTest.metadata, null, 2)}</pre>
+          </Card.Body>
         </Card>
       )}
     </Container>

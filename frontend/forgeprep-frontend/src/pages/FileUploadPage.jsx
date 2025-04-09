@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Container, Form, Button, ProgressBar, Table, Card } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import studyGuideImage from "../assets/study_guide.jpg"; // Import the image
 
 const FileUploadPage = () => {
@@ -8,6 +9,8 @@ const FileUploadPage = () => {
   const [message, setMessage] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileHistory, setFileHistory] = useState([]); // Initialize as an empty array
+  const [uploadedFileId, setUploadedFileId] = useState(null); // Track the uploaded file ID
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFileHistory = async () => {
@@ -65,15 +68,22 @@ const FileUploadPage = () => {
 
       // Add the uploaded file to the file history
       const newFile = {
+        id: data.file_id, // Assuming the backend returns a file ID
         filename: file.name,
         uploadedAt: new Date(),
         size: file.size / 1024,
       };
       setFileHistory([...fileHistory, newFile]);
+      setUploadedFileId(data.file_id); // Save the uploaded file ID
     } catch (err) {
       console.error("Error uploading file:", err); // Debugging log
       setMessage("Error uploading file.");
     }
+  };
+
+  const handleGenerateTest = () => {
+    // Navigate to the test generator page with the uploaded file ID
+    navigate("/testgenerator", { state: { fileId: uploadedFileId } });
   };
 
   return (
@@ -112,10 +122,17 @@ const FileUploadPage = () => {
               className="mt-3"
             />
           )}
+          {uploadedFileId && (
+            <Button
+              variant="success"
+              className="mt-3"
+              onClick={handleGenerateTest}
+            >
+              Generate Test
+            </Button>
+          )}
         </Card.Body>
       </Card>
-
-      
 
       {/* File Upload History */}
       <Card className="p-3">
