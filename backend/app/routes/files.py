@@ -4,6 +4,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from database.database import get_db
 from app.models.models import File as FileModel
+from app.models.models import User
+from app.routes.auth import get_current_user
 
 router = APIRouter()
 
@@ -19,29 +21,40 @@ from app.services.file_handler import save_and_scan_file, insert_file_to_db
 router = APIRouter()
 
 @router.get("/")
-async def list_files(db: Session = Depends(get_db)):
-    files = db.query(FileModel).all()
+async def list_files(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),  # Get the current user from the request
+):
+    # Query files only for the current user
+    files = db.query(FileModel).filter(FileModel.user_id == current_user.id).all()
     return [
         {
             "file_id": f.id,
             "filename": f.filename,
-            "uploadedAt": f.created_at,  # or whatever timestamp field
-            "size": len(f.content) / 1024,
+            "uploadedAt": f.created_at,
+            "size": len(f.content) / 1024,  # Size in KB
         }
         for f in files
     ]
 
 @router.post("/upload/raw/")
-async def upload_raw(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_raw(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),  # Assuming you have this dependency to get the current user
+):
+    """
+    Upload a file and associate it with the current user.
+    """
     data = await file.read()
-    print(f"[DEBUG] Uploading file: {file.filename}, size: {len(data)} bytes")
-
-    db_file = FileModel(filename=file.filename, content=data)
+    db_file = FileModel(
+        filename=file.filename,
+        content=data,
+        user_id=current_user.id  # Save the user_id from the authenticated user
+    )
     db.add(db_file)
     db.commit()
     db.refresh(db_file)
-
-    print(f"[DEBUG] File saved with ID: {db_file.id}")
     return {"message": "File uploaded successfully", "file_id": db_file.id}
 
 

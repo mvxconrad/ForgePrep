@@ -51,6 +51,12 @@ class File(Base):
         default=datetime.utcnow,          # SQLAlchemy-level default
         server_default="NOW()"            # Database-level default
     )
+    
+    # Add user_id as foreign key, referencing the 'id' field of the users table
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Link to user
+
+    # Define the relationship back to the User model (optional, but useful for querying)
+    user = relationship("User", back_populates="files")
 
 class User(Base):
     __tablename__ = "users"
@@ -62,10 +68,13 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     sets = relationship("StudySet", back_populates="owner")
-    progress = relationship("UserProgress", back_populates="user")  # ✅ Fixed reference
+    progress = relationship("UserProgress", back_populates="user")
     study_materials = relationship("StudyMaterial", back_populates="user")
     tests = relationship("Test", back_populates="user")
     goals = relationship("Goal", back_populates="user")
+    
+    # New relationship for the 'File' model (files uploaded by the user)
+    files = relationship("File", back_populates="user")  # This establishes the reverse relationship
 
 class StudyMaterial(Base):
     __tablename__ = "study_materials"
