@@ -19,6 +19,7 @@ import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
 import AITestInsightsPage from "./pages/AITestInsightsPage"; // Import the AITestInsightsPage
 import TakeTestPage from "./pages/TakeTestPage";
 import GeneratedTestPage from "./pages/GeneratedTestPage";
+import StudySetsPage from "./pages/StudySetsPage"; // Import the StudySetsPage component
 
 const ProtectedRoute = ({ isAuthenticated, children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -60,6 +61,7 @@ const AppContent = () => {
         <Route path="/ai-insights" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AITestInsightsPage /></ProtectedRoute>} /> {/* Add AITestInsightsPage route */}
         <Route path="/generated-test" element={<ProtectedRoute isAuthenticated={isAuthenticated}><GeneratedTestPage /></ProtectedRoute>} />
         <Route path="/take-test" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TakeTestPage /></ProtectedRoute>} />
+        <Route path="/study-sets" element={<ProtectedRoute isAuthenticated={isAuthenticated}><StudySetsPage /></ProtectedRoute>} /> {/* Add this route */}
       </Routes>
     </>
   );

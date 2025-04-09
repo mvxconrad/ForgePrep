@@ -4,6 +4,7 @@ import { Container, Card, Form, Button } from "react-bootstrap";
 const SettingsPage = () => {
   const [profile, setProfile] = useState({ username: "", email: "" });
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -23,7 +24,7 @@ const SettingsPage = () => {
         setProfile(data);
       } catch (err) {
         console.error("Error fetching profile:", err);
-        setError(err.message);
+        setError("Failed to fetch profile. Please try again.");
       }
     };
 
@@ -33,6 +34,7 @@ const SettingsPage = () => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
 
     try {
       const response = await fetch("https://forgeprep.net/api/users/profile", {
@@ -53,9 +55,10 @@ const SettingsPage = () => {
       const data = await response.json();
       console.log("Profile data updated:", data);
       setProfile(data);
+      setSuccessMessage("Profile updated successfully!");
     } catch (err) {
       console.error("Error updating profile:", err);
-      setError(err.message);
+      setError("Failed to update profile. Please try again.");
     }
   };
 
@@ -65,6 +68,7 @@ const SettingsPage = () => {
         <Card.Body>
           <h2>Settings</h2>
           {error && <p className="text-danger">{error}</p>}
+          {successMessage && <p className="text-success">{successMessage}</p>}
           <Form onSubmit={handleUpdateProfile}>
             <Form.Group controlId="formUsername" className="mb-3">
               <Form.Label>Username</Form.Label>
@@ -92,13 +96,6 @@ const SettingsPage = () => {
                 type="password"
                 placeholder="Enter new password"
                 onChange={(e) => setProfile({ ...profile, password: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group controlId="formProfilePicture" className="mb-3">
-              <Form.Label>Profile Picture</Form.Label>
-              <Form.Control
-                type="file"
-                onChange={(e) => setProfile({ ...profile, profilePicture: e.target.files[0] })}
               />
             </Form.Group>
             <Button variant="primary" type="submit">Update Profile</Button>

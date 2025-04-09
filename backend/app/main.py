@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import auth, users, study_sets, files, dashboard, upload
 from app.routes import gpt
+from app.routes import admin
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,11 +21,12 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(upload.router, prefix="/upload", tags=["File Upload"])
-app.include_router(gpt.router, prefix="/api/gpt", tags=["AI"])
-app.include_router(users.router, prefix="/users", tags=["Users"])
-app.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])  # Correct registration
-app.include_router(study_sets.router, prefix="/study_sets", tags=["Study Sets"])
+app.include_router(gpt.router, prefix="/api", tags=["AI"])
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(study_sets.router, prefix="/api/study_sets", tags=["Study Sets"])
 app.include_router(files.router, prefix="/files", tags=["File Management"])
+app.include_router(admin.router, prefix="/api", tags=["Admin"])
 
 @app.get("/")
 def root():

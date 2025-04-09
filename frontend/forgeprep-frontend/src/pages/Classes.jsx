@@ -11,7 +11,9 @@ const Classes = () => {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/api/study_sets/"); // Updated API URL
+        const response = await fetch("https://forgeprep.net/api/study_sets/", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
 
         if (!response.ok) {
           const errorText = await response.text(); // Read the response as text

@@ -9,6 +9,41 @@ from app.security.security import decode_access_token
 
 router = APIRouter()
 
+@router.get("/")
+async def get_study_sets(user=Depends(decode_access_token), db: Session = Depends(get_db)):
+    """
+    Retrieve all study sets for the authenticated user.
+    """
+    study_sets = db.query(StudySet).filter(StudySet.user_id == user["id"]).all()
+    return [{"id": s.id, "title": s.title, "description": s.description} for s in study_sets]
+
+@router.post("/")
+async def create_study_set(study_set: dict, user=Depends(decode_access_token), db: Session = Depends(get_db)):
+    """
+    Create a new study set for the authenticated user.
+    """
+    new_study_set = StudySet(
+        user_id=user["id"],
+        title=study_set["title"],
+        description=study_set["description"]
+    )
+    db.add(new_study_set)
+    db.commit()
+    db.refresh(new_study_set)
+    return {"id": new_study_set.id, "title": new_study_set.title, "description": new_study_set.description}
+
+@router.delete("/{id}")
+async def delete_study_set(id: int, user=Depends(decode_access_token), db: Session = Depends(get_db)):
+    """
+    Delete a study set by ID for the authenticated user.
+    """
+    study_set = db.query(StudySet).filter(StudySet.id == id, StudySet.user_id == user["id"]).first()
+    if not study_set:
+        raise HTTPException(status_code=404, detail="Study set not found")
+    db.delete(study_set)
+    db.commit()
+    return {"message": "Study set deleted successfully"}
+
 @router.post("/", response_model=StudySetResponse)
 async def create_study_set(
     study_set: StudySetCreate, 

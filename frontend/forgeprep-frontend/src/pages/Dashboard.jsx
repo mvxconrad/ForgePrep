@@ -31,7 +31,11 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem("token"); // Retrieve the token from localStorage
-      const response = await fetch(`https://forgeprep.net/api/dashboard/?token=${token}`); // Add token as a query parameter
+      if (!token) {
+        throw new Error("Token is missing");
+      }
+
+      const response = await fetch(`https://forgeprep.net/api/dashboard/?token=${token}`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -40,7 +44,7 @@ const Dashboard = () => {
       }
 
       const data = await response.json();
-      console.log("Dashboard data:", data); // Debugging log
+      console.log("Dashboard data:", data);
 
       if (data.username) {
         setUsername(data.username);
@@ -48,7 +52,7 @@ const Dashboard = () => {
         console.warn("Username not found in the response data");
       }
 
-      setRecentTests(data.recent_tests || []); // Ensure correct field names
+      setRecentTests(data.recent_tests || []);
       setGoals(data.goals || []);
       setStatistics(data.statistics || null);
       setNotifications(data.notifications || []);
