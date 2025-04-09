@@ -75,11 +75,16 @@ class Test(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    study_material_id = Column(Integer, ForeignKey("study_materials.id"))
-    test_metadata = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    name = Column(String, nullable=False)
+    score = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)  # Add this field
+    test_metadata = Column(String)  # JSON or text field for test data
 
     user = relationship("User", back_populates="tests")
+
+    study_material_id = Column(Integer, ForeignKey("study_materials.id"))
+    test_metadata = Column(JSON, nullable=True)
+
     study_material = relationship("StudyMaterial", back_populates="tests")
 
 class Goal(Base):

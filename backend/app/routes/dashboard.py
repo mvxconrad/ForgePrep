@@ -19,7 +19,7 @@ async def get_dashboard(token: str = Query(...), db: Session = Depends(get_db)):
 
     print("Retrieved user:", user.username)  # Debugging log
 
-    recent_tests = db.query(Test).filter(Test.user_id == user.id).order_by(Test.date.desc()).limit(5).all()
+    recent_tests = db.query(Test).filter(Test.user_id == user.id).order_by(Test.created_at.desc()).limit(5).all()
     goals = db.query(Goal).filter(Goal.user_id == user.id).all()
     statistics = {
         "average_score": db.query(func.avg(Test.score)).filter(Test.user_id == user.id).scalar(),
