@@ -21,15 +21,15 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchUsername(); // Fetch username from /api/users/profile
-    fetchDashboardData();
+    fetchUserProfile(); // Fetch user profile from /api/users/profile
+    fetchDashboardData(); // Fetch dashboard-specific data
   }, []);
 
   useEffect(() => {
     console.log("Username state updated:", username); // Debugging log
   }, [username]);
 
-  const fetchUsername = async () => {
+  const fetchUserProfile = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -50,7 +50,8 @@ const Dashboard = () => {
       console.log("User profile data:", data);
       setUsername(data.username);
     } catch (error) {
-      console.error("Error fetching username:", error);
+      console.error("Error fetching user profile:", error);
+      setError("Failed to fetch user profile. Please try again.");
     }
   };
 
@@ -78,6 +79,7 @@ const Dashboard = () => {
       setNotifications(data.notifications || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
+      setError("Failed to fetch dashboard data. Please try again.");
     }
   };
 
