@@ -20,7 +20,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(upload.router, prefix="/api/upload", tags=["File Upload"])
+# app.include_router(upload.router, prefix="/api/upload", tags=["File Upload"])
 app.include_router(gpt.router, prefix="/api", tags=["AI"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
