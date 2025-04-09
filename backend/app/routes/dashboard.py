@@ -22,9 +22,9 @@ async def get_dashboard(token: str = Query(...), db: Session = Depends(get_db)):
     recent_tests = db.query(Test).filter(Test.user_id == user.id).order_by(Test.created_at.desc()).limit(5).all()
     goals = db.query(Goal).filter(Goal.user_id == user.id).all()
     statistics = {
-        "average_score": db.query(func.avg(Test.score)).filter(Test.user_id == user.id).scalar(),
-        "best_score": db.query(func.max(Test.score)).filter(Test.user_id == user.id).scalar(),
-        "worst_score": db.query(func.min(Test.score)).filter(Test.user_id == user.id).scalar(),
+        "average_score": db.query(func.avg(Test.score)).filter(Test.user_id == user.id).scalar() or 0,
+        "best_score": db.query(func.max(Test.score)).filter(Test.user_id == user.id).scalar() or 0,
+        "worst_score": db.query(func.min(Test.score)).filter(Test.user_id == user.id).scalar() or 0,
     }
 
     return {
