@@ -44,6 +44,14 @@ class File(Base):
     filename = Column(String, nullable=False)
     content = Column(LargeBinary, nullable=False)  # Stores file data as binary
 
+    # New column for timestamp
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,          # SQLAlchemy-level default
+        server_default="NOW()"            # Database-level default
+    )
+
 class User(Base):
     __tablename__ = "users"
 
