@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from app.routes import auth, users, study_sets, files, dashboard, upload
 from app.routes import gpt
 from app.routes import admin
@@ -8,6 +9,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI()
+
+# Redirect HTTP to HTTPS
+app.add_middleware(HTTPSRedirectMiddleware)
 
 # Configure CORS
 app.add_middleware(
