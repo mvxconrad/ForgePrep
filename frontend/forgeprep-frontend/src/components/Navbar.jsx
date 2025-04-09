@@ -28,11 +28,11 @@ const CustomNavbar = () => {
                 <Button as={Link} to="/templates" variant="outline-light" className="me-2">Templates</Button>
                 <Button as={Link} to="/study-sets" variant="outline-light" className="me-2">Study Sets</Button>
                 <Button as={Link} to="/test-results" variant="outline-light" className="me-2">Test Results</Button>
-                <Button as={Link} to="/admin" variant="outline-light" className="me-2">Admin Dashboard</Button>
-                <Button as={Link} to="/admin-analytics" variant="outline-light" className="me-2">Admin Analytics</Button>
+                {/* <Button as={Link} to="/admin" variant="outline-light" className="me-2">Admin Dashboard</Button> */}
+                {/* <Button as={Link} to="/admin-analytics" variant="outline-light" className="me-2">Admin Analytics</Button> */}
                 <Button as={Link} to="/profile" variant="outline-light" className="me-2">Profile</Button>
                 <Button as={Link} to="/settings" variant="outline-light" className="me-2">Settings</Button>
-                <Button as={Link} to="/ai-insights" variant="outline-light" className="me-2">AI Insights</Button>
+                {/* <Button as={Link} to="/ai-insights" variant="outline-light" className="me-2">AI Insights</Button> */}
               </>
             ) : (
               <>
