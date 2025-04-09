@@ -41,8 +41,20 @@ from database.database import get_db
 from app.models.models import File as FileModel
 from app.services.file_handler import save_and_scan_file, insert_file_to_db
 
-router = APIRouter(prefix="/api/files", tags=["File Management"])
+router = APIRouter()
 
+@router.get("/")
+async def list_files(db: Session = Depends(get_db)):
+    files = db.query(FileModel).all()
+    return [
+        {
+            "file_id": f.id,
+            "filename": f.filename,
+            "uploadedAt": f.created_at,  # or whatever timestamp field
+            "size": len(f.content) / 1024,
+        }
+        for f in files
+    ]
 
 @router.post("/upload/raw/")
 async def upload_raw(

@@ -13,7 +13,7 @@ const FileUploadPage = () => {
     const fetchFileHistory = async () => {
       try {
         const response = await axios.get(
-          `https://forgeprep.net/files/`, // Updated API URL
+          `https://forgeprep.net/api/files/`, // Updated API URL
           {
             headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           }
