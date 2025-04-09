@@ -25,7 +25,6 @@
 #     db.refresh(db_file)
 #     return {"message": "File uploaded successfully", "file_id": db_file.id}
 
-
 # @router.post("/upload/scan/")
 # async def upload_scanned(file: UploadFile = File(...)):
 #     """
@@ -59,4 +58,4 @@
 #         media_type="application/octet-stream",
 #         headers={"Content-Disposition": f"attachment; filename={db_file.filename}"},
 #     )
-
+>>>>>>> f2cae63db8742421c545d53707c15611fd39edf8
