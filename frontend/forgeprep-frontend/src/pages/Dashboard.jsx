@@ -7,7 +7,7 @@ const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState(null);
-  const [username, setUsername] = useState(""); // Remove mock username
+  const [username, setUsername] = useState(""); // Fetch username from /api/users/profile
   const [prompt, setPrompt] = useState("");
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [error, setError] = useState("");
@@ -21,12 +21,38 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    fetchUsername(); // Fetch username from /api/users/profile
     fetchDashboardData();
   }, []);
 
   useEffect(() => {
     console.log("Username state updated:", username); // Debugging log
   }, [username]);
+
+  const fetchUsername = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Token is missing");
+      }
+
+      const response = await fetch("https://forgeprep.net/api/users/profile", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("User profile data:", data);
+      setUsername(data.username);
+    } catch (error) {
+      console.error("Error fetching username:", error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -45,12 +71,6 @@ const Dashboard = () => {
 
       const data = await response.json();
       console.log("Dashboard data:", data);
-
-      if (data.username) {
-        setUsername(data.username);
-      } else {
-        console.warn("Username not found in the response data");
-      }
 
       setRecentTests(data.recent_tests || []);
       setGoals(data.goals || []);
