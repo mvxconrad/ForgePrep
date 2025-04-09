@@ -40,7 +40,7 @@ const Dashboard = () => {
       const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
       const userId = decodedToken.id; // Ensure the token includes the user ID
 
-      const response = await fetch(`https://forgeprep.net/api/users/${user_id}`, {
+      const response = await fetch(`https://forgeprep.net/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
