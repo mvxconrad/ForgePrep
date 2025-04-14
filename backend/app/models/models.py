@@ -71,7 +71,7 @@ class User(Base):
     progress = relationship("UserProgress", back_populates="user")
     study_materials = relationship("StudyMaterial", back_populates="user")
     tests = relationship("Test", back_populates="user")
-    goals = relationship("Goal", back_populates="user")
+#    goals = relationship("Goal", back_populates="user")
     
     # New relationship for the 'File' model (files uploaded by the user)
     files = relationship("File", back_populates="user")  # This establishes the reverse relationship
@@ -104,12 +104,12 @@ class Test(Base):
 
     study_material = relationship("StudyMaterial", back_populates="tests")
 
-class Goal(Base):
-    __tablename__ = "goals"
+#class Goal(Base):
+ #   __tablename__ = "goals"
+#
+ #   id = Column(Integer, primary_key=True, index=True)
+  #  title = Column(String, nullable=False)
+   # progress = Column(Integer, default=0)
+    #user_id = Column(Integer, ForeignKey("users.id"))
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    progress = Column(Integer, default=0)
-    user_id = Column(Integer, ForeignKey("users.id"))
-
-    user = relationship("User", back_populates="goals")
+    #user = relationship("User", back_populates="goals")

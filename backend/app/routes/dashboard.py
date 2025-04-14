@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from database.database import get_db
-from app.models.models import User, Test, Goal
+from app.models.models import User, Test
 from app.security.security import decode_access_token
 
 router = APIRouter()
@@ -20,7 +20,7 @@ async def get_dashboard(token: str = Query(...), db: Session = Depends(get_db)):
     print("Retrieved user:", user.username)  # Debugging log
 
     recent_tests = db.query(Test).filter(Test.user_id == user.id).order_by(Test.created_at.desc()).limit(5).all()
-    goals = db.query(Goal).filter(Goal.user_id == user.id).all()
+#    goals = db.query(Goal).filter(Goal.user_id == user.id).all()
     statistics = {
         "average_score": db.query(func.avg(Test.score)).filter(Test.user_id == user.id).scalar(),
         "best_score": db.query(func.max(Test.score)).filter(Test.user_id == user.id).scalar(),
@@ -30,6 +30,6 @@ async def get_dashboard(token: str = Query(...), db: Session = Depends(get_db)):
     return {
         "username": user.username,
         "recent_tests": [{"id": t.id, "name": t.name, "score": t.score} for t in recent_tests],
-        "goals": [{"id": g.id, "title": g.title, "progress": g.progress} for g in goals],
+#        "goals": [{"id": g.id, "title": g.title, "progress": g.progress} for g in goals],
         "statistics": statistics,
     }
