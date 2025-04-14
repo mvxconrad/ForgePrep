@@ -41,28 +41,29 @@ async def list_files(
 async def upload_raw(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),  # Assuming you have this dependency to get the current user
+    current_user: User = Depends(get_current_user),
 ):
-    """
-    Upload a file and associate it with the current user.
-    """
+    # Check if the uploaded file is a PDF
+    if not file.filename.lower().endswith(".pdf") or file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+
     data = await file.read()
     db_file = FileModel(
         filename=file.filename,
         content=data,
-        user_id=current_user.id  # Save the user_id from the authenticated user
+        user_id=current_user.id
     )
     db.add(db_file)
     db.commit()
     db.refresh(db_file)
     return {"message": "File uploaded successfully", "file_id": db_file.id}
 
-
 @router.post("/upload/scan/")
 async def upload_scanned(file: UploadFile = File(...)):
-    """
-    Upload a file, scan it for viruses, then store it via your file_handler service.
-    """
+    # Check if the uploaded file is a PDF
+    if not file.filename.lower().endswith(".pdf") or file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+
     status = save_and_scan_file(file)
     if status == "infected":
         raise HTTPException(status_code=400, detail="⚠️ File is infected and was removed!")
@@ -72,7 +73,6 @@ async def upload_scanned(file: UploadFile = File(...)):
         return {"message": f"✅ {file.filename} uploaded successfully!"}
     else:
         raise HTTPException(status_code=500, detail="❌ File upload failed.")
-
 
 @router.get("/download/{file_id}")
 async def download_file(
