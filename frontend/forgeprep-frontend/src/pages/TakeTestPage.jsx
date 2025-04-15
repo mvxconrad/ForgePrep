@@ -1,18 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Card, Button, Form } from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const TakeTestPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { test } = location.state || {}; // Test data passed from the previous page
+  const { test: initialTest, testId } = location.state || {}; // Test data passed from the previous page
 
+  const [test, setTest] = useState(initialTest);
   const [answers, setAnswers] = useState({});
   const [error, setError] = useState("");
 
-  if (!test) {
-    return <p>No test data available.</p>;
-  }
+  useEffect(() => {
+    if (!test) {
+      const fetchTest = async () => {
+        try {
+          const response = await axios.get(`https://forgeprep.net/api/tests/${testId}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          });
+          setTest(response.data);
+        } catch (err) {
+          console.error("Error fetching test:", err);
+          setError("Failed to load test. Please try again.");
+        }
+      };
+
+      fetchTest();
+    }
+  }, [test, testId]);
 
   const handleAnswerChange = (questionId, selectedOption) => {
     setAnswers({ ...answers, [questionId]: selectedOption });
@@ -21,29 +37,27 @@ const TakeTestPage = () => {
   const handleSubmitTest = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://forgeprep.net/api/tests/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ testId: test.id, answers }),
-      });
+      const response = await axios.post(
+        "https://forgeprep.net/api/tests/submit",
+        { testId: test.id, answers },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Test submitted successfully:", result);
-      navigate("/test-results", { state: { result } }); // Redirect to test results page
+      navigate("/test-results", { state: { result: response.data } });
     } catch (err) {
       console.error("Error submitting test:", err);
-      setError("Failed to submit the test. Please try again.");
+      setError("Failed to submit test. Please try again.");
     }
   };
+
+  if (!test) {
+    return <p>No test data available.</p>;
+  }
 
   return (
     <Container className="mt-4">

@@ -10,6 +10,7 @@ const TestResults = () => {
     correct: [],
     incorrect: [],
   });
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchTestResults = async () => {
@@ -18,16 +19,10 @@ const TestResults = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
-        const results = Array.isArray(response.data) ? response.data.slice(0, 5) : [];
-        setTestResults(results);
-
-        const dates = results.map((test) => test.date);
-        const correct = results.map((test) => test.correctAnswers);
-        const incorrect = results.map((test) => test.incorrectAnswers);
-
-        setPerformanceData({ dates, correct, incorrect });
+        setTestResults(response.data || []);
       } catch (err) {
         console.error("Error fetching test results:", err);
+        setError("Failed to load test results. Please try again.");
       }
     };
 
@@ -37,6 +32,8 @@ const TestResults = () => {
   return (
     <Container className="mt-4">
       <h1 className="mb-4">Test Results</h1>
+
+      {error && <div className="alert alert-danger">{error}</div>}
 
       <Card className="mb-4 p-3">
         <h3>Performance Overview</h3>

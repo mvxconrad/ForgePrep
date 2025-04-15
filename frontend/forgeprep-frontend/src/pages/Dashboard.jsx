@@ -22,12 +22,27 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchUsername(); // Fetch username from /api/users/profile
-    fetchDashboardData();
   }, []);
 
   useEffect(() => {
     console.log("Username state updated:", username); // Debugging log
   }, [username]);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await axios.get("https://forgeprep.net/api/dashboard/", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setDashboardData(response.data);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data. Please try again.");
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const fetchUsername = async () => {
     try {
@@ -58,33 +73,6 @@ const Dashboard = () => {
       setUsername(data.username);
     } catch (error) {
       console.error("Error fetching username:", error);
-    }
-  };
-
-  const fetchDashboardData = async () => {
-    try {
-      const token = localStorage.getItem("token"); // Retrieve the token from localStorage
-      if (!token) {
-        throw new Error("Token is missing");
-      }
-
-      const response = await fetch(`https://forgeprep.net/api/dashboard/?token=${token}`);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Dashboard data:", data);
-
-      setRecentTests(data.recent_tests || []);
-      setGoals(data.goals || []);
-      setStatistics(data.statistics || null);
-      setNotifications(data.notifications || []);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
     }
   };
 

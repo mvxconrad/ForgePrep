@@ -39,6 +39,8 @@ const TestGeneratorPage = () => {
     }
 
     try {
+      const prompt = `Generate a ${difficulty} test on the topic "${topic}" with ${numQuestions} questions based on the selected study material.`;
+
       const response = await axios.post(
         "https://forgeprep.net/api/gpt/generate",
         {
@@ -46,17 +48,21 @@ const TestGeneratorPage = () => {
           difficulty,
           num_questions: numQuestions,
           study_material_id: selectedFileId,
+          prompt,
         },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
 
-      console.log("Generated test:", response.data); // Debugging log
-      setGeneratedTest(response.data);
+      if (response.data && response.data.id) {
+        setGeneratedTest(response.data);
+      } else {
+        throw new Error("Invalid response from server.");
+      }
     } catch (err) {
       console.error("Error generating test:", err);
-      setError("Failed to generate test. Please try again.");
+      setError(err.response?.data?.message || "Failed to generate test. Please try again.");
     }
   };
 
@@ -128,6 +134,15 @@ const TestGeneratorPage = () => {
           <Card.Body>
             <h3>Generated Test</h3>
             <pre>{JSON.stringify(generatedTest.metadata, null, 2)}</pre>
+            <Button
+              variant="success"
+              className="mt-3"
+              onClick={() => {
+                window.location.href = `/take-test/${generatedTest.id}`;
+              }}
+            >
+              Take Test
+            </Button>
           </Card.Body>
         </Card>
       )}
