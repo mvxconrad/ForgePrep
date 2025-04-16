@@ -2,30 +2,27 @@ import io
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+
 from database.database import get_db
-from app.models.models import File as FileModel
-from app.models.models import User
+from app.models.models import File as FileModel, User
 from app.routes.auth import get_current_user
-
-router = APIRouter()
-
-import io
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
-
-from database.database import get_db
-from app.models.models import File as FileModel
 from app.services.file_handler import save_and_scan_file, insert_file_to_db
 
 router = APIRouter()
 
+
+# Helper function to verify actual PDF content
+async def is_valid_pdf(file: UploadFile) -> bool:
+    header = await file.read(4)
+    await file.seek(0)  # Reset pointer after reading
+    return header == b"%PDF"
+
+
 @router.get("/")
 async def list_files(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),  # Get the current user from the request
+    current_user: User = Depends(get_current_user),
 ):
-    # Query files only for the current user
     files = db.query(FileModel).filter(FileModel.user_id == current_user.id).all()
     return [
         {
@@ -37,15 +34,20 @@ async def list_files(
         for f in files
     ]
 
+
 @router.post("/upload/raw/")
 async def upload_raw(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Check if the uploaded file is a PDF
-    if not file.filename.lower().endswith(".pdf") or file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+    # Enforce strict PDF validation
+    if (
+        not file.filename.lower().endswith(".pdf")
+        or file.content_type != "application/pdf"
+        or not await is_valid_pdf(file)
+    ):
+        raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
     data = await file.read()
     db_file = FileModel(
@@ -56,13 +58,20 @@ async def upload_raw(
     db.add(db_file)
     db.commit()
     db.refresh(db_file)
-    return {"message": "File uploaded successfully", "file_id": db_file.id}
+    return {"message": "✅ File uploaded successfully", "file_id": db_file.id}
+
 
 @router.post("/upload/scan/")
-async def upload_scanned(file: UploadFile = File(...)):
-    # Check if the uploaded file is a PDF
-    if not file.filename.lower().endswith(".pdf") or file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+async def upload_scanned(
+    file: UploadFile = File(...),
+):
+    # Enforce strict PDF validation
+    if (
+        not file.filename.lower().endswith(".pdf")
+        or file.content_type != "application/pdf"
+        or not await is_valid_pdf(file)
+    ):
+        raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
     status = save_and_scan_file(file)
     if status == "infected":
@@ -74,14 +83,12 @@ async def upload_scanned(file: UploadFile = File(...)):
     else:
         raise HTTPException(status_code=500, detail="❌ File upload failed.")
 
+
 @router.get("/download/{file_id}")
 async def download_file(
     file_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    Download a file from the database by its ID.
-    """
     db_file = db.query(FileModel).filter(FileModel.id == file_id).first()
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
