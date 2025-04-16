@@ -2,6 +2,7 @@ import io
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+import fitz
 
 from database.database import get_db
 from app.models.models import File as FileModel, User
@@ -10,6 +11,16 @@ from app.services.file_handler import save_and_scan_file, insert_file_to_db
 
 router = APIRouter()
 
+# Extract text from a clean PDF
+async def extract_text_from_pdf(file: UploadFile) -> str:
+    contents = await file.read()
+    await file.seek(0)
+    pdf = fitz.open(stream=contents, filetype="pdf")
+    text = ""
+    for page in pdf:
+        text += page.get_text()
+    pdf.close()
+    return text
 
 # Helper function to verify actual PDF content
 async def is_valid_pdf(file: UploadFile) -> bool:
@@ -64,8 +75,10 @@ async def upload_raw(
 @router.post("/upload/scan/")
 async def upload_scanned(
     file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    # Enforce strict PDF validation
+    # Validate file is actually a PDF
     if (
         not file.filename.lower().endswith(".pdf")
         or file.content_type != "application/pdf"
@@ -73,15 +86,32 @@ async def upload_scanned(
     ):
         raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
+    # Scan the file with your AV logic
     status = save_and_scan_file(file)
     if status == "infected":
         raise HTTPException(status_code=400, detail="⚠️ File is infected and was removed!")
 
-    success = insert_file_to_db(status)
-    if success:
-        return {"message": f"✅ {file.filename} uploaded successfully!"}
-    else:
-        raise HTTPException(status_code=500, detail="❌ File upload failed.")
+    # Extract text after clean scan
+    extracted_text = await extract_text_from_pdf(file)
+
+    # Store the file and optionally the extracted text
+    file_data = await file.read()
+    db_file = FileModel(
+        filename=file.filename,
+        content=file_data,
+        extracted_text=extracted_text,
+        user_id=current_user.id
+        # You can add a `text` column if you want to store `extracted_text` too
+    )
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+
+    return {
+        "message": f"✅ {file.filename} uploaded and scanned successfully!",
+        "file_id": db_file.id,
+        "extracted_text": extracted_text[:1000]  # Preview only, avoid sending huge text
+    }
 
 
 @router.get("/download/{file_id}")

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Float, DateTime, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Text, Float, DateTime, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -43,6 +43,7 @@ class File(Base):
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, nullable=False)
     content = Column(LargeBinary, nullable=False)  # Stores file data as binary
+    extracted_text = Column(Text)
 
     # New column for timestamp
     created_at = Column(
