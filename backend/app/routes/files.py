@@ -2,7 +2,7 @@ import io
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-import fitz
+import fitz  # PyMuPDF
 
 from database.database import get_db
 from app.models.models import File as FileModel, User
@@ -34,6 +34,7 @@ async def list_files(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Query files only for the current user
     files = db.query(FileModel).filter(FileModel.user_id == current_user.id).all()
     return [
         {
@@ -46,13 +47,13 @@ async def list_files(
     ]
 
 
-@router.post("/upload/raw/")
+@router.post("/upload/raw/") # Only for testing purposes, not for production use
 async def upload_raw(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Enforce strict PDF validation
+    # Validate the file type and ensure it's a valid PDF
     if (
         not file.filename.lower().endswith(".pdf")
         or file.content_type != "application/pdf"
@@ -60,19 +61,29 @@ async def upload_raw(
     ):
         raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
-    data = await file.read()
+    # Extract text from the PDF
+    extracted_text = await extract_text_from_pdf(file)
+
+    # Store the file and extracted text in the database
+    file_data = await file.read()
     db_file = FileModel(
         filename=file.filename,
-        content=data,
+        content=file_data,
+        extracted_text=extracted_text,  # Store the extracted text
         user_id=current_user.id
     )
     db.add(db_file)
     db.commit()
     db.refresh(db_file)
-    return {"message": "✅ File uploaded successfully", "file_id": db_file.id}
+
+    return {
+        "message": "✅ File uploaded successfully",
+        "file_id": db_file.id,
+        "extracted_text": extracted_text[:1000]  # Preview of the extracted text
+    }
 
 
-@router.post("/upload/scan/")
+@router.post("/upload/scan/") # Use in production for scanning and uploading files
 async def upload_scanned(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -86,22 +97,21 @@ async def upload_scanned(
     ):
         raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
-    # Scan the file with your AV logic
+    # Scan the file with your AV logic (ClamAV or similar)
     status = save_and_scan_file(file)
     if status == "infected":
         raise HTTPException(status_code=400, detail="⚠️ File is infected and was removed!")
 
-    # Extract text after clean scan
+    # Extract text after the clean scan
     extracted_text = await extract_text_from_pdf(file)
 
-    # Store the file and optionally the extracted text
+    # Store the file and extracted text
     file_data = await file.read()
     db_file = FileModel(
         filename=file.filename,
         content=file_data,
-        extracted_text=extracted_text,
+        extracted_text=extracted_text,  # Store the extracted text
         user_id=current_user.id
-        # You can add a `text` column if you want to store `extracted_text` too
     )
     db.add(db_file)
     db.commit()
@@ -110,7 +120,7 @@ async def upload_scanned(
     return {
         "message": f"✅ {file.filename} uploaded and scanned successfully!",
         "file_id": db_file.id,
-        "extracted_text": extracted_text[:1000]  # Preview only, avoid sending huge text
+        "extracted_text": extracted_text[:1000]  # Preview of the extracted text
     }
 
 
@@ -119,6 +129,9 @@ async def download_file(
     file_id: int,
     db: Session = Depends(get_db),
 ):
+    """
+    Download a file from the database by its ID.
+    """
     db_file = db.query(FileModel).filter(FileModel.id == file_id).first()
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
