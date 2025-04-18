@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, ListGroup, ProgressBar, Button, Form } from "react-bootstrap";
 import statisticsImage from "../assets/statistics.jpg"; // Import the image
-import axios from "axios";
+import api from "../utils/apiService"; // Import the centralized API service
 
 const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
@@ -29,58 +29,35 @@ const Dashboard = () => {
   }, [username]);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await axios.get("https://forgeprep.net/api/dashboard/", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        setDashboardData(response.data);
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load dashboard data. Please try again.");
-      }
-    };
-
     fetchDashboardData();
   }, []);
 
+  const fetchDashboardData = async () => {
+    try {
+      const response = await api.get("/dashboard/");
+      setRecentTests(response.data.recent_tests);
+      setStatistics(response.data.statistics);
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError("Failed to load dashboard data. Please try again.");
+    }
+  };
+
   const fetchUsername = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Token is missing");
-      }
-
-      // Decode the token to get the user ID
-      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
-      const userId = decodedToken.id;
-      if (!userId) {
-        throw new Error("User ID is missing in the token");
-      }
-
-      const response = await fetch(`https://forgeprep.net/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("User profile data:", data);
-      setUsername(data.username);
-    } catch (error) {
-      console.error("Error fetching username:", error);
+      const response = await api.get("/users/profile");
+      setUsername(response.data.username);
+    } catch (err) {
+      console.error("Error fetching username:", err);
+      setError("Failed to fetch username. Please try again.");
     }
   };
 
   const handleGenerateQuestions = async () => {
     try {
       const token = localStorage.getItem("token");
-      const questions = await axios.post(
-        "/api/gpt/generate",
+      const questions = await api.post(
+        "/gpt/generate",
         { prompt },
         {
           headers: {

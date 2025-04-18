@@ -1,31 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Form, Button, ListGroup, Card } from "react-bootstrap";
-import classesImage from "../assets/classroom.jpg"; // Import the image
+import { Container, Row, Col, Form, Button, ListGroup, Card, Alert } from "react-bootstrap";
+import api from "../utils/apiService"; // Centralized API service
+import classesImage from "../assets/classroom.jpg";
 
 const Classes = () => {
-  const [classes, setClasses] = useState([]); // Initialize as an empty array
+  const [classes, setClasses] = useState([]);
   const [newClass, setNewClass] = useState("");
   const [syllabus, setSyllabus] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/api/study_sets/", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text(); // Read the response as text
-          console.error("Error response:", errorText); // Log the error response
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setClasses(data);
+        const response = await api.get("/classes/");
+        setClasses(response.data);
       } catch (err) {
         console.error("Error fetching classes:", err);
-        setError(err.message);
+        setError("Failed to load classes. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -36,53 +30,42 @@ const Classes = () => {
     if (!newClass) return;
 
     const formData = new FormData();
-    formData.append("title", newClass);
-    formData.append("description", ""); // Add description if needed
+    formData.append("name", newClass);
     if (syllabus) formData.append("syllabus", syllabus);
 
     try {
-      const response = await fetch("https://forgeprep.net/api/study_sets/", { // Updated API URL
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text(); // Read the response as text
-        console.error("Error response:", errorText); // Log the error response
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const addedClass = await response.json();
-      setClasses([...classes, addedClass]);
+      const response = await api.post("/classes/", formData);
+      setClasses([...classes, response.data]);
       setNewClass("");
       setSyllabus(null);
     } catch (err) {
       console.error("Error adding class:", err);
-      setError(err.message);
+      setError("Failed to add class. Please try again.");
     }
   };
 
   const handleRemoveClass = async (id) => {
     try {
-      const response = await fetch(`https://forgeprep.net/api/study_sets/${id}`, { method: "DELETE" });
-
-      if (!response.ok) {
-        const errorText = await response.text(); // Read the response as text
-        console.error("Error response:", errorText); // Log the error response
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      await api.delete(`/classes/${id}`);
       setClasses(classes.filter((c) => c.id !== id));
     } catch (err) {
       console.error("Error removing class:", err);
-      setError(err.message);
+      setError("Failed to remove class. Please try again.");
     }
   };
+
+  if (loading) {
+    return (
+      <Container className="mt-4">
+        <p>Loading classes...</p>
+      </Container>
+    );
+  }
 
   return (
     <Container className="mt-4">
       <h2>Classes</h2>
-      {error && <p className="text-danger">{error}</p>}
+      {error && <Alert variant="danger">{error}</Alert>}
       <Row>
         <Col md={6}>
           <Card className="mb-4">
@@ -121,8 +104,15 @@ const Classes = () => {
                 {classes.length > 0 ? (
                   classes.map((c) => (
                     <ListGroup.Item key={c.id}>
-                      {c.title}
-                      <Button variant="danger" size="sm" onClick={() => handleRemoveClass(c.id)} className="float-end">Remove</Button>
+                      {c.name}
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleRemoveClass(c.id)}
+                        className="float-end"
+                      >
+                        Remove
+                      </Button>
                     </ListGroup.Item>
                   ))
                 ) : (
@@ -135,6 +125,6 @@ const Classes = () => {
       </Row>
     </Container>
   );
-}
+};
 
 export default Classes;

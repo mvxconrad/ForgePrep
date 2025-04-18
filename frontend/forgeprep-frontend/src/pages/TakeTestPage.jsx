@@ -36,22 +36,16 @@ const TakeTestPage = () => {
 
   const handleSubmitTest = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await axios.post(
         "https://forgeprep.net/api/tests/submit",
-        { testId: test.id, answers },
+        { testId, answers },
         {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
-
-      navigate("/test-results", { state: { result: response.data } });
+      navigate("/test-results");
     } catch (err) {
       console.error("Error submitting test:", err);
-      setError("Failed to submit test. Please try again.");
     }
   };
 

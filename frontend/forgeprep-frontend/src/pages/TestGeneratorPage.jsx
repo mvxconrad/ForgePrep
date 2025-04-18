@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Form, Button, Card, Alert } from "react-bootstrap";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import api from "../utils/apiService"; // Import the centralized API service
 
 const TestGeneratorPage = () => {
   const [files, setFiles] = useState([]); // List of uploaded files
@@ -10,14 +11,12 @@ const TestGeneratorPage = () => {
   const [numQuestions, setNumQuestions] = useState(10);
   const [generatedTest, setGeneratedTest] = useState(null);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await axios.get("https://forgeprep.net/api/files/", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        console.log("Fetched files:", response.data); // Debugging log
+        const response = await api.get("/files/");
         setFiles(response.data);
       } catch (err) {
         console.error("Error fetching files:", err);
@@ -40,29 +39,17 @@ const TestGeneratorPage = () => {
 
     try {
       const prompt = `Generate a ${difficulty} test on the topic "${topic}" with ${numQuestions} questions based on the selected study material.`;
-
-      const response = await axios.post(
-        "https://forgeprep.net/api/gpt/generate",
-        {
-          topic,
-          difficulty,
-          num_questions: numQuestions,
-          study_material_id: selectedFileId,
-          prompt,
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-
-      if (response.data && response.data.id) {
-        setGeneratedTest(response.data);
-      } else {
-        throw new Error("Invalid response from server.");
-      }
+      const response = await api.post("/gpt/generate", {
+        topic,
+        difficulty,
+        num_questions: numQuestions,
+        study_material_id: selectedFileId,
+        prompt,
+      });
+      setGeneratedTest(response.data);
     } catch (err) {
       console.error("Error generating test:", err);
-      setError(err.response?.data?.message || "Failed to generate test. Please try again.");
+      setError("Failed to generate test. Please try again.");
     }
   };
 
@@ -135,11 +122,7 @@ const TestGeneratorPage = () => {
             <h3>Generated Test</h3>
             <pre>{JSON.stringify(generatedTest.metadata, null, 2)}</pre>
             <Button
-              variant="success"
-              className="mt-3"
-              onClick={() => {
-                window.location.href = `/take-test/${generatedTest.id}`;
-              }}
+              onClick={() => navigate(`/take-test/${generatedTest.id}`)}
             >
               Take Test
             </Button>

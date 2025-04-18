@@ -1,66 +1,47 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button } from "react-bootstrap";
+import api from "../utils/apiService"; // Import the centralized API service
 
 const SettingsPage = () => {
   const [profile, setProfile] = useState({ username: "", email: "" });
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("https://forgeprep.net/api/users/profile", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Profile data fetched:", data);
-        setProfile(data);
+        const response = await api.get("/users/profile");
+        setProfile(response.data);
       } catch (err) {
-        console.error("Error fetching profile:", err);
+        console.error("Error fetching profile:", err.response?.data || err.message);
         setError("Failed to fetch profile. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProfile();
   }, []);
 
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccessMessage("");
-
+  const handleUpdateProfile = async () => {
     try {
-      const response = await fetch("https://forgeprep.net/api/users/profile", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(profile),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Profile data updated:", data);
-      setProfile(data);
-      setSuccessMessage("Profile updated successfully!");
+      const response = await api.put("/users/profile", profile);
+      setProfile(response.data);
     } catch (err) {
       console.error("Error updating profile:", err);
-      setError("Failed to update profile. Please try again.");
     }
   };
+
+  if (loading) {
+    return (
+      <Container className="mt-4 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container className="mt-4">
@@ -75,7 +56,7 @@ const SettingsPage = () => {
               <Form.Control
                 type="text"
                 placeholder="Enter username"
-                value={profile.username}
+                value={profile.username || ""}
                 onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                 required
               />
@@ -85,7 +66,7 @@ const SettingsPage = () => {
               <Form.Control
                 type="email"
                 placeholder="Enter email"
-                value={profile.email}
+                value={profile.email || ""}
                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                 required
               />
