@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from .auth import get_current_user
 from database.database import get_db
 from app.models import Test  # SQLAlchemy Test model
-from app.models import File as FileModel  # SQLAlchemy File model
+from app.models.models import File as FileModel  # SQLAlchemy File model
 import os
 from openai import OpenAI
 import json
