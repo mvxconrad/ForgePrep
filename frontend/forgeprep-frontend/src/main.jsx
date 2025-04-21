@@ -1,5 +1,5 @@
-import 'bootswatch/dist/cyborg/bootstrap.min.css'; // Import the Bootswatch theme
-import './index.css';
+import 'bootswatch/dist/lux/bootstrap.min.css'; // OR minty, cyborg, darkly, etc.
+import './index.css'; // Keep this - it imports your CSS with the Tailwind directives
 import App from './App.jsx';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
