@@ -1,14 +1,20 @@
-from fastapi import APIRouter, status, Depends, HTTPException, Security
+from fastapi import APIRouter, status, Depends, HTTPException, Security, Request
 from sqlalchemy.orm import Session
-from app.security.security import verify_password, create_access_token, decode_access_token, hash_password
-from database.database import get_db
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from app.models.models import User
 from app.schemas.schemas import UserCreate, LoginRequest
+from app.security.security import (
+    verify_password,
+    create_access_token,
+    decode_access_token,
+    hash_password
+)
+from database.database import get_db
 from authlib.integrations.starlette_client import OAuth
-from starlette.requests import Request
 from jose import JWTError, jwt
 import os
+from dotenv import load_dotenv
 
 router = APIRouter()
 
@@ -70,14 +76,30 @@ async def register_user(request: UserCreate, db: Session = Depends(get_db)):
     return {"message": "User registered successfully"}
 
 @router.post("/login")
-async def login(email: str, password: str, db: Session = Depends(get_db)):
+async def login(data: LoginRequest, db: Session = Depends(get_db)):
+    email = data.email
+    password = data.password
+
     user = db.query(User).filter(User.email == email).first()
+
     if not user or not user.verify_password(password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token_data = {"id": user.id, "sub": user.email}
     access_token = create_access_token(token_data)
-    return {"token": access_token}
+
+    # Set the token in a secure, HttpOnly cookie
+    response = JSONResponse(content={"message": "Login successful"})
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="Lax",
+        max_age=86400,  # 1 day in seconds
+        path="/"
+    )
+    return response
 
 @router.get("/login/{provider}")
 async def login_provider(request: Request, provider: str):
@@ -120,3 +142,27 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@router.get("/me")
+def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    try:
+        payload = decode_access_token(token)
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token decoding failed")
+
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "email": user.email,
+        "username": user.username,
+        "id": user.id
+    }

@@ -1,7 +1,7 @@
-// LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, Form, Button, Container, Row, Col } from "react-bootstrap";
+import { AuthContext } from "../context/AuthContext";
 import background1 from "../assets/login_background.png";
 import logo from "../assets/forgepreplogo.png";
 import loginImage from "../assets/loginicon.png";
@@ -11,16 +11,22 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (user) navigate("/dashboard");
+  }, [user, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
-      const response = await fetch("https://forgeprep.net/api/auth/login/", {
+      const response = await fetch("https://forgeprep.net/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -29,8 +35,7 @@ const LoginPage = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
+      await response.json();
       navigate("/dashboard");
     } catch (err) {
       setError(err.message);
@@ -39,7 +44,6 @@ const LoginPage = () => {
 
   return (
     <div className="position-relative bg-dark text-light overflow-hidden" style={{ minHeight: "100vh" }}>
-      {/* Background Image */}
       <img
         src={background1}
         alt="Login Background"
@@ -47,7 +51,6 @@ const LoginPage = () => {
         style={{ opacity: 0.25, zIndex: 0 }}
       />
 
-      {/* Navbar */}
       <nav
         className="navbar navbar-expand-lg navbar-dark px-4 py-2 position-fixed w-100"
         style={{ zIndex: 10, backgroundColor: "rgba(13, 17, 23, 0.85)", backdropFilter: "blur(12px)" }}
@@ -64,7 +67,6 @@ const LoginPage = () => {
         </div>
       </nav>
 
-      {/* Login Form Section */}
       <Container
         className="d-flex justify-content-center align-items-center"
         style={{ minHeight: "100vh", zIndex: 2, position: "relative", paddingTop: "80px" }}
@@ -106,12 +108,10 @@ const LoginPage = () => {
                   </Button>
                 </Form>
                 <p className="mt-3 text-center">
-                  Don't have an account? <a href="/register" className="text-info">Sign up</a>
+                  Don't have an account? <Link to="/register" className="text-info">Sign up</Link>
                 </p>
                 <p className="text-center">
-                  <a href="/forgot-password" className="text-info">
-                    Forgot Password?
-                  </a>
+                  <Link to="/forgot-password" className="text-info">Forgot Password?</Link>
                 </p>
               </Card.Body>
             </Card>
