@@ -1,17 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { Container, Row, Col, Card, ListGroup, ProgressBar, Button, Form } from "react-bootstrap";
-import statisticsImage from "../assets/statistics.jpg"; // Import the image
-import axios from "axios";
+import React, { useEffect, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Container, Row, Col, Card, ListGroup,
+  ProgressBar, Button, Form
+} from "react-bootstrap";
+import { AuthContext } from "../context/AuthContext";
+import statisticsImage from "../assets/statistics.jpg";
+import styles from "./Dashboard.module.css";
 
 const Dashboard = () => {
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState(null);
-  const [username, setUsername] = useState(""); // Fetch username from /api/users/profile
   const [prompt, setPrompt] = useState("");
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [error, setError] = useState("");
-  const [notifications, setNotifications] = useState([]); // Add state for notifications
+  const [notifications, setNotifications] = useState([]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -21,237 +28,166 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchUsername(); // Fetch username from /api/users/profile
     fetchDashboardData();
   }, []);
 
-  useEffect(() => {
-    console.log("Username state updated:", username); // Debugging log
-  }, [username]);
-
-  const fetchUsername = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Token is missing");
-      }
-
-      // Decode the token to get the user ID
-      const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
-      const userId = decodedToken.id;
-      if (!userId) {
-        throw new Error("User ID is missing in the token");
-      }
-
-      const response = await fetch(`https://forgeprep.net/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("User profile data:", data);
-      setUsername(data.username);
-    } catch (error) {
-      console.error("Error fetching username:", error);
-    }
-  };
-
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem("token"); // Retrieve the token from localStorage
-      if (!token) {
-        throw new Error("Token is missing");
-      }
-
-      const response = await fetch(`https://forgeprep.net/api/dashboard/?token=${token}`);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Dashboard data:", data);
-
+      const res = await fetch("https://forgeprep.net/api/dashboard", {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Dashboard fetch failed.");
+      const data = await res.json();
       setRecentTests(data.recent_tests || []);
       setGoals(data.goals || []);
       setStatistics(data.statistics || null);
       setNotifications(data.notifications || []);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+    } catch (err) {
+      console.error("Dashboard error:", err);
     }
   };
 
   const handleGenerateQuestions = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const questions = await axios.post(
-        "/api/gpt/generate",
-        { prompt },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setGeneratedQuestions(questions.data.questions);
+      const res = await fetch("/api/gpt/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      setGeneratedQuestions(data.questions || []);
     } catch (err) {
-      console.error("Error generating questions:", err);
-      setError("Failed to generate questions. Please try again.");
+      console.error("Question generation failed:", err);
+      setError("Could not generate questions.");
     }
   };
 
   return (
-    <Container className="mt-4">
-      <h1 className="mb-4">Dashboard</h1>
-      <h2>{`${getGreeting()}, ${username || "User"}!`}</h2>
+    <div className={styles.containerBackground}>
+      <Container>
+        <h1 className={styles.sectionTitle}>
+          {getGreeting()}, {user?.username || "User"} 👋
+        </h1>
 
-      <Row>
-        <Col md={6}>
-          <Card className="mb-4">
-            <Card.Header>Recent Tests</Card.Header>
-            <Card.Body>
-              {recentTests.length > 0 ? (
-                <ListGroup>
+        <Row className="g-4">
+          <Col md={6}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Recent Tests</div>
+              {recentTests.length ? (
+                <ListGroup variant="flush">
                   {recentTests.map((test) => (
-                    <ListGroup.Item key={test.id} className="d-flex justify-content-between align-items-center">
+                    <ListGroup.Item key={test.id} className="bg-transparent text-white d-flex justify-content-between">
                       {test.name}
-                      <span className="badge bg-primary rounded-pill">{test.score}%</span>
+                      <span className="badge bg-primary">{test.score}%</span>
                     </ListGroup.Item>
                   ))}
                 </ListGroup>
               ) : (
-                <p>No recent tests available.</p>
+                <p>No recent tests.</p>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={6}>
-          <Card className="mb-4">
-            <Card.Header>Your Goals</Card.Header>
-            <Card.Body>
-              {goals.length > 0 ? (
-                <ListGroup>
+            </Card>
+          </Col>
+
+          <Col md={6}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Your Goals</div>
+              {goals.length ? (
+                <ListGroup variant="flush">
                   {goals.map((goal) => (
-                    <ListGroup.Item key={goal.id}>
+                    <ListGroup.Item key={goal.id} className="bg-transparent text-white">
                       {goal.title}
-                      <ProgressBar now={goal.progress} label={`${goal.progress}%`} className="mt-2" />
+                      <ProgressBar
+                        now={goal.progress}
+                        label={`${goal.progress}%`}
+                        className="mt-2"
+                      />
                     </ListGroup.Item>
                   ))}
                 </ListGroup>
               ) : (
                 <p>No goals set yet.</p>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+            </Card>
+          </Col>
 
-      <Card className="mb-4">
-        <Card.Header>Recently Generated Tests</Card.Header>
-        <Card.Body>
-          {recentTests.length > 0 ? (
-            <ListGroup>
-              {recentTests.map((test) => (
-                <ListGroup.Item key={test.id}>
-                  {test.name} - {test.date}
-                  <Button
-                    variant="primary"
-                    className="ms-3"
-                    onClick={() => navigate("/take-test", { state: { test } })}
-                  >
-                    Take Test
-                  </Button>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          ) : (
-            <p>No tests generated recently.</p>
+          <Col md={12}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Quick Actions</div>
+              <div className="d-flex flex-wrap gap-3">
+                <Button variant="primary" href="/upload">Upload Files</Button>
+                <Button variant="success" href="/testgenerator">Generate Test</Button>
+                <Button variant="info" href="/study-sets">Study Sets</Button>
+              </div>
+            </Card>
+          </Col>
+
+          <Col md={12}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Past Test Statistics</div>
+              <img src={statisticsImage} alt="Statistics" className="w-100 mb-3 rounded" />
+              {statistics ? (
+                <div>
+                  <p><strong>Average Score:</strong> {statistics.averageScore}%</p>
+                  <p><strong>Best Score:</strong> {statistics.bestScore}%</p>
+                  <p><strong>Lowest Score:</strong> {statistics.worstScore}%</p>
+                </div>
+              ) : (
+                <p>No statistics available.</p>
+              )}
+            </Card>
+          </Col>
+
+          <Col md={12}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>AI-Powered Question Generator</div>
+              <Form.Group controlId="formPrompt" className="mb-3">
+                <Form.Control
+                  type="text"
+                  placeholder="Enter a topic or prompt"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                />
+              </Form.Group>
+              <Button onClick={handleGenerateQuestions} variant="primary">
+                Generate Questions
+              </Button>
+              {error && <p className="text-danger mt-3">{error}</p>}
+            </Card>
+          </Col>
+
+          {generatedQuestions.length > 0 && (
+            <Col md={12}>
+              <Card className={styles.glassCard}>
+                <div className={styles.cardHeader}>Generated Questions</div>
+                <ListGroup>
+                  {generatedQuestions.map((q, idx) => (
+                    <ListGroup.Item key={idx} className="bg-transparent text-white">{q}</ListGroup.Item>
+                  ))}
+                </ListGroup>
+              </Card>
+            </Col>
           )}
-        </Card.Body>
-      </Card>
 
-      <Card className="mb-4">
-        <Card.Header>Quick Actions</Card.Header>
-        <Card.Body>
-          <Button variant="primary" className="me-2" href="/upload">Upload Files</Button>
-          <Button variant="success" className="me-2" href="/testgenerator">Generate Test</Button>
-          <Button variant="info" href="/study-sets">View Study Sets</Button>
-        </Card.Body>
-      </Card>
-
-      <Card className="mb-4">
-        <Card.Header>Past Test Statistics</Card.Header>
-        <Card.Body>
-          <img src={statisticsImage} alt="Statistics" style={{ width: "100%", height: "auto" }} />
-          {statistics ? (
-            <div>
-              <p><strong>Average Score:</strong> {statistics.averageScore}%</p>
-              <p><strong>Best Score:</strong> {statistics.bestScore}%</p>
-              <p><strong>Worst Score:</strong> {statistics.worstScore}%</p>
-            </div>
-          ) : (
-            <p>No statistics available.</p>
-          )}
-        </Card.Body>
-      </Card>
-
-      <Card className="mb-4">
-        <Card.Header>Progress Overview</Card.Header>
-        <Card.Body>
-          <ProgressBar now={statistics?.averageScore || 0} label={`${statistics?.averageScore || 0}%`} />
-        </Card.Body>
-      </Card>
-
-      <Card className="mb-4">
-        <Card.Header>Notifications</Card.Header>
-        <Card.Body>
-          {notifications.length > 0 ? (
-            <ListGroup>
-              {notifications.map((notification, index) => (
-                <ListGroup.Item key={index}>{notification.message}</ListGroup.Item>
-              ))}
-            </ListGroup>
-          ) : (
-            <p>No notifications available.</p>
-          )}
-        </Card.Body>
-      </Card>
-
-      <Card className="p-3 mb-4">
-        <h3>AI-Powered Question Generator</h3>
-        <Form.Group controlId="formPrompt" className="mb-3">
-          <Form.Label>Enter a Prompt</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter a topic or question prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-        </Form.Group>
-        <Button onClick={handleGenerateQuestions} variant="primary">
-          Generate Questions
-        </Button>
-        {error && <p className="text-danger mt-3">{error}</p>}
-      </Card>
-
-      {generatedQuestions.length > 0 && (
-        <Card className="p-3">
-          <h3>Generated Questions</h3>
-          <ListGroup>
-            {generatedQuestions.map((question, index) => (
-              <ListGroup.Item key={index}>{question}</ListGroup.Item>
-            ))}
-          </ListGroup>
-        </Card>
-      )}
-    </Container>
+          <Col md={12}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Notifications</div>
+              {notifications.length > 0 ? (
+                <ListGroup>
+                  {notifications.map((note, idx) => (
+                    <ListGroup.Item key={idx} className="bg-transparent text-white">
+                      {note.message}
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              ) : (
+                <p>No notifications at this time.</p>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
 
