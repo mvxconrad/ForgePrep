@@ -69,14 +69,15 @@ async def register_user(request: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return {"message": "User registered successfully"}
 
-@router.post("/login/")
-async def login(request: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email).first()
-    if not user or not verify_password(request.password, user.hashed_password):
+@router.post("/login")
+async def login(email: str, password: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not user.verify_password(password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_access_token(data={"sub": user.email})
-    return {"message": "Login successful", "token": access_token}
+    token_data = {"id": user.id, "sub": user.email}
+    access_token = create_access_token(token_data)
+    return {"token": access_token}
 
 @router.get("/login/{provider}")
 async def login_provider(request: Request, provider: str):
