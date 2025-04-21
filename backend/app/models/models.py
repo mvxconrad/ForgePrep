@@ -72,10 +72,11 @@ class User(Base):
     progress = relationship("UserProgress", back_populates="user")
     study_materials = relationship("StudyMaterial", back_populates="user")
     tests = relationship("Test", back_populates="user")
-#    goals = relationship("Goal", back_populates="user")
-    
-    # New relationship for the 'File' model (files uploaded by the user)
-    files = relationship("File", back_populates="user")  # This establishes the reverse relationship
+    files = relationship("File", back_populates="user")
+
+    def verify_password(self, plain_password: str) -> bool:
+        return verify_password(plain_password, self.hashed_password)
+
 
 class StudyMaterial(Base):
     __tablename__ = "study_materials"
