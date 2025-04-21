@@ -6,6 +6,7 @@ from database.database import get_db
 from app.models import Test  # SQLAlchemy Test model
 from app.models.models import File as FileModel  # SQLAlchemy File model
 import os
+import openai
 from openai import OpenAI
 import json
 from datetime import datetime
