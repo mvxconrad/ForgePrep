@@ -1,77 +1,70 @@
-import React, { useState } from "react";
-import { Container, Card, Button, Form } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import api from "../utils/apiService";
+import { Container, Card, Button, Form } from "react-bootstrap";
 
 const TakeTestPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { test } = location.state || {}; // Test data passed from the previous page
+  const testId = location.state?.testId;
 
+  const [test, setTest] = useState(null);
   const [answers, setAnswers] = useState({});
   const [error, setError] = useState("");
 
-  if (!test) {
-    return <p>No test data available.</p>;
-  }
+  useEffect(() => {
+    if (!testId) {
+      setError("Missing test ID.");
+      return;
+    }
 
-  const handleAnswerChange = (questionId, selectedOption) => {
-    setAnswers({ ...answers, [questionId]: selectedOption });
+    const fetchTest = async () => {
+      try {
+        const response = await api.get(`/tests/${testId}`);
+        setTest(response.data);
+      } catch (err) {
+        console.error("Error fetching test:", err);
+        setError("Failed to load test. Please try again.");
+      }
+    };
+
+    fetchTest();
+  }, [testId]);
+
+  const handleChange = (questionId, value) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleSubmitTest = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("https://forgeprep.net/api/tests/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ testId: test.id, answers }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Test submitted successfully:", result);
-      navigate("/test-results", { state: { result } }); // Redirect to test results page
+      const response = await api.post("/tests/submit", { testId, answers });
+      navigate("/test-results", { state: { result: response.data } });
     } catch (err) {
       console.error("Error submitting test:", err);
-      setError("Failed to submit the test. Please try again.");
+      setError("Failed to submit test. Please try again.");
     }
   };
 
+  if (!test) return <p>{error || "Loading test..."}</p>;
+
   return (
     <Container className="mt-4">
-      <h1>{test.name}</h1>
-      <p>{test.description}</p>
-      {error && <p className="text-danger">{error}</p>}
-      {test.questions.map((question, index) => (
-        <Card key={index} className="mb-3">
-          <Card.Body>
-            <h5>{index + 1}. {question.questionText}</h5>
-            <Form>
-              {question.options.map((option, idx) => (
-                <Form.Check
-                  key={idx}
-                  type="radio"
-                  name={`question-${index}`}
-                  label={option}
-                  value={option}
-                  onChange={() => handleAnswerChange(question.id, option)}
-                />
-              ))}
-            </Form>
-          </Card.Body>
-        </Card>
-      ))}
-      <Button onClick={handleSubmitTest} variant="success">
-        Submit Test
-      </Button>
+      <Card className="p-4">
+        <h2>{test.title || "Take Test"}</h2>
+        {test.questions.map((q, idx) => (
+          <Form.Group className="mb-3" key={q.id}>
+            <Form.Label>
+              {idx + 1}. {q.text}
+            </Form.Label>
+            <Form.Control
+              type="text"
+              value={answers[q.id] || ""}
+              onChange={(e) => handleChange(q.id, e.target.value)}
+            />
+          </Form.Group>
+        ))}
+        <Button onClick={handleSubmitTest}>Submit Test</Button>
+      </Card>
     </Container>
   );
 };

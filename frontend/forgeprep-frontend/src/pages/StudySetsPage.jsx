@@ -1,100 +1,64 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Form, Button, ListGroup, Card } from "react-bootstrap";
+import { Container, Card, ListGroup, Alert } from "react-bootstrap";
+import api from "../utils/apiService"; // Centralized API service
 
 const StudySetsPage = () => {
   const [studySets, setStudySets] = useState([]);
-  const [newStudySet, setNewStudySet] = useState({ title: "", description: "" });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("https://forgeprep.net/api/study_sets/")
-      .then((res) => res.json())
-      .then((data) => setStudySets(data))
-      .catch((err) => console.error("Error fetching study sets:", err));
-  }, []);
-
-  const handleAddStudySet = async (e) => {
-    e.preventDefault();
-    if (!newStudySet.title || !newStudySet.description) return;
-
+  const fetchFilteredStudySets = async (query) => {
     try {
-      const response = await fetch("https://forgeprep.net/api/study_sets/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newStudySet),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const addedStudySet = await response.json();
-      setStudySets([...studySets, addedStudySet]);
-      setNewStudySet({ title: "", description: "" });
+      const response = await api.get(`${API_ENDPOINTS.STUDY_SETS}?search=${query}`);
+      setStudySets(response.data);
     } catch (err) {
-      console.error("Error adding study set:", err);
+      console.error("Error fetching filtered study sets:", err);
+      setError("Failed to load study sets. Please try again.");
     }
   };
 
+  useEffect(() => {
+    const fetchStudySets = async () => {
+      try {
+        const response = await api.get("/study_sets/");
+        setStudySets(response.data);
+      } catch (err) {
+        console.error("Error fetching study sets:", err);
+        setError("Failed to load study sets. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudySets();
+  }, []);
+
+  if (loading) {
+    return (
+      <Container className="mt-4">
+        <p>Loading study sets...</p>
+      </Container>
+    );
+  }
+
   return (
     <Container className="mt-4">
-      <Row>
-        <Col md={6}>
-          <Card className="mb-4">
-            <Card.Body>
-              <h2>Add New Study Set</h2>
-              <Form onSubmit={handleAddStudySet}>
-                <Form.Group controlId="formStudySetTitle" className="mb-3">
-                  <Form.Label>Title</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter title"
-                    value={newStudySet.title}
-                    onChange={(e) => setNewStudySet({ ...newStudySet, title: e.target.value })}
-                    required
-                  />
-                </Form.Group>
-                <Form.Group controlId="formStudySetDescription" className="mb-3">
-                  <Form.Label>Description</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter description"
-                    value={newStudySet.description}
-                    onChange={(e) => setNewStudySet({ ...newStudySet, description: e.target.value })}
-                    required
-                  />
-                </Form.Group>
-                <Button variant="primary" type="submit">Add Study Set</Button>
-              </Form>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={6}>
-          <Card>
-            <Card.Body>
-              <h2>Study Sets</h2>
-              <Form.Group controlId="formSearchStudySets" className="mb-3">
-                <Form.Control
-                  type="text"
-                  placeholder="Search study sets..."
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </Form.Group>
-              <ListGroup>
-                {studySets.length > 0 ? (
-                  studySets.map((set) => (
-                    <ListGroup.Item key={set.id}>
-                      {set.title} - {set.description}
-                    </ListGroup.Item>
-                  ))
-                ) : (
-                  <ListGroup.Item>No study sets available</ListGroup.Item>
-                )}
-              </ListGroup>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <h2>Study Sets</h2>
+      {error && <Alert variant="danger">{error}</Alert>}
+      <Card>
+        <Card.Body>
+          <Card.Title>Available Study Sets</Card.Title>
+          <ListGroup>
+            {studySets.length > 0 ? (
+              studySets.map((set) => (
+                <ListGroup.Item key={set.id}>{set.name}</ListGroup.Item>
+              ))
+            ) : (
+              <ListGroup.Item>No study sets available</ListGroup.Item>
+            )}
+          </ListGroup>
+        </Card.Body>
+      </Card>
     </Container>
   );
 };

@@ -38,6 +38,10 @@ const PerformanceChart = ({ performanceData }) => {
     },
   };
 
+  if (!data || data.datasets.length === 0) {
+    return <p>No performance data available.</p>;
+  }
+
   return <Line data={data} options={options} />;
 };
 

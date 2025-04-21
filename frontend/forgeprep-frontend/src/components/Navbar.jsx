@@ -20,16 +20,20 @@ const CustomNavbar = () => {
     }
   };
 
+  const getActiveClass = (path) => (window.location.pathname === path ? "active" : "");
+
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" className="mb-4 custom-navbar">
+    <BootstrapNavbar bg="dark" variant="dark" expand="lg" className="mb-4 custom-navbar">
       <Container fluid>
-        <Navbar.Brand as={Link} to="/dashboard">ForgePrep</Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
+        <BootstrapNavbar.Brand as={Link} to="/dashboard">ForgePrep</BootstrapNavbar.Brand>
+        <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
+        <BootstrapNavbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
             {user ? (
               <>
-                <Button as={Link} to="/dashboard" variant="outline-light" className="me-2">Dashboard</Button>
+                <Button as={Link} to="/dashboard" variant="outline-light" className={`me-2 ${getActiveClass("/dashboard")}`}>
+                  Dashboard
+                </Button>
                 <Button as={Link} to="/upload" variant="outline-light" className="me-2">File Upload</Button>
                 <Button as={Link} to="/testgenerator" variant="outline-light" className="me-2">Test Generator</Button>
                 <Button as={Link} to="/classes" variant="outline-light" className="me-2">Classes</Button>
@@ -47,9 +51,9 @@ const CustomNavbar = () => {
             )}
           </Nav>
           {user && <Button variant="danger" onClick={handleLogout}>Logout</Button>}
-        </Navbar.Collapse>
+        </BootstrapNavbar.Collapse>
       </Container>
-    </Navbar>
+    </BootstrapNavbar>
   );
 };
 

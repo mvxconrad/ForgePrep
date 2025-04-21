@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { Container, Card, Button, ListGroup, ProgressBar } from "react-bootstrap";
-import axios from "axios";
+import { Container, Card, Button, ListGroup, ProgressBar, Alert } from "react-bootstrap";
+import api from "../utils/apiService"; // Centralized API service
 
 const StudySetDetailsPage = ({ studySetId }) => {
   const [studySet, setStudySet] = useState(null);
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStudySet = async () => {
-      const response = await fetch(`https://forgeprep.net/api/study_sets/${studySetId}`);
-      const data = await response.json();
-      setStudySet(data);
+      try {
+        const response = await api.get(`/study_sets/${studySetId}`);
+        setStudySet(response.data);
+      } catch (err) {
+        console.error("Error fetching study set:", err);
+        setError("Failed to load study set details. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchStudySet();
@@ -19,26 +26,26 @@ const StudySetDetailsPage = ({ studySetId }) => {
 
   const handleGenerateQuestions = async () => {
     try {
-      const token = localStorage.getItem("token");
       const prompt = `Generate questions for study set ID: ${studySetId}`;
-      const questions = await axios.post(
-        "/api/gpt/generate",
-        { prompt },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setGeneratedQuestions(questions.data.questions);
+      const response = await api.post("/gpt/generate", { prompt });
+      setGeneratedQuestions(response.data.questions);
     } catch (err) {
       console.error("Error generating questions:", err);
       setError("Failed to generate questions. Please try again.");
     }
   };
 
+  if (loading) {
+    return (
+      <Container className="mt-4">
+        <p>Loading study set details...</p>
+      </Container>
+    );
+  }
+
   return (
     <Container className="mt-4">
+      {error && <Alert variant="danger">{error}</Alert>}
       {studySet ? (
         <>
           <h2>{studySet.title}</h2>
@@ -59,7 +66,7 @@ const StudySetDetailsPage = ({ studySetId }) => {
           </Card>
         </>
       ) : (
-        <p>Loading study set details...</p>
+        <p>No study set details available.</p>
       )}
 
       <Card className="p-3 mb-4">

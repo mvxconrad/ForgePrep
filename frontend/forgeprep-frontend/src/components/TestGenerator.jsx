@@ -5,8 +5,15 @@ const TestGenerator = () => {
   const [numQuestions, setNumQuestions] = useState(10);
   const [difficulty, setDifficulty] = useState("medium");
   const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
+    if (numQuestions <= 0) {
+      alert("Number of questions must be greater than 0.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/tests/generate`, {
         num_questions: numQuestions,
@@ -16,6 +23,8 @@ const TestGenerator = () => {
     } catch (error) {
       console.error("Test generation failed", error);
       alert("Error generating test");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,7 +46,9 @@ const TestGenerator = () => {
           <option value="hard">Hard</option>
         </select>
       </label>
-      <button onClick={handleGenerate}>Generate Test</button>
+      <button onClick={handleGenerate} disabled={loading}>
+        {loading ? "Generating..." : "Generate Test"}
+      </button>
 
       <ul>
         {questions.map((q, index) => (
