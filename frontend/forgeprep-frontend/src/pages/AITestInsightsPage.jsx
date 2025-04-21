@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, ListGroup, Button } from "react-bootstrap";
 import axios from "axios";
-
+import { getUserRole } from "../utils/authUtils";
+import { Navigate } from "react-router-dom";
+const role = getUserRole();
+if (role !== "admin") {
+  return <Navigate to="/dashboard" />;
+}
 const AITestInsightsPage = () => {
   const [insights, setInsights] = useState([]); // Initialize as an empty array
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [analytics, setAnalytics] = useState([]);
 
   const fetchInsights = async () => {
     setLoading(true);
@@ -25,6 +31,15 @@ const AITestInsightsPage = () => {
       setError("Failed to fetch AI insights. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await api.get("/admin/analytics");
+      setAnalytics(response.data);
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
     }
   };
 

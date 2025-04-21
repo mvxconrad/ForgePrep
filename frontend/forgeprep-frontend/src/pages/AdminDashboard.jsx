@@ -1,5 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Container, Table, Button, Spinner, Alert } from "react-bootstrap";
+import axios from "axios";
+import { Navigate } from "react-router-dom";
+
+const isAdmin = () => {
+  const token = localStorage.getItem("token");
+  const { role } = JSON.parse(atob(token.split(".")[1]));
+  return role === "admin";
+};
+
+const ProtectedAdminRoute = ({ component: Component }) => {
+  return isAdmin() ? <Component /> : <Navigate to="/dashboard" />;
+};
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -10,33 +22,24 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchAdminData = async () => {
-      setLoading(true);
-      setError("");
       try {
-        const response = await fetch("https://forgeprep.net/api/admin/data", {
+        const response = await axios.get("https://forgeprep.net/api/admin/data", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Admin data fetched:", data);
-
-        setUsers(data.users || []);
-        setStudySets(data.studySets || []);
-        setFiles(data.files || []);
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-        setError("Failed to fetch admin data. Please try again.");
+        setUsers(response.data.users || []);
+        setStudySets(response.data.studySets || []);
+        setFiles(response.data.files || []);
+      } catch (err) {
+        console.error("Error fetching admin data:", err);
+        setError("Failed to load admin data. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
+    setLoading(true);
+    setError("");
     fetchAdminData();
   }, []);
 
