@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Card, Form, Button } from "react-bootstrap";
+import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import api from "../utils/apiService"; // Import the centralized API service
 
 const SettingsPage = () => {
@@ -48,8 +48,8 @@ const SettingsPage = () => {
       <Card className="shadow">
         <Card.Body>
           <h2>Settings</h2>
-          {error && <p className="text-danger">{error}</p>}
-          {successMessage && <p className="text-success">{successMessage}</p>}
+          {successMessage && <Alert variant="success">{successMessage}</Alert>}
+          {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleUpdateProfile}>
             <Form.Group controlId="formUsername" className="mb-3">
               <Form.Label>Username</Form.Label>

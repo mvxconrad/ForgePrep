@@ -16,7 +16,7 @@ const ProfilePage = () => {
           throw new Error("Token is missing. Please log in again.");
         }
 
-        const response = await api.get("/users/profile");
+        const response = await api.get("/users/");
         setProfile(response.data);
       } catch (err) {
         console.error("Error fetching profile:", err.response?.data || err.message);

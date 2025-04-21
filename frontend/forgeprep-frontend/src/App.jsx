@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Dashboard from "./pages/Dashboard";
@@ -10,20 +10,17 @@ import TestGenerator from "./pages/TestGeneratorPage";
 import GitHubCallback from "./pages/GitHubCallback";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
-import LandingPage from "./pages/LandingPage"; // Import the LandingPage
+import LandingPage from "./pages/LandingPage";
 import Navbar from "./components/Navbar";
-import AdminDashboard from "./pages/AdminDashboard"; // Import the AdminDashboard
-import TestResults from "./pages/TestResults"; // Import the TestResults
+import AdminDashboard from "./pages/AdminDashboard";
+import TestResults from "./pages/TestResults";
 import StudySetDetailsPage from "./pages/StudySetDetailsPage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
-import AITestInsightsPage from "./pages/AITestInsightsPage"; // Import the AITestInsightsPage
+import AITestInsightsPage from "./pages/AITestInsightsPage";
 import TakeTestPage from "./pages/TakeTestPage";
 import GeneratedTestPage from "./pages/GeneratedTestPage";
-import StudySetsPage from "./pages/StudySetsPage"; // Import the StudySetsPage component
-
-const ProtectedRoute = ({ isAuthenticated, children }) => {
-  return isAuthenticated ? children : <Navigate to="/login" />;
-};
+import StudySetsPage from "./pages/StudySetsPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const AppContent = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
@@ -40,28 +37,76 @@ const AppContent = () => {
     <>
       {showNavbar && <Navbar />}
       <Routes>
-        <Route path="/" element={<LandingPage />} /> {/* Set LandingPage as the default route */}
+        {/* Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Guest-Only Pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />
-        <Route path="/dashboard" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Dashboard /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute isAuthenticated={isAuthenticated}><ProfilePage /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute isAuthenticated={isAuthenticated}><SettingsPage /></ProtectedRoute>} />
-        <Route path="/upload" element={<ProtectedRoute isAuthenticated={isAuthenticated}><FileUpload /></ProtectedRoute>} />
-        <Route path="/testgenerator" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TestGenerator /></ProtectedRoute>} />
-        <Route path="/auth/github/callback" element={<GitHubCallback />} />
-        <Route path="/templates" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Templates /></ProtectedRoute>} />
-        {/* <Route path="/quizzes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Quizzes /></ProtectedRoute>} /> */}
-        <Route path="/classes" element={<ProtectedRoute isAuthenticated={isAuthenticated}><Classes /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/test-results" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TestResults /></ProtectedRoute>} />
-        <Route path="/study-sets/:id" element={<ProtectedRoute isAuthenticated={isAuthenticated}><StudySetDetailsPage /></ProtectedRoute>} />
-        <Route path="/admin-analytics" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminAnalyticsPage /></ProtectedRoute>} />
-        <Route path="/admin/dashboard" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/analytics" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AdminAnalyticsPage /></ProtectedRoute>} />
-        <Route path="/ai-insights" element={<ProtectedRoute isAuthenticated={isAuthenticated}><AITestInsightsPage /></ProtectedRoute>} /> {/* Add AITestInsightsPage route */}
-        <Route path="/generated-test" element={<ProtectedRoute isAuthenticated={isAuthenticated}><GeneratedTestPage /></ProtectedRoute>} />
-        <Route path="/take-test" element={<ProtectedRoute isAuthenticated={isAuthenticated}><TakeTestPage /></ProtectedRoute>} />
-        <Route path="/study-sets" element={<ProtectedRoute isAuthenticated={isAuthenticated}><StudySetsPage /></ProtectedRoute>} /> {/* Add this route */}
+
+        {/* User and Admin Pages */}
+        <Route
+          path="/dashboard"
+          element={<ProtectedRoute component={Dashboard} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/profile"
+          element={<ProtectedRoute component={ProfilePage} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/settings"
+          element={<ProtectedRoute component={SettingsPage} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/upload"
+          element={<ProtectedRoute component={FileUpload} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/testgenerator"
+          element={<ProtectedRoute component={TestGenerator} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/classes"
+          element={<ProtectedRoute component={Classes} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/templates"
+          element={<ProtectedRoute component={Templates} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/study-sets"
+          element={<ProtectedRoute component={StudySetsPage} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/test-results"
+          element={<ProtectedRoute component={TestResults} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/study-set-details"
+          element={<ProtectedRoute component={StudySetDetailsPage} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/take-test"
+          element={<ProtectedRoute component={TakeTestPage} allowedRoles={["user", "admin"]} />}
+        />
+        <Route
+          path="/generated-test"
+          element={<ProtectedRoute component={GeneratedTestPage} allowedRoles={["user", "admin"]} />}
+        />
+
+        {/* Admin-Only Pages */}
+        <Route
+          path="/admin-dashboard"
+          element={<ProtectedRoute component={AdminDashboard} allowedRoles={["admin"]} />}
+        />
+        <Route
+          path="/admin-analytics"
+          element={<ProtectedRoute component={AdminAnalyticsPage} allowedRoles={["admin"]} />}
+        />
+        <Route
+          path="/ai-test-insights"
+          element={<ProtectedRoute component={AITestInsightsPage} allowedRoles={["admin"]} />}
+        />
       </Routes>
     </>
   );

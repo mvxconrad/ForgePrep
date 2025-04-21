@@ -7,6 +7,16 @@ const StudySetsPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const fetchFilteredStudySets = async (query) => {
+    try {
+      const response = await api.get(`${API_ENDPOINTS.STUDY_SETS}?search=${query}`);
+      setStudySets(response.data);
+    } catch (err) {
+      console.error("Error fetching filtered study sets:", err);
+      setError("Failed to load study sets. Please try again.");
+    }
+  };
+
   useEffect(() => {
     const fetchStudySets = async () => {
       try {

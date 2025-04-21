@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row, Col, Card, ListGroup, ProgressBar, Button, Form } from "react-bootstrap";
-import statisticsImage from "../assets/statistics.jpg"; // Import the image
-import api from "../utils/apiService"; // Import the centralized API service
+import statisticsImage from "../assets/statistics.jpg";
+import api from "../utils/apiService";
+import { useNavigate } from "react-router-dom"; // Needed for navigation
 
 const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState(null);
-  const [username, setUsername] = useState(""); // Fetch username from /api/users/profile
+  const [username, setUsername] = useState("");
   const [prompt, setPrompt] = useState("");
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [error, setError] = useState("");
-  const [notifications, setNotifications] = useState([]); // Add state for notifications
+  const [notifications, setNotifications] = useState([]);
+
+  const navigate = useNavigate();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -21,54 +24,39 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchUsername(); // Fetch username from /api/users/profile
-  }, []);
-
-  useEffect(() => {
-    console.log("Username state updated:", username); // Debugging log
-  }, [username]);
-
-  useEffect(() => {
+    fetchUsername();
     fetchDashboardData();
   }, []);
+
+  const fetchUsername = async () => {
+    try {
+      const response = await api.get("/users/");
+      setUsername(response.data.username);
+    } catch (err) {
+      console.error("Error fetching username:", err);
+      setError("Failed to fetch username.");
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
       const response = await api.get("/dashboard/");
       setRecentTests(response.data.recent_tests);
       setStatistics(response.data.statistics);
+      // Optionally set goals/notifications if included in backend response
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
-      setError("Failed to load dashboard data. Please try again.");
-    }
-  };
-
-  const fetchUsername = async () => {
-    try {
-      const response = await api.get("/users/profile");
-      setUsername(response.data.username);
-    } catch (err) {
-      console.error("Error fetching username:", err);
-      setError("Failed to fetch username. Please try again.");
+      setError("Failed to load dashboard data.");
     }
   };
 
   const handleGenerateQuestions = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const questions = await api.post(
-        "/gpt/generate",
-        { prompt },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setGeneratedQuestions(questions.data.questions);
+      const response = await api.post("/gpt/generate", { prompt });
+      setGeneratedQuestions(response.data.questions);
     } catch (err) {
       console.error("Error generating questions:", err);
-      setError("Failed to generate questions. Please try again.");
+      setError("Failed to generate questions.");
     }
   };
 
@@ -77,6 +65,7 @@ const Dashboard = () => {
       <h1 className="mb-4">Dashboard</h1>
       <h2>{`${getGreeting()}, ${username || "User"}!`}</h2>
 
+      {/* Recent Tests and Goals */}
       <Row>
         <Col md={6}>
           <Card className="mb-4">
@@ -118,6 +107,7 @@ const Dashboard = () => {
         </Col>
       </Row>
 
+      {/* Recently Generated Tests */}
       <Card className="mb-4">
         <Card.Header>Recently Generated Tests</Card.Header>
         <Card.Body>
@@ -142,6 +132,7 @@ const Dashboard = () => {
         </Card.Body>
       </Card>
 
+      {/* Quick Actions */}
       <Card className="mb-4">
         <Card.Header>Quick Actions</Card.Header>
         <Card.Body>
@@ -151,6 +142,7 @@ const Dashboard = () => {
         </Card.Body>
       </Card>
 
+      {/* Statistics Section */}
       <Card className="mb-4">
         <Card.Header>Past Test Statistics</Card.Header>
         <Card.Body>
@@ -167,6 +159,7 @@ const Dashboard = () => {
         </Card.Body>
       </Card>
 
+      {/* Progress Overview */}
       <Card className="mb-4">
         <Card.Header>Progress Overview</Card.Header>
         <Card.Body>
@@ -174,6 +167,7 @@ const Dashboard = () => {
         </Card.Body>
       </Card>
 
+      {/* Notifications */}
       <Card className="mb-4">
         <Card.Header>Notifications</Card.Header>
         <Card.Body>
@@ -189,6 +183,7 @@ const Dashboard = () => {
         </Card.Body>
       </Card>
 
+      {/* AI Question Generator */}
       <Card className="p-3 mb-4">
         <h3>AI-Powered Question Generator</h3>
         <Form.Group controlId="formPrompt" className="mb-3">
@@ -206,6 +201,7 @@ const Dashboard = () => {
         {error && <p className="text-danger mt-3">{error}</p>}
       </Card>
 
+      {/* Generated Questions */}
       {generatedQuestions.length > 0 && (
         <Card className="p-3">
           <h3>Generated Questions</h3>
