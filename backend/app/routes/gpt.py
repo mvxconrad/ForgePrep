@@ -7,63 +7,66 @@ from app.models import Test  # SQLAlchemy Test model
 from app.models.models import File as FileModel  # SQLAlchemy File model
 import os
 import openai
-from openai import OpenAI
 import json
 from datetime import datetime
 
+# Initialize the router
 router = APIRouter()
-# openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Define the request model
 class PromptRequest(BaseModel):
-    file_id: int
-    prompt: str | None = None
-    study_material_id: int | None = None
+    file_id: int  # The ID of the file containing the extracted text
+    prompt: str | None = None  # Optional prompt from the user
+    study_material_id: int | None = None  # Optional ID for the study material
 
 @router.post("/gpt/generate")
 async def generate_test(
     request: PromptRequest,
-    db: Session = Depends(get_db),
-    user=Depends(get_current_user)  # or require_admin if needed
+    db: Session = Depends(get_db),  # Dependency for DB session
+    user=Depends(get_current_user)  # Dependency for current authenticated user
 ):
     try:
-        # Only allow specific user (admin-level)
+        # Step 1: Check if the current user is authorized (admin-level check)
         if user.email != "aejense@gmail.com":
             raise HTTPException(status_code=403, detail="Not authorized")
 
-        # Fetch file from DB (only if it belongs to this user)
+        # Step 2: Fetch the file from the database (make sure the file belongs to the current user)
         file = db.query(FileModel).filter_by(id=request.file_id, user_id=user.id).first()
         if not file:
             raise HTTPException(status_code=404, detail="File not found or access denied")
 
+        # Step 3: Extract text from the file and check for validity
         extracted_text = file.extracted_text
         if not extracted_text or len(extracted_text.strip()) == 0:
             raise HTTPException(status_code=400, detail="No extracted text available for this file")
 
-        # Combine prompt
+        # Step 4: Construct the prompt (use the user-provided prompt or a default one)
         base_prompt = request.prompt or (
             "You are provided with study material. Generate a test based on this material in JSON format. "
             "Each item should have a question, answer, and difficulty (easy, medium, hard)."
         )
-        full_prompt = f"{base_prompt}\n\nStudy Material:\n{extracted_text[:10000]}"  # limit for token safety
+        full_prompt = f"{base_prompt}\n\nStudy Material:\n{extracted_text[:10000]}"  # Limit to 10,000 characters for token safety
 
-        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        response = client.chat.completions.create(
-            model="gpt-4.1-nano",
+        # Step 5: Call OpenAI's API to generate the test
+        openai.api_key = os.environ.get("OPENAI_API_KEY")  # Set the API key
+        response = openai.ChatCompletion.create(
+            model="gpt-4.1-nano",  # Choose the model to use (make sure it is available)
             messages=[
                 {"role": "system", "content": "You are a helpful test generator assistant."},
                 {"role": "user", "content": full_prompt}
             ]
         )
 
-        raw_output = response.choices[0].message.content
+        # Step 6: Parse the response
+        raw_output = response.choices[0].message["content"]
 
-        # Parse JSON if possible
+        # Step 7: Try parsing the response as JSON
         try:
             questions = json.loads(raw_output)
         except json.JSONDecodeError:
-            questions = {"raw_text": raw_output}
+            questions = {"raw_text": raw_output}  # If parsing fails, return raw text as fallback
 
-        # Save test in DB
+        # Step 8: Save the generated test to the database
         new_test = Test(
             user_id=user.id,
             study_material_id=request.study_material_id,
@@ -74,7 +77,9 @@ async def generate_test(
         db.commit()
         db.refresh(new_test)
 
+        # Step 9: Return the result
         return {"test_id": new_test.id, "metadata": new_test.test_metadata}
 
     except Exception as e:
+        # If any error occurs, return a 500 internal server error
         raise HTTPException(status_code=500, detail=str(e))
