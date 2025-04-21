@@ -1,11 +1,14 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Navbar, Nav, Container, Button } from "react-bootstrap";
+import { Navbar, Nav, Container, Button, Toast, ToastContainer } from "react-bootstrap";
 import { AuthContext } from "../context/AuthContext";
+import logo from "../assets/forgepreplogo.png";
+import background from "../assets/login_background.png";
 
-const CustomNavbar = () => {
+const Navbar = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
+  const [showToast, setShowToast] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -14,7 +17,8 @@ const CustomNavbar = () => {
         credentials: "include",
       });
       setUser(null);
-      navigate("/login");
+      setShowToast(true);
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       console.error("Logout failed", err);
     }
@@ -23,38 +27,75 @@ const CustomNavbar = () => {
   const getActiveClass = (path) => (window.location.pathname === path ? "active" : "");
 
   return (
-    <BootstrapNavbar bg="dark" variant="dark" expand="lg" className="mb-4 custom-navbar">
-      <Container fluid>
-        <BootstrapNavbar.Brand as={Link} to="/dashboard">ForgePrep</BootstrapNavbar.Brand>
-        <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
-        <BootstrapNavbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
+    <>
+      <Navbar
+        expand="lg"
+        sticky="top"
+        style={{
+          backgroundImage: `url(${background})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backdropFilter: "blur(8px)",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+        }}
+        className="px-4 py-2"
+        variant="dark"
+      >
+        <Container fluid className="d-flex justify-content-between align-items-center">
+          <Navbar.Brand as={Link} to={user ? "/dashboard" : "/"}>
+            <img src={logo} alt="ForgePrep Logo" height="48" />
+          </Navbar.Brand>
+
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+              {user && (
+                <>
+                  <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
+                  <Nav.Link as={Link} to="/upload">File Upload</Nav.Link>
+                  <Nav.Link as={Link} to="/testgenerator">Test Generator</Nav.Link>
+                  <Nav.Link as={Link} to="/classes">Classes</Nav.Link>
+                  <Nav.Link as={Link} to="/templates">Templates</Nav.Link>
+                  <Nav.Link as={Link} to="/study-sets">Study Sets</Nav.Link>
+                  <Nav.Link as={Link} to="/test-results">Test Results</Nav.Link>
+                  <Nav.Link as={Link} to="/profile">Profile</Nav.Link>
+                  <Nav.Link as={Link} to="/settings">Settings</Nav.Link>
+                </>
+              )}
+            </Nav>
+
             {user ? (
-              <>
-                <Button as={Link} to="/dashboard" variant="outline-light" className={`me-2 ${getActiveClass("/dashboard")}`}>
-                  Dashboard
+              <div className="d-flex align-items-center gap-3">
+                <span className="text-white fw-semibold">Hi, {user.username || "User"}</span>
+                <Button variant="danger" size="sm" onClick={handleLogout}>
+                  Logout
                 </Button>
-                <Button as={Link} to="/upload" variant="outline-light" className="me-2">File Upload</Button>
-                <Button as={Link} to="/testgenerator" variant="outline-light" className="me-2">Test Generator</Button>
-                <Button as={Link} to="/classes" variant="outline-light" className="me-2">Classes</Button>
-                <Button as={Link} to="/templates" variant="outline-light" className="me-2">Templates</Button>
-                <Button as={Link} to="/study-sets" variant="outline-light" className="me-2">Study Sets</Button>
-                <Button as={Link} to="/test-results" variant="outline-light" className="me-2">Test Results</Button>
-                <Button as={Link} to="/profile" variant="outline-light" className="me-2">Profile</Button>
-                <Button as={Link} to="/settings" variant="outline-light" className="me-2">Settings</Button>
-              </>
+              </div>
             ) : (
-              <>
-                <Button as={Link} to="/login" variant="outline-light" className="me-2">Login</Button>
-                <Button as={Link} to="/register" variant="outline-light" className="me-2">Sign Up</Button>
-              </>
+              <div className="d-flex gap-2">
+                <Button as={Link} to="/login" variant="outline-light" size="sm">Login</Button>
+                <Button as={Link} to="/register" variant="light" size="sm">Sign Up</Button>
+              </div>
             )}
-          </Nav>
-          {user && <Button variant="danger" onClick={handleLogout}>Logout</Button>}
-        </BootstrapNavbar.Collapse>
-      </Container>
-    </BootstrapNavbar>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+
+      {/* Logout Toast */}
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          bg="success"
+          onClose={() => setShowToast(false)}
+          show={showToast}
+          delay={2000}
+          autohide
+        >
+          <Toast.Body className="text-white">Logout successful!</Toast.Body>
+        </Toast>
+      </ToastContainer>
+    </>
   );
 };
 
-export default CustomNavbar;
+export default Navbar;
