@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, ListGroup, Button } from "react-bootstrap";
 import axios from "axios";
-
+import { getUserRole } from "../utils/authUtils";
+import { Navigate } from "react-router-dom";
+const role = getUserRole();
+if (role !== "admin") {
+  return <Navigate to="/dashboard" />;
+}
 const AITestInsightsPage = () => {
   const [insights, setInsights] = useState([]); // Initialize as an empty array
   const [loading, setLoading] = useState(false);
