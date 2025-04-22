@@ -1,7 +1,8 @@
 import React, { useContext } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { AuthProvider, AuthContext } from "./components/AuthContext";
 
+// Pages
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import Dashboard from "./pages/Dashboard";
@@ -13,22 +14,19 @@ import GitHubCallback from "./pages/GitHubCallback";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
 import LandingPage from "./pages/LandingPage";
-import LandingPage from "./pages/LandingPage";
-import Navbar from "./components/Navbar";
-import AdminDashboard from "./pages/AdminDashboard";
-import TestResults from "./pages/TestResults";
 import AdminDashboard from "./pages/AdminDashboard";
 import TestResults from "./pages/TestResults";
 import StudySetDetailsPage from "./pages/StudySetDetailsPage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
 import AITestInsightsPage from "./pages/AITestInsightsPage";
-import AITestInsightsPage from "./pages/AITestInsightsPage";
 import TakeTestPage from "./pages/TakeTestPage";
 import GeneratedTestPage from "./pages/GeneratedTestPage";
 import StudySetsPage from "./pages/StudySetsPage";
+
+// Components
+import AppNavbar from "./components/AppNavbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
-// Needed to use hooks with Router
 const AppContent = () => {
   const { user, loading } = useContext(AuthContext);
   const location = useLocation();
@@ -39,7 +37,7 @@ const AppContent = () => {
 
   return (
     <>
-      {showNavbar && <Navbar />}
+      {showNavbar && <AppNavbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -53,15 +51,14 @@ const AppContent = () => {
         <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
         <Route path="/classes" element={<ProtectedRoute><Classes /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/test-results" element={<ProtectedRoute><TestResults /></ProtectedRoute>} />
-        <Route path="/study-sets/:id" element={<ProtectedRoute><StudySetDetailsPage /></ProtectedRoute>} />
-        <Route path="/admin-analytics" element={<ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
         <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
+        <Route path="/test-results" element={<ProtectedRoute><TestResults /></ProtectedRoute>} />
+        <Route path="/study-sets" element={<ProtectedRoute><StudySetsPage /></ProtectedRoute>} />
+        <Route path="/study-sets/:id" element={<ProtectedRoute><StudySetDetailsPage /></ProtectedRoute>} />
         <Route path="/ai-insights" element={<ProtectedRoute><AITestInsightsPage /></ProtectedRoute>} />
         <Route path="/generated-test" element={<ProtectedRoute><GeneratedTestPage /></ProtectedRoute>} />
         <Route path="/take-test" element={<ProtectedRoute><TakeTestPage /></ProtectedRoute>} />
-        <Route path="/study-sets" element={<ProtectedRoute><StudySetsPage /></ProtectedRoute>} />
       </Routes>
     </>
   );

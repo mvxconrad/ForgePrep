@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "../utils/apiService";
+import api from "../util/apiService";
 import { Container, Card, Button, Form } from "react-bootstrap";
 
 const TakeTestPage = () => {

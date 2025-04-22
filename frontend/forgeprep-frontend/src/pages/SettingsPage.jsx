@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
-import api from "../utils/apiService"; // Import the centralized API service
+import api from "../util/apiService"; // Import the centralized API service
 
 const SettingsPage = () => {
   const [profile, setProfile] = useState({ username: "", email: "" });

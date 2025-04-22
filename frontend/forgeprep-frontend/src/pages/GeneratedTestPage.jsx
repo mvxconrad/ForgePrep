@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Button, Alert } from "react-bootstrap";
-import api from "../utils/apiService"; // Centralized API service
+import api from "../util/apiService"; // Centralized API service
 
 const GeneratedTestPage = () => {
   const location = useLocation();

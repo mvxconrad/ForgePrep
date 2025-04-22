@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import api from "../utils/apiService"; // Import the centralized API service
+import api from "../util/apiService"; // Import the centralized API service
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState({ username: "", email: "" });

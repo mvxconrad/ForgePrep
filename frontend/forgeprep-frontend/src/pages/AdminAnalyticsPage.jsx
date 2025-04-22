@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Container, Card, Alert, Spinner } from "react-bootstrap";
-import api from "../utils/apiService";
+import api from "../util/apiService";
 
 const AdminAnalyticsPage = () => {
   const [analytics, setAnalytics] = useState(null);

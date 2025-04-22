@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Form, Button, Alert, Spinner } from "react-bootstrap";
-import api from "../utils/apiService";
+import api from "../util/apiService";
 import { useNavigate } from "react-router-dom";
 
 const TestGeneratorPage = () => {

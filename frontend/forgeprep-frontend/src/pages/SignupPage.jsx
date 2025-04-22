@@ -4,6 +4,7 @@ import { Card, Form, Button, Container, Row, Col } from "react-bootstrap";
 import background1 from "../assets/signup_background.png";
 import logo from "../assets/forgepreplogo.png";
 import signupImage from "../assets/signupicon.png";
+import { AuthContext } from "../components/AuthContext";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");

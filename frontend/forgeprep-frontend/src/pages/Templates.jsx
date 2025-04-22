@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button, ListGroup, Alert } from "react-bootstrap";
-import api from "../utils/apiService"; // Centralized API service
+import api from "../util/apiService"; // Centralized API service
 
 const Templates = () => {
   const [templates, setTemplates] = useState([]);
