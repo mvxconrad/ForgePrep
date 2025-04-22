@@ -77,6 +77,7 @@ const TestGeneratorPage = () => {
             <option>Easy</option>
             <option>Medium</option>
             <option>Hard</option>
+            <option>Mixed</option>
           </Form.Select>
         </Form.Group>
 
