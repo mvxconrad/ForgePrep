@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Button, Alert } from "react-bootstrap";
-import api from "../utils/apiService"; // Centralized API service
+import api from "../utils/apiService";
+import PageWrapper from "../components/PageWrapper";
 
 const GeneratedTestPage = () => {
   const location = useLocation();
@@ -35,39 +36,45 @@ const GeneratedTestPage = () => {
 
   if (error) {
     return (
-      <Container className="mt-4">
-        <Alert variant="danger">{error}</Alert>
-      </Container>
+      <PageWrapper>
+        <Container className="mt-4">
+          <Alert variant="danger">{error}</Alert>
+        </Container>
+      </PageWrapper>
     );
   }
 
   if (!test) {
     return (
-      <Container className="mt-4">
-        <p>Loading test data...</p>
-      </Container>
+      <PageWrapper>
+        <Container className="mt-4">
+          <p>Loading test data...</p>
+        </Container>
+      </PageWrapper>
     );
   }
 
   return (
-    <Container className="mt-4">
-      <h1>Generated Test</h1>
-      <ul>
-        {test.questions.map((question, index) => (
-          <li key={index}>
-            <strong>{question.questionText}</strong>
-            <ul>
-              {question.options.map((option, idx) => (
-                <li key={idx}>{option}</li>
-              ))}
-            </ul>
-          </li>
-        ))}
-      </ul>
-      <Button onClick={handleStartTest} variant="primary">
-        Start Test
-      </Button>
-    </Container>
+    <PageWrapper>
+      <Container className="mt-4">
+        <h1>Generated Test</h1>
+        <ul>
+          {test.questions.map((question, index) => (
+            <li key={index}>
+              <strong>{question.questionText}</strong>
+              <ul>
+                {question.options.map((option, idx) => (
+                  <li key={idx}>{option}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+        <Button onClick={handleStartTest} variant="primary">
+          Start Test
+        </Button>
+      </Container>
+    </PageWrapper>
   );
 };
 

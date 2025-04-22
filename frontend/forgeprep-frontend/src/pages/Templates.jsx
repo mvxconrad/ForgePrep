@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button, ListGroup, Alert } from "react-bootstrap";
 import api from "../utils/apiService"; // Centralized API service
+import PageWrapper from "../components/PageWrapper";
 
 const Templates = () => {
   const [templates, setTemplates] = useState([]);
@@ -49,58 +50,62 @@ const Templates = () => {
 
   if (loading) {
     return (
-      <Container className="mt-4">
-        <p>Loading templates...</p>
-      </Container>
+      <PageWrapper>
+        <Container className="mt-4">
+          <p>Loading templates...</p>
+        </Container>
+      </PageWrapper>
     );
   }
 
   return (
-    <Container className="mt-4">
-      <h2>Templates</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
-      <Card className="mb-4">
-        <Card.Body>
-          <Card.Title>Add New Template</Card.Title>
-          <Form>
-            <Form.Group controlId="formTemplateName" className="mb-3">
-              <Form.Label>New Template Name</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter template name"
-                value={newTemplate}
-                onChange={(e) => setNewTemplate(e.target.value)}
-              />
-            </Form.Group>
-            <Button onClick={handleAddTemplate}>Add Template</Button>
-          </Form>
-        </Card.Body>
-      </Card>
-      <Card>
-        <Card.Body>
-          <Card.Title>Template List</Card.Title>
-          <ListGroup>
-            {templates.length > 0 ? (
-              templates.map((t) => (
-                <ListGroup.Item key={t.id}>
-                  {t.name}
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleRemoveTemplate(t.id)}
-                    className="float-end"
-                  >
-                    Remove
-                  </Button>
-                </ListGroup.Item>
-              ))
-            ) : (
-              <ListGroup.Item>No templates available</ListGroup.Item>
-            )}
-          </ListGroup>
-        </Card.Body>
-      </Card>
-    </Container>
+    <PageWrapper>
+      <Container className="mt-4">
+        <h2>Templates</h2>
+        {error && <Alert variant="danger">{error}</Alert>}
+        <Card className="mb-4 glass">
+          <Card.Body>
+            <Card.Title>Add New Template</Card.Title>
+            <Form>
+              <Form.Group controlId="formTemplateName" className="mb-3">
+                <Form.Label>New Template Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter template name"
+                  value={newTemplate}
+                  onChange={(e) => setNewTemplate(e.target.value)}
+                />
+              </Form.Group>
+              <Button onClick={handleAddTemplate}>Add Template</Button>
+            </Form>
+          </Card.Body>
+        </Card>
+        <Card className="glass">
+          <Card.Body>
+            <Card.Title>Template List</Card.Title>
+            <ListGroup>
+              {templates.length > 0 ? (
+                templates.map((t) => (
+                  <ListGroup.Item key={t.id} className="bg-transparent text-white">
+                    {t.name}
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleRemoveTemplate(t.id)}
+                      className="float-end"
+                    >
+                      Remove
+                    </Button>
+                  </ListGroup.Item>
+                ))
+              ) : (
+                <ListGroup.Item>No templates available</ListGroup.Item>
+              )}
+            </ListGroup>
+          </Card.Body>
+        </Card>
+      </Container>
+    </PageWrapper>
   );
 };
 

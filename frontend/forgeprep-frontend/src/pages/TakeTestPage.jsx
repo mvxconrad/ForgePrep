@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../utils/apiService";
 import { Container, Card, Button, Form } from "react-bootstrap";
+import PageWrapper from "../components/PageWrapper";
 
 const TakeTestPage = () => {
   const location = useLocation();
@@ -45,27 +46,35 @@ const TakeTestPage = () => {
     }
   };
 
-  if (!test) return <p>{error || "Loading test..."}</p>;
+  if (!test) {
+    return (
+      <PageWrapper>
+        <p>{error || "Loading test..."}</p>
+      </PageWrapper>
+    );
+  }
 
   return (
-    <Container className="mt-4">
-      <Card className="p-4">
-        <h2>{test.title || "Take Test"}</h2>
-        {test.questions.map((q, idx) => (
-          <Form.Group className="mb-3" key={q.id}>
-            <Form.Label>
-              {idx + 1}. {q.text}
-            </Form.Label>
-            <Form.Control
-              type="text"
-              value={answers[q.id] || ""}
-              onChange={(e) => handleChange(q.id, e.target.value)}
-            />
-          </Form.Group>
-        ))}
-        <Button onClick={handleSubmitTest}>Submit Test</Button>
-      </Card>
-    </Container>
+    <PageWrapper>
+      <Container className="mt-4">
+        <Card className="p-4">
+          <h2>{test.title || "Take Test"}</h2>
+          {test.questions.map((q, idx) => (
+            <Form.Group className="mb-3" key={q.id}>
+              <Form.Label>
+                {idx + 1}. {q.text}
+              </Form.Label>
+              <Form.Control
+                type="text"
+                value={answers[q.id] || ""}
+                onChange={(e) => handleChange(q.id, e.target.value)}
+              />
+            </Form.Group>
+          ))}
+          <Button onClick={handleSubmitTest}>Submit Test</Button>
+        </Card>
+      </Container>
+    </PageWrapper>
   );
 };
 

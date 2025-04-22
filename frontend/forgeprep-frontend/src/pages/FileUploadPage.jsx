@@ -3,6 +3,7 @@ import axios from "axios";
 import { Container, Form, Button, ProgressBar, Table, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import studyGuideImage from "../assets/study_guide.jpg"; // Import the image
+import PageWrapper from "../components/PageWrapper"; // Import PageWrapper
 
 const FileUploadPage = () => {
   const [file, setFile] = useState(null);
@@ -87,84 +88,86 @@ const FileUploadPage = () => {
   };
 
   return (
-    <Container className="mt-4">
-      <Card className="shadow">
-        <Card.Body>
-          <h2>File Upload</h2>
-          <Form onSubmit={handleFileUpload}>
-            <Form.Group controlId="formFile" className="mb-3">
-              <Form.Label>Choose file</Form.Label>
-              <Form.Control type="file" onChange={handleFileChange} accept=".pdf,.docx,.txt" />
-            </Form.Group>
-            <Form.Group controlId="formFileCategory" className="mb-3">
-              <Form.Label>File Category</Form.Label>
-              <Form.Select>
-                <option value="study-material">Study Material</option>
-                <option value="assignments">Assignments</option>
-                <option value="notes">Notes</option>
-              </Form.Select>
-            </Form.Group>
-            {file && (
-              <Card className="mb-3">
-                <Card.Body>
-                  <p><strong>File Name:</strong> {file.name}</p>
-                  <p><strong>File Size:</strong> {(file.size / 1024).toFixed(2)} KB</p>
-                </Card.Body>
-              </Card>
+    <PageWrapper>
+      <Container className="mt-4">
+        <Card className="shadow">
+          <Card.Body>
+            <h2>File Upload</h2>
+            <Form onSubmit={handleFileUpload}>
+              <Form.Group controlId="formFile" className="mb-3">
+                <Form.Label>Choose file</Form.Label>
+                <Form.Control type="file" onChange={handleFileChange} accept=".pdf,.docx,.txt" />
+              </Form.Group>
+              <Form.Group controlId="formFileCategory" className="mb-3">
+                <Form.Label>File Category</Form.Label>
+                <Form.Select>
+                  <option value="study-material">Study Material</option>
+                  <option value="assignments">Assignments</option>
+                  <option value="notes">Notes</option>
+                </Form.Select>
+              </Form.Group>
+              {file && (
+                <Card className="mb-3">
+                  <Card.Body>
+                    <p><strong>File Name:</strong> {file.name}</p>
+                    <p><strong>File Size:</strong> {(file.size / 1024).toFixed(2)} KB</p>
+                  </Card.Body>
+                </Card>
+              )}
+              <Button variant="primary" type="submit" disabled={!file}>Upload</Button>
+            </Form>
+            {message && <p className="mt-3">{message}</p>}
+            {uploadProgress > 0 && (
+              <ProgressBar
+                now={uploadProgress}
+                label={`${uploadProgress}%`}
+                className="mt-3"
+              />
             )}
-            <Button variant="primary" type="submit" disabled={!file}>Upload</Button>
-          </Form>
-          {message && <p className="mt-3">{message}</p>}
-          {uploadProgress > 0 && (
-            <ProgressBar
-              now={uploadProgress}
-              label={`${uploadProgress}%`}
-              className="mt-3"
-            />
-          )}
-          {uploadedFileId && (
-            <Button
-              variant="success"
-              className="mt-3"
-              onClick={handleGenerateTest}
-            >
-              Generate Test
-            </Button>
-          )}
-        </Card.Body>
-      </Card>
+            {uploadedFileId && (
+              <Button
+                variant="success"
+                className="mt-3"
+                onClick={handleGenerateTest}
+              >
+                Generate Test
+              </Button>
+            )}
+          </Card.Body>
+        </Card>
 
-      {/* File Upload History */}
-      <Card className="p-3">
-        <h3>Upload History</h3>
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>Filename</th>
-              <th>Uploaded On</th>
-              <th>Size</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fileHistory.length > 0 ? (
-              fileHistory.map((file, index) => (
-                <tr key={index}>
-                  <td>{file.filename}</td>
-                  <td>{new Date(file.uploadedAt).toLocaleString()}</td>
-                  <td>{file.size.toFixed(2)} KB</td>
-                </tr>
-              ))
-            ) : (
+        {/* File Upload History */}
+        <Card className="p-3">
+          <h3>Upload History</h3>
+          <Table striped bordered hover>
+            <thead>
               <tr>
-                <td colSpan="3" className="text-center">
-                  No files uploaded yet
-                </td>
+                <th>Filename</th>
+                <th>Uploaded On</th>
+                <th>Size</th>
               </tr>
-            )}
-          </tbody>
-        </Table>
-      </Card>
-    </Container>
+            </thead>
+            <tbody>
+              {fileHistory.length > 0 ? (
+                fileHistory.map((file, index) => (
+                  <tr key={index}>
+                    <td>{file.filename}</td>
+                    <td>{new Date(file.uploadedAt).toLocaleString()}</td>
+                    <td>{file.size.toFixed(2)} KB</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="text-center">
+                    No files uploaded yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </Card>
+      </Container>
+    </PageWrapper>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Container, Card, ListGroup, Button } from "react-bootstrap";
+import { Container, Card, ListGroup, Spinner, Alert } from "react-bootstrap";
 import axios from "axios";
+import PageWrapper from "../components/PageWrapper";
 
 const AITestInsightsPage = () => {
   const [insights, setInsights] = useState([]);
@@ -30,31 +31,41 @@ const AITestInsightsPage = () => {
   }, []);
 
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <PageWrapper>
+        <Container className="mt-4 text-center">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </Container>
+      </PageWrapper>
+    );
   }
 
   return (
-    <Container>
-      <h2>AI Test Insights</h2>
-      {error && <p className="text-danger">{error}</p>}
-      <Card>
-        <Card.Body>
-          <ListGroup>
-            {insights.length > 0 ? (
-              insights.map((insight, index) => (
-                <ListGroup.Item key={index}>
-                  <strong>Topic:</strong> {insight.topic || "Unknown"} <br />
-                  <strong>Created At:</strong> {new Date(insight.created_at).toLocaleString()} <br />
-                  <strong>Questions:</strong> {insight.questions.length} questions
-                </ListGroup.Item>
-              ))
-            ) : (
-              <p>No insights available.</p>
-            )}
-          </ListGroup>
-        </Card.Body>
-      </Card>
-    </Container>
+    <PageWrapper>
+      <Container className="mt-4">
+        <h2>AI Test Insights</h2>
+        {error && <Alert variant="danger">{error}</Alert>}
+        <Card className="glass">
+          <Card.Body>
+            <ListGroup>
+              {insights.length > 0 ? (
+                insights.map((insight, index) => (
+                  <ListGroup.Item key={index} className="bg-transparent text-white">
+                    <strong>Topic:</strong> {insight.topic || "Unknown"} <br />
+                    <strong>Created At:</strong> {new Date(insight.created_at).toLocaleString()} <br />
+                    <strong>Questions:</strong> {insight.questions.length} questions
+                  </ListGroup.Item>
+                ))
+              ) : (
+                <p>No insights available.</p>
+              )}
+            </ListGroup>
+          </Card.Body>
+        </Card>
+      </Container>
+    </PageWrapper>
   );
 };
 

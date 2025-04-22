@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Table, Button, Spinner, Alert } from "react-bootstrap";
 import axios from "axios";
+import PageWrapper from "../components/PageWrapper";
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -33,41 +34,42 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <Container className="mt-4">
-      <h1>Admin Dashboard</h1>
-      {loading ? (
-        <Spinner animation="border" />
-      ) : error ? (
-        <Alert variant="danger">{error}</Alert>
-      ) : (
-        <>
-          <h2>Manage Users</h2>
-          <Table striped bordered hover>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <Button variant="danger" size="sm">Delete</Button>
-                  </td>
+    <PageWrapper>
+      <Container className="mt-4">
+        <h1>Admin Dashboard</h1>
+        {loading ? (
+          <Spinner animation="border" />
+        ) : error ? (
+          <Alert variant="danger">{error}</Alert>
+        ) : (
+          <>
+            <h2>Manage Users</h2>
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
-          {/* Add similar sections for study sets and files */}
-        </>
-      )}
-    </Container>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.username}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <Button variant="danger" size="sm">Delete</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </>
+        )}
+      </Container>
+    </PageWrapper>
   );
 };
 
