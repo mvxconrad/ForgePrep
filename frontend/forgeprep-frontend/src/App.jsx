@@ -13,15 +13,11 @@ import GitHubCallback from "./pages/GitHubCallback";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
 import LandingPage from "./pages/LandingPage";
-import LandingPage from "./pages/LandingPage";
 import Navbar from "./components/Navbar";
-import AdminDashboard from "./pages/AdminDashboard";
-import TestResults from "./pages/TestResults";
 import AdminDashboard from "./pages/AdminDashboard";
 import TestResults from "./pages/TestResults";
 import StudySetDetailsPage from "./pages/StudySetDetailsPage";
 import AdminAnalyticsPage from "./pages/AdminAnalyticsPage";
-import AITestInsightsPage from "./pages/AITestInsightsPage";
 import AITestInsightsPage from "./pages/AITestInsightsPage";
 import TakeTestPage from "./pages/TakeTestPage";
 import GeneratedTestPage from "./pages/GeneratedTestPage";
@@ -56,8 +52,6 @@ const AppContent = () => {
         <Route path="/test-results" element={<ProtectedRoute><TestResults /></ProtectedRoute>} />
         <Route path="/study-sets/:id" element={<ProtectedRoute><StudySetDetailsPage /></ProtectedRoute>} />
         <Route path="/admin-analytics" element={<ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
-        <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsPage /></ProtectedRoute>} />
         <Route path="/ai-insights" element={<ProtectedRoute><AITestInsightsPage /></ProtectedRoute>} />
         <Route path="/generated-test" element={<ProtectedRoute><GeneratedTestPage /></ProtectedRoute>} />
         <Route path="/take-test" element={<ProtectedRoute><TakeTestPage /></ProtectedRoute>} />
