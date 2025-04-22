@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { getUserRole } from "../utils/authUtils";
 import { Container, Card, Alert, Spinner } from "react-bootstrap";
 import api from "../utils/apiService";
 
@@ -8,11 +7,6 @@ const AdminAnalyticsPage = () => {
   const [analytics, setAnalytics] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-
-  const role = getUserRole();
-  if (role !== "admin") {
-    return <Navigate to="/dashboard" />;
-  }
 
   useEffect(() => {
     const fetchAnalytics = async () => {

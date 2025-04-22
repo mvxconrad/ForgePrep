@@ -1,17 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Container, Table, Button, Spinner, Alert } from "react-bootstrap";
 import axios from "axios";
-import { Navigate } from "react-router-dom";
-
-const isAdmin = () => {
-  const token = localStorage.getItem("token");
-  const { role } = JSON.parse(atob(token.split(".")[1]));
-  return role === "admin";
-};
-
-const ProtectedAdminRoute = ({ component: Component }) => {
-  return isAdmin() ? <Component /> : <Navigate to="/dashboard" />;
-};
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);

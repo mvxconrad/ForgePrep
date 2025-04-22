@@ -1,13 +1,25 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useContext(AuthContext);
+const ProtectedRoute = ({ component: Component }) => {
+  const isAuthenticated = () => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
 
-  if (loading) return <div className="text-white text-center mt-5">Loading...</div>;
+    try {
+      const { exp } = JSON.parse(atob(token.split(".")[1]));
+      return Date.now() < exp * 1000;
+    } catch (err) {
+      console.error("Error decoding token:", err);
+      return false;
+    }
+  };
 
-  return user ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" />;
+  }
+
+  return <Component />;
 };
 
 export default ProtectedRoute;
