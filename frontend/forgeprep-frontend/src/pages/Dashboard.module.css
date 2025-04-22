@@ -1,40 +1,55 @@
+/* Container background with modern blurred backdrop */
 .containerBackground {
-    min-height: 100vh;
-    padding: 60px 0;
-    background-image: url("../assets/login_background.png");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    backdrop-filter: blur(8px);
-    color: white;
-  }
-  
-  .glassCard {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    padding: 25px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: white;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  .glassCard:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
-  }
-  
-  .cardHeader {
-    font-size: 1.25rem;
-    font-weight: 600;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 1rem;
-  }
-  
-  .sectionTitle {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 1.5rem;
-  }
-  
+  min-height: 100vh;
+  padding: 60px 0;
+  background-image: url("../assets/login_background.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 0;
+  color: white;
+}
+
+/* Main glassmorphic card styling */
+.glassCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 25px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: white;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hover effect for modern interaction */
+.glassCard:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+}
+
+/* Optional fallback class if you use it independently of .glassCard */
+.glass {
+  background-color: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+/* Header inside card components */
+.cardHeader {
+  font-size: 1.25rem;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+
+/* Top-level section title */
+.sectionTitle {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}

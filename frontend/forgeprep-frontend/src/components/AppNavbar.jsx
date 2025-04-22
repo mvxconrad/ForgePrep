@@ -1,11 +1,11 @@
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Navbar, Nav, Container, Button, Toast, ToastContainer } from "react-bootstrap";
-import { AuthContext } from "../context/AuthContext";
+import { Navbar as BootstrapNavbar, Nav, Container, Button, Toast, ToastContainer } from "react-bootstrap";
+import { AuthContext } from "../components/AuthContext";
 import logo from "../assets/forgepreplogo.png";
 import background from "../assets/login_background.png";
 
-const Navbar = () => {
+const AppNavbar = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
   const [showToast, setShowToast] = useState(false);
@@ -28,7 +28,7 @@ const Navbar = () => {
 
   return (
     <>
-      <Navbar
+      <BootstrapNavbar
         expand="lg"
         sticky="top"
         style={{
@@ -42,13 +42,13 @@ const Navbar = () => {
         variant="dark"
       >
         <Container fluid className="d-flex justify-content-between align-items-center">
-          <Navbar.Brand as={Link} to={user ? "/dashboard" : "/"}>
+          <BootstrapNavbar.Brand as={Link} to={user ? "/dashboard" : "/"}>
             <img src={logo} alt="ForgePrep Logo" height="48" />
-          </Navbar.Brand>
+          </BootstrapNavbar.Brand>
 
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
 
-          <Navbar.Collapse id="basic-navbar-nav">
+          <BootstrapNavbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               {user && (
                 <>
@@ -78,9 +78,9 @@ const Navbar = () => {
                 <Button as={Link} to="/register" variant="light" size="sm">Sign Up</Button>
               </div>
             )}
-          </Navbar.Collapse>
+          </BootstrapNavbar.Collapse>
         </Container>
-      </Navbar>
+      </BootstrapNavbar>
 
       {/* Logout Toast */}
       <ToastContainer position="top-end" className="p-3">
@@ -98,4 +98,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default AppNavbar;

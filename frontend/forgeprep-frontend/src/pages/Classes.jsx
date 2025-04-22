@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, ListGroup, Card, Alert } from "react-bootstrap";
-import api from "../utils/apiService"; // Centralized API service
+import api from "../util/apiService"; // Centralized API service
 import classesImage from "../assets/classroom.jpg";
 import PageWrapper from "../components/PageWrapper";
 

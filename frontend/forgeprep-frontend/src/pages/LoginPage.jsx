@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Card, Form, Button, Container, Row, Col } from "react-bootstrap";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../components/AuthContext";
 import background1 from "../assets/login_background.png";
 import logo from "../assets/forgepreplogo.png";
 import loginImage from "../assets/loginicon.png";
@@ -11,16 +11,20 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/dashboard");
-  }, [user, navigate]);
+    if (user && !hasRedirected) {
+      setHasRedirected(true);
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, hasRedirected, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     try {
       const response = await fetch("https://forgeprep.net/api/auth/login", {
         method: "POST",
@@ -28,19 +32,19 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
         credentials: "include",
       });
-
+  
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Error response:", errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      await response.json();
-      navigate("/dashboard");
+  
+      const userData = await response.json();
+      setUser(userData);
     } catch (err) {
       setError(err.message);
     }
-  };
+  };  
 
   return (
     <div className="position-relative bg-dark text-light overflow-hidden" style={{ minHeight: "100vh" }}>
@@ -48,7 +52,7 @@ const LoginPage = () => {
         src={background1}
         alt="Login Background"
         className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
-        style={{ opacity: 0.25, zIndex: 0 }}
+        style={{ opacity: 0.25, zIndex: 0, pointerEvents: "none" }}
       />
 
       <nav
