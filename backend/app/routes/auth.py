@@ -1,9 +1,8 @@
-from fastapi import APIRouter, status, Depends, HTTPException, Security, Request
+from fastapi import APIRouter, status, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
 from authlib.integrations.starlette_client import OAuth
-from jose import JWTError, jwt
+from jose import JWTError
 from app.models.models import User
 from app.schemas.schemas import UserCreate, LoginRequest
 from app.security.security import (
@@ -17,9 +16,6 @@ import os
 from dotenv import load_dotenv
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-# Load environment variables
 load_dotenv()
 
 # JWT config
@@ -29,7 +25,6 @@ ALGORITHM = "HS256"
 # OAuth setup
 oauth = OAuth()
 
-# Register OAuth providers if configured
 if os.getenv("GOOGLE_CLIENT_ID"):
     oauth.register(
         name="google",
@@ -60,8 +55,7 @@ if os.getenv("GITHUB_CLIENT_ID"):
         client_kwargs={"scope": "user:email"},
     )
 
-
-# ---------- AUTH ROUTES ----------
+# ------------------ AUTH ROUTES ------------------ #
 
 @router.post("/register/")
 async def register_user(request: UserCreate, db: Session = Depends(get_db)):
@@ -81,7 +75,7 @@ async def register_user(request: UserCreate, db: Session = Depends(get_db)):
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
 
-    if not user or not user.verify_password(data.password):
+    if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token_data = {"id": user.id, "sub": user.email}
@@ -108,28 +102,15 @@ def logout():
 
 
 @router.get("/me")
-def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)):
-    token = request.cookies.get("access_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    try:
-        payload = decode_access_token(token)
-        email = payload.get("sub")
-        if not email:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError as e:
-        print("JWT error:", str(e))
-        raise HTTPException(status_code=401, detail="Token decoding failed")
-
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    return {"email": user.email, "username": user.username, "id": user.id}
+def get_current_user_info(current_user: User = Depends(lambda: get_current_user_from_cookie())):
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email
+    }
 
 
-# ---------- OAUTH ROUTES ----------
+# ------------------ OAUTH ROUTES ------------------ #
 
 @router.get("/login/{provider}")
 async def login_provider(request: Request, provider: str):
@@ -155,27 +136,28 @@ async def auth_provider(request: Request, provider: str):
 
 
 @router.get("/protected/")
-async def protected_route(token: str = Security(oauth2_scheme)):
-    user_data = decode_access_token(token)
-    return {"message": f"Hello, {user_data['sub']}!"}
+async def protected_route(current_user: User = Depends(lambda: get_current_user_from_cookie())):
+    return {"message": f"Hello, {current_user.username}!"}
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+# ------------------ HELPER ------------------ #
+
+def get_current_user_from_cookie(request: Request = Depends(), db: Session = Depends(get_db)) -> User:
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+        payload = decode_access_token(token)
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError as e:
+        print("JWT error:", str(e))
+        raise HTTPException(status_code=401, detail="Token decoding failed")
 
     user = db.query(User).filter(User.email == email).first()
-    if user is None:
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     return user

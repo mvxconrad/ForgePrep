@@ -7,7 +7,6 @@ import {
 import { AuthContext } from "../components/AuthContext";
 import styles from "./Dashboard.module.css";
 import logo from "../assets/forgepreplogo.png";
-import statisticsImage from "../assets/statistics.png";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -17,6 +16,7 @@ const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState(null);
+  const [backgroundImage, setBackgroundImage] = useState("");
   const [prompt, setPrompt] = useState("");
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [error, setError] = useState("");
@@ -33,12 +33,12 @@ const Dashboard = () => {
     if (hour < 18) return "Good Afternoon";
     return "Good Evening";
   };
-  
+
   useEffect(() => {
     fetchDashboardData();
     fetchUser();
   }, []);
-  
+
   const fetchUser = async () => {
     try {
       const res = await fetch("https://forgeprep.net/api/auth/me", {
@@ -63,6 +63,7 @@ const Dashboard = () => {
       setGoals(data.goals || []);
       setStatistics(data.statistics || null);
       setNotifications(data.notifications || []);
+      setBackgroundImage(data.background_image || "");
     } catch (err) {
       console.error("Dashboard error:", err);
     }
@@ -87,8 +88,16 @@ const Dashboard = () => {
   if (!currentUser) return <p className="text-white text-center mt-5">Loading...</p>;
 
   return (
-    <div className="bg-dark text-light" style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
-      {/* Navbar */}
+    <div
+      className="bg-dark text-light position-relative"
+      style={{
+        zIndex: 1,
+        minHeight: "100vh",
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center"
+      }}
+    >
       <Navbar expand="lg" className="px-4 py-2 position-sticky top-0 w-100" style={{ zIndex: 10, backgroundColor: 'rgba(13, 17, 23, 0.85)', backdropFilter: 'blur(12px)' }}>
         <Container fluid className="d-flex justify-content-between align-items-center">
           <Link to="/" className="navbar-brand d-flex align-items-center">
@@ -122,7 +131,7 @@ const Dashboard = () => {
                   ))}
                 </ListGroup>
               ) : (
-                <p className="text-muted">No recent tests.</p>
+                <p className="text-muted">No recent tests yet.</p>
               )}
             </Card>
           </Col>
@@ -148,15 +157,15 @@ const Dashboard = () => {
           <Col md={12}>
             <Card className="glassCard">
               <div className="cardHeader">Past Test Statistics</div>
-              <img src={statisticsImage} alt="Statistics" className="w-100 mb-3 rounded" />
-              {statistics ? (
+              {statistics?.image && <img src={statistics.image} alt="Statistics" className="w-100 mb-3 rounded" />}
+              {statistics?.average_score !== null ? (
                 <div>
-                  <p><strong>Average Score:</strong> {statistics.averageScore}%</p>
-                  <p><strong>Best Score:</strong> {statistics.bestScore}%</p>
-                  <p><strong>Lowest Score:</strong> {statistics.worstScore}%</p>
+                  <p><strong>Average Score:</strong> {statistics.average_score}</p>
+                  <p><strong>Best Score:</strong> {statistics.best_score}</p>
+                  <p><strong>Lowest Score:</strong> {statistics.worst_score}</p>
                 </div>
               ) : (
-                <p className="text-muted">No statistics available.</p>
+                <p className="text-muted">No statistics available yet.</p>
               )}
             </Card>
           </Col>

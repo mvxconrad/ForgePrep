@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database.database import get_db
 from app.models.models import User, UserProgress
 from app.schemas.schemas import UserCreate, UserUpdate
-from app.security.security import hash_password, decode_access_token
+from app.security.security import hash_password
+from app.routes.auth import get_current_user_from_cookie
 
 router = APIRouter()
 
 @router.get("/")
 def get_users(db: Session = Depends(get_db)):
-    """Fetch all users"""
+    """Fetch all users (admin route?)"""
     return db.query(User).all()
 
 @router.post("/")
@@ -53,27 +54,29 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     return db_user
 
 @router.get("/profile")
-async def get_user_profile(token: str = Security(decode_access_token), db: Session = Depends(get_db)):
-    """Fetch user profile"""
-    user_data = decode_access_token(token)
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"username": user.username, "email": user.email}
+async def get_user_profile(current_user: User = Depends(get_current_user_from_cookie)):
+    """Fetch authenticated user's profile"""
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "id": current_user.id
+    }
 
 @router.put("/profile")
-async def update_user_profile(user_update: UserUpdate, token: str = Security(decode_access_token), db: Session = Depends(get_db)):
-    """Update user profile"""
-    user_data = decode_access_token(token)
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
+async def update_user_profile(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    """Update authenticated user's profile"""
     if user_update.username:
-        user.username = user_update.username
+        current_user.username = user_update.username
     if user_update.email:
-        user.email = user_update.email
+        current_user.email = user_update.email
 
     db.commit()
-    db.refresh(user)
-    return {"username": user.username, "email": user.email}
+    db.refresh(current_user)
+    return {
+        "username": current_user.username,
+        "email": current_user.email
+    }

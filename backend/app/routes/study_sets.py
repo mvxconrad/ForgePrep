@@ -1,88 +1,56 @@
-# In app/routes/study_sets.py
-
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database.database import get_db
-from app.models.models import User, StudySet
+from app.models.models import User, StudySet, Flashcard
 from app.schemas.schemas import StudySetCreate, StudySetResponse
-from app.security.security import decode_access_token
+from app.routes.auth import get_current_user_from_cookie
 
 router = APIRouter()
 
-@router.get("/")
-async def get_study_sets(user=Depends(decode_access_token), db: Session = Depends(get_db)):
-    """
-    Retrieve all study sets for the authenticated user.
-    """
-    study_sets = db.query(StudySet).filter(StudySet.user_id == user["id"]).all()
-    return [{"id": s.id, "title": s.title, "description": s.description} for s in study_sets]
+@router.get("/", response_model=list[StudySetResponse])
+async def get_study_sets(current_user: User = Depends(get_current_user_from_cookie), db: Session = Depends(get_db)):
+    """Retrieve all study sets for the authenticated user."""
+    study_sets = db.query(StudySet).filter(StudySet.user_id == current_user.id).all()
+    return study_sets
 
-@router.post("/")
-async def create_study_set(study_set: dict, user=Depends(decode_access_token), db: Session = Depends(get_db)):
-    """
-    Create a new study set for the authenticated user.
-    """
-    new_study_set = StudySet(
-        user_id=user["id"],
-        title=study_set["title"],
-        description=study_set["description"]
+@router.post("/", response_model=StudySetResponse)
+async def create_study_set(
+    study_set: StudySetCreate, 
+    current_user: User = Depends(get_current_user_from_cookie), 
+    db: Session = Depends(get_db)
+):
+    """Create a new study set for the authenticated user."""
+    new_set = StudySet(
+        user_id=current_user.id,
+        title=study_set.title,
+        description=study_set.description
     )
-    db.add(new_study_set)
+    db.add(new_set)
     db.commit()
-    db.refresh(new_study_set)
-    return {"id": new_study_set.id, "title": new_study_set.title, "description": new_study_set.description}
+    db.refresh(new_set)
+    return new_set
 
 @router.delete("/{id}")
-async def delete_study_set(id: int, user=Depends(decode_access_token), db: Session = Depends(get_db)):
-    """
-    Delete a study set by ID for the authenticated user.
-    """
-    study_set = db.query(StudySet).filter(StudySet.id == id, StudySet.user_id == user["id"]).first()
+async def delete_study_set(id: int, current_user: User = Depends(get_current_user_from_cookie), db: Session = Depends(get_db)):
+    """Delete a study set by ID for the authenticated user."""
+    study_set = db.query(StudySet).filter(StudySet.id == id, StudySet.user_id == current_user.id).first()
     if not study_set:
         raise HTTPException(status_code=404, detail="Study set not found")
     db.delete(study_set)
     db.commit()
     return {"message": "Study set deleted successfully"}
 
-@router.post("/", response_model=StudySetResponse)
-async def create_study_set(
-    study_set: StudySetCreate, 
-    token: str = Security(decode_access_token), 
+@router.post("/generate-test/")
+async def generate_test(
+    set_id: int,
+    num_questions: int,
+    difficulty: str,
+    category: str,
+    current_user: User = Depends(get_current_user_from_cookie),
     db: Session = Depends(get_db)
 ):
-    # Decode the token and get user info
-    user_data = decode_access_token(token)
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Create a new study set
-    new_set = StudySet(
-        title=study_set.title, 
-        description=study_set.description, 
-        user_id=user.id
-    )
-    
-    db.add(new_set)
-    db.commit()
-    db.refresh(new_set)
-    return new_set
-
-@router.get("/", response_model=list[StudySetResponse])
-async def get_study_sets(db: Session = Depends(get_db)):
-    # Return all study sets
-    return db.query(StudySet).all()
-
-@router.post("/generate-test/")
-async def generate_test(set_id: int, num_questions: int, difficulty: str, category: str, token: str = Security(decode_access_token), db: Session = Depends(get_db)):
-    user_data = decode_access_token(token)
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    study_set = db.query(StudySet).filter(StudySet.id == set_id, StudySet.user_id == user.id).first()
+    """Generate a test from a specific study set with filters."""
+    study_set = db.query(StudySet).filter(StudySet.id == set_id, StudySet.user_id == current_user.id).first()
     if not study_set:
         raise HTTPException(status_code=404, detail="Study set not found")
 
@@ -92,16 +60,18 @@ async def generate_test(set_id: int, num_questions: int, difficulty: str, catego
         Flashcard.category == category
     ).limit(num_questions).all()
 
-    return {"test_questions": [{"question": fc.question, "answer": fc.answer} for fc in flashcards]}
+    return {
+        "test_questions": [{"question": fc.question, "answer": fc.answer} for fc in flashcards]
+    }
 
 @router.get("/users/{user_id}/sets")
 async def get_user_sets(user_id: int, db: Session = Depends(get_db)):
-    """Fetch study sets for a user"""
+    """Fetch all study sets for a specific user (admin-only endpoint)."""
     return db.query(StudySet).filter(StudySet.user_id == user_id).all()
 
 @router.get("/users/{user_id}/sets/{set_id}")
 async def get_user_set(user_id: int, set_id: int, db: Session = Depends(get_db)):
-    """Fetch a specific study set for a user"""
+    """Fetch a specific study set for a user."""
     study_set = db.query(StudySet).filter(StudySet.user_id == user_id, StudySet.id == set_id).first()
     if not study_set:
         raise HTTPException(status_code=404, detail="Study set not found")
