@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Card, Form, Button, Container, Row, Col } from "react-bootstrap";
+import { Card, Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
 import background1 from "../assets/signup_background.png";
 import logo from "../assets/forgepreplogo.png";
 import signupImage from "../assets/signupicon.png";
-import { AuthContext } from "../components/AuthContext";
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -26,14 +25,15 @@ const SignupPage = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(errorText || "Signup failed");
       }
 
       const data = await response.json();
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.message);
+      console.error("Signup error:", err);
+      setError("Failed to register. Please try again.");
     }
   };
 
@@ -79,7 +79,7 @@ const SignupPage = () => {
                   <p className="text-white-50">Start your journey to academic success with us.</p>
                 </div>
                 <h2 className="mb-4 text-center text-white">Sign Up</h2>
-                {error && <p className="text-danger text-center">{error}</p>}
+                {error && <Alert variant="danger" className="text-center">{error}</Alert>}
                 <Form onSubmit={handleSignup}>
                   <Form.Group className="mb-3" controlId="formUsername">
                     <Form.Label className="text-white">Username</Form.Label>
@@ -118,6 +118,16 @@ const SignupPage = () => {
                 <p className="mt-3 text-center">
                   Already have an account? <a href="/login" className="text-info">Login</a>
                 </p>
+
+                {/* Future social auth buttons */}
+                {/**
+                <Button variant="outline-light" className="w-100 mt-2">
+                  Sign up with Google
+                </Button>
+                <Button variant="outline-light" className="w-100 mt-2">
+                  Sign up with Facebook
+                </Button>
+                **/}
               </Card.Body>
             </Card>
           </Col>

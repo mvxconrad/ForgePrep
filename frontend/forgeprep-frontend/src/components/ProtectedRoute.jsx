@@ -18,7 +18,9 @@ const ProtectedRoute = ({ component: Component }) => {
     checkAuth();
   }, []);
 
-  if (isAuthenticated === null) return null; // or a loading spinner
+  if (isAuthenticated === null) {
+    return <div className="text-center text-white">Checking authentication...</div>;
+  }  
 
   return isAuthenticated ? <Component /> : <Navigate to="/login" />;
 };

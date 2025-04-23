@@ -16,9 +16,9 @@ const FileUploadPage = () => {
     const fetchFileHistory = async () => {
       try {
         const response = await axios.get(
-          `https://forgeprep.net/api/files/`, // Updated API URL
+          `https://forgeprep.net/api/files/`,
           {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+            withCredentials: true, // ✅ Use cookies instead of Bearer token
           }
         );
         console.log("API response:", response.data); // Debugging log
@@ -51,7 +51,7 @@ const FileUploadPage = () => {
       const response = await fetch("https://forgeprep.net/api/files/upload/scan/", {
         method: "POST",
         body: formData,
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        credentials: "include", // ✅ Send HttpOnly cookies
       });
 
       if (!response.ok) {
@@ -82,7 +82,6 @@ const FileUploadPage = () => {
   };
 
   const handleGenerateTest = () => {
-    // Navigate to the test generator page with the uploaded file ID
     navigate("/testgenerator", { state: { fileId: uploadedFileId } });
   };
 
@@ -134,7 +133,6 @@ const FileUploadPage = () => {
         </Card.Body>
       </Card>
 
-      {/* File Upload History */}
       <Card className="p-3">
         <h3>Upload History</h3>
         <Table striped bordered hover>

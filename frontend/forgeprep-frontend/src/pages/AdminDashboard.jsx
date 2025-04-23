@@ -13,7 +13,7 @@ const AdminDashboard = () => {
     const fetchAdminData = async () => {
       try {
         const response = await axios.get("https://forgeprep.net/api/admin/data", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          withCredentials: true, // ✅ Send HttpOnly cookies
         });
 
         setUsers(response.data.users || []);
@@ -64,7 +64,8 @@ const AdminDashboard = () => {
               ))}
             </tbody>
           </Table>
-          {/* Add similar sections for study sets and files */}
+
+          {/* 🔧 TODO: Add tables for Study Sets and Files */}
         </>
       )}
     </Container>

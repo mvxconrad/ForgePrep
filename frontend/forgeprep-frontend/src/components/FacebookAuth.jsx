@@ -3,13 +3,11 @@ import React, { useEffect } from "react";
 const FacebookAuth = () => {
   useEffect(() => {
     const loadFacebookSDK = () => {
-      if (window.FB) {
-        return; // SDK is already loaded
-      }
+      if (window.FB) return;
 
       window.fbAsyncInit = function () {
         window.FB.init({
-          appId: import.meta.env.VITE_FACEBOOK_APP_ID, // Use environment variable
+          appId: import.meta.env.VITE_FACEBOOK_APP_ID,
           cookie: true,
           xfbml: true,
           version: "v12.0",
@@ -20,16 +18,6 @@ const FacebookAuth = () => {
       script.id = "facebook-jssdk";
       script.src = "https://connect.facebook.net/en_US/sdk.js";
       script.async = true;
-      script.onload = () => {
-        if (window.FB) {
-          window.FB.init({
-            appId: import.meta.env.VITE_FACEBOOK_APP_ID, // Use environment variable
-            cookie: true,
-            xfbml: true,
-            version: "v12.0",
-          });
-        }
-      };
 
       document.body.appendChild(script);
     };
@@ -46,20 +34,20 @@ const FacebookAuth = () => {
     window.FB.login(
       async (response) => {
         if (response.authResponse) {
-          console.log("Facebook login success:", response);
           const accessToken = response.authResponse.accessToken;
 
           try {
-            const res = await fetch("https://forgeprep.net/auth/facebook", {
+            const res = await fetch("https://forgeprep.net/api/auth/facebook", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ token: accessToken }),
+              credentials: "include", // Ensure cookie is accepted
             });
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Facebook login failed");
 
-            localStorage.setItem("token", data.token);
+           
             window.location.href = "/dashboard";
           } catch (err) {
             console.error("Facebook login error:", err);

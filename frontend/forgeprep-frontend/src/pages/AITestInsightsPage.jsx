@@ -12,9 +12,7 @@ const AITestInsightsPage = () => {
     setError("");
     try {
       const response = await axios.get("https://forgeprep.net/api/ai/insights", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        withCredentials: true, // ✅ Use HttpOnly cookie auth
       });
       setInsights(response.data);
     } catch (err) {
@@ -34,24 +32,25 @@ const AITestInsightsPage = () => {
   }
 
   return (
-    <Container>
-      <h2>AI Test Insights</h2>
+    <Container className="mt-4">
+      <h2 className="mb-4">AI Test Insights</h2>
       {error && <p className="text-danger">{error}</p>}
-      <Card>
+      <Card className="glassCard">
         <Card.Body>
-          <ListGroup>
-            {insights.length > 0 ? (
-              insights.map((insight, index) => (
-                <ListGroup.Item key={index}>
+          {insights.length > 0 ? (
+            <ListGroup variant="flush">
+              {insights.map((insight, index) => (
+                <ListGroup.Item key={index} className="bg-transparent text-white">
                   <strong>Topic:</strong> {insight.topic || "Unknown"} <br />
-                  <strong>Created At:</strong> {new Date(insight.created_at).toLocaleString()} <br />
+                  <strong>Created At:</strong>{" "}
+                  {new Date(insight.created_at).toLocaleString()} <br />
                   <strong>Questions:</strong> {insight.questions.length} questions
                 </ListGroup.Item>
-              ))
-            ) : (
-              <p>No insights available.</p>
-            )}
-          </ListGroup>
+              ))}
+            </ListGroup>
+          ) : (
+            <p className="text-muted">No insights available.</p>
+          )}
         </Card.Body>
       </Card>
     </Container>
