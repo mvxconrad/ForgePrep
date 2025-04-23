@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import fitz  # PyMuPDF
+from tempfile import SpooledTemporaryFile
 
 from database.database import get_db
 from app.models.models import File as FileModel, User
@@ -13,11 +14,9 @@ router = APIRouter()
 
 # ------------------ UTILITY FUNCTIONS ------------------ #
 
-async def extract_text_from_pdf(file: UploadFile) -> str:
-    """Extract readable text from a PDF file using PyMuPDF."""
-    contents = await file.read()
-    await file.seek(0)  # Reset stream
-    pdf = fitz.open(stream=contents, filetype="pdf")
+async def extract_text_from_pdf(file_bytes: bytes) -> str:
+    """Extract readable text from PDF bytes using PyMuPDF."""
+    pdf = fitz.open(stream=file_bytes, filetype="pdf")
     text = "".join(page.get_text() for page in pdf)
     pdf.close()
     return text
@@ -62,8 +61,7 @@ async def upload_raw(
         raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
     file_data = await file.read()
-    await file.seek(0)
-    extracted_text = await extract_text_from_pdf(file)
+    extracted_text = await extract_text_from_pdf(file_data)
 
     db_file = FileModel(
         filename=file.filename,
@@ -102,12 +100,10 @@ async def upload_scanned(
 
     # STEP 2: Run virus scan using a file-like buffer
     try:
-        from tempfile import SpooledTemporaryFile
-
         with SpooledTemporaryFile() as temp:
             temp.write(file_data)
             temp.seek(0)
-            scan_result = save_and_scan_file(temp)  # Pass file-like object to your AV
+            scan_result = save_and_scan_file(temp, filename=file.filename)
             if scan_result == "infected":
                 raise HTTPException(status_code=400, detail="File is infected and was removed.")
     except Exception as e:
@@ -115,9 +111,7 @@ async def upload_scanned(
 
     # STEP 3: Extract text from the original in-memory stream
     try:
-        pdf = fitz.open(stream=file_data, filetype="pdf")
-        extracted_text = "".join(page.get_text() for page in pdf)
-        pdf.close()
+        extracted_text = await extract_text_from_pdf(file_data)
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to extract text from PDF.")
 
