@@ -20,10 +20,10 @@ class PromptRequest(BaseModel):
 
 
 def parse_raw_mcq(raw_text: str):
-    """Fallback parser for GPT outputs that return plain-text formatted MCQs"""
+    """Improved parser for GPT outputs that may use 'Question X:' or numbered formats"""
     pattern = re.compile(
-        r"\d+\.\s*(.*?)\s*a\)\s*(.*?)\s*b\)\s*(.*?)\s*c\)\s*(.*?)\s*d\)\s*(.*?)(?=\n\d+\.|\Z)",
-        re.DOTALL | re.IGNORECASE
+        r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a\)\s*(.*?)\s*b\)\s*(.*?)\s*c\)\s*(.*?)\s*d\)\s*(.*?)(?=(?:\n(?:\d+\.|Question \d+:)|\Z))",
+        re.DOTALL | re.IGNORECASE,
     )
     matches = pattern.findall(raw_text)
     print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
@@ -36,6 +36,7 @@ def parse_raw_mcq(raw_text: str):
             "answer": None,
             "difficulty": "medium"
         })
+
     return structured
 
 
