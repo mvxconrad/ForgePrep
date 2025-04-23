@@ -19,10 +19,10 @@ class PromptRequest(BaseModel):
     study_material_id: int | None = None
 
 def parse_raw_mcq(raw_text: str):
-    """Parse GPT fallback output and extract answers if provided at the bottom"""
+    """Parse fallback GPT output for MCQs and optional answer key"""
     pattern = re.compile(
         r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a[).]\s*(.*?)\s*b[).]\s*(.*?)\s*c[).]\s*(.*?)\s*d[).]\s*(.*?)(?=\n(?:\d+\.|Question \d+:)|\Z)",
-        re.DOTALL | re.IGNORECASE,
+        re.DOTALL | re.IGNORECASE
     )
     matches = pattern.findall(raw_text)
     print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
@@ -32,13 +32,14 @@ def parse_raw_mcq(raw_text: str):
         questions.append({
             "question": question.strip(),
             "options": [opt1.strip(), opt2.strip(), opt3.strip(), opt4.strip()],
-            "answer": None,
+            "answer": "Unknown",
             "difficulty": "medium"
         })
 
-    # ✅ Extract answer key block if exists
-    answer_block = re.search(r"Answers:\s*((?:\d+\.\s*[a-dA-D]\s*)+)", raw_text, re.IGNORECASE)
+    # ✅ Try to pull answer key from bottom
+    answer_block = re.search(r"Answers:\s*((?:\d+\.\s*[a-dA-D]\s*)+)", raw_text, re.IGNORECASE | re.DOTALL)
     if answer_block:
+        print("✅ Answer key detected in GPT output.")
         answers = re.findall(r"(\d+)\.\s*([a-dA-D])", answer_block.group(1))
         for num_str, letter in answers:
             idx = int(num_str) - 1
@@ -48,7 +49,6 @@ def parse_raw_mcq(raw_text: str):
                     questions[idx]["answer"] = questions[idx]["options"][option_index]
 
     return questions
-
 
 @router.post("/gpt/generate")
 async def generate_test(
@@ -65,20 +65,13 @@ async def generate_test(
         if not file.extracted_text or not file.extracted_text.strip():
             raise HTTPException(status_code=400, detail="No extracted text found in file.")
 
-        # Prompt definition
+        # 🔁 Prompt with answer key expectation
         base_prompt = request.prompt or (
             "You are a helpful assistant for test generation. "
             "From the following study material, create 5 multiple-choice questions. "
-            "Each question must be returned in valid JSON format like this:\n\n"
-            "[\n"
-            "  {\n"
-            "    \"question\": \"What is the capital of France?\",\n"
-            "    \"options\": [\"Paris\", \"London\", \"Berlin\", \"Rome\"],\n"
-            "    \"answer\": \"Paris\",\n"
-            "    \"difficulty\": \"easy\"\n"
-            "  }\n"
-            "]\n\n"
-            "Return ONLY the JSON array. Do NOT include explanations."
+            "Each question must have 4 options (a–d). After all questions, include an answer key like this:\n"
+            "Answers:\n1. b\n2. d\n3. a\n4. c\n5. b\n"
+            "Do not include explanations or any extra text—just the questions and the key."
         )
 
         full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:6000]}"
@@ -89,35 +82,22 @@ async def generate_test(
 
         response = openai.ChatCompletion.create(
             model="gpt-4",
-            messages=[
-                {"role": "user", "content": full_prompt}
-            ]
+            messages=[{"role": "user", "content": full_prompt}]
         )
+
         raw_output = response.choices[0].message["content"]
         print("GPT RAW OUTPUT:\n", raw_output)
 
-        # Attempt to parse as JSON first
+        # Try JSON first
         try:
             questions = json.loads(raw_output)
             if not isinstance(questions, list):
                 raise ValueError("Expected a list of questions")
-        except Exception as parse_err:
+        except Exception:
             print("⚠️ GPT returned invalid JSON. Falling back to raw parsing...")
             questions = parse_raw_mcq(raw_output)
 
-            # ✅ Extract answers from the footer if they exist
-            answer_block = re.search(r"Answers:\s*((?:\d+\.\s*[a-dA-D]\s*)+)", raw_output, re.IGNORECASE | re.DOTALL)
-            if answer_block:
-                print("✅ Answer key detected in GPT output.")
-                answers = re.findall(r"(\d+)\.\s*([a-dA-D])", answer_block.group(1))
-                for num_str, letter in answers:
-                    idx = int(num_str) - 1
-                    if 0 <= idx < len(questions):
-                        option_index = ord(letter.lower()) - ord("a")
-                        if 0 <= option_index < len(questions[idx]["options"]):
-                            questions[idx]["answer"] = questions[idx]["options"][option_index]
-
-        # Validate and clean questions
+        # ✅ Clean and validate
         valid_questions = [
             q for q in questions
             if isinstance(q, dict)
@@ -126,15 +106,10 @@ async def generate_test(
             and isinstance(q["options"], list)
         ]
 
-        # ✅ Patch missing answers
-        for q in valid_questions:
-            if "answer" not in q or not q["answer"]:
-                q["answer"] = "Unknown"
-
         if not valid_questions:
             raise HTTPException(status_code=400, detail="No valid questions parsed from GPT output.")
 
-        # Save to DB
+        # ✅ Save to DB
         new_test = Test(
             user_id=current_user.id,
             name="Generated Test",
@@ -147,7 +122,6 @@ async def generate_test(
         db.refresh(new_test)
 
         print(f"✅ Saved test: ID {new_test.id} for user {current_user.email}")
-
         return {"test_id": new_test.id, "metadata": new_test.test_metadata}
 
     except openai.error.OpenAIError as oe:
