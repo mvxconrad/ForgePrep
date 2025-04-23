@@ -3,66 +3,56 @@ import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import api from "../util/apiService";
 
 const SettingsPage = () => {
-  const [profile, setProfile] = useState({ username: "", email: "", password: "" });
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [profile, setProfile] = useState({ username: "", email: "" });
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState({ error: "", success: "" });
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await api.get("/auth/me");
-        setProfile({ username: response.data.username, email: response.data.email, password: "" });
+        const res = await api.get("/auth/me");
+        setProfile({ username: res.data.username, email: res.data.email });
       } catch (err) {
-        console.error("Error fetching profile:", err.response?.data || err.message);
-        setError("Failed to fetch profile. Please try again.");
+        setMessage({ error: "Failed to load profile.", success: "" });
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, []);
 
-  const handleUpdateProfile = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccessMessage("");
+    setMessage({ error: "", success: "" });
 
     try {
-      const { username, email, password } = profile;
-      const payload = { username, email };
-      if (password) payload.password = password;
-
-      const response = await api.put("/auth/update-profile", payload); // ✅ Make sure this route exists
-      setSuccessMessage("Profile updated successfully.");
-      setProfile({ ...response.data, password: "" });
+      const res = await api.put("/users/profile", { ...profile, password });
+      setProfile({ username: res.data.username, email: res.data.email });
+      setPassword("");
+      setMessage({ success: "Profile updated successfully!", error: "" });
     } catch (err) {
-      console.error("Error updating profile:", err.response?.data || err.message);
-      setError("Failed to update profile. Try again.");
+      setMessage({ error: "Failed to update profile.", success: "" });
     }
   };
 
   if (loading) {
     return (
-      <Container className="mt-4 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <Container className="text-center mt-5">
+        <div className="spinner-border text-light" role="status" />
       </Container>
     );
   }
 
   return (
-    <Container className="mt-4">
-      <Card className="shadow glassCard">
+    <Container className="mt-5">
+      <Card className="glassCard p-4">
         <Card.Body>
-          <h2 className="mb-4 fw-bold text-white">Account Settings</h2>
-          {successMessage && <Alert variant="success">{successMessage}</Alert>}
-          {error && <Alert variant="danger">{error}</Alert>}
-
-          <Form onSubmit={handleUpdateProfile}>
-            <Form.Group controlId="formUsername" className="mb-3">
+          <h3 className="fw-bold mb-4 text-white">Edit Profile</h3>
+          {message.error && <Alert variant="danger">{message.error}</Alert>}
+          {message.success && <Alert variant="success">{message.success}</Alert>}
+          <Form onSubmit={handleUpdate}>
+            <Form.Group className="mb-3" controlId="username">
               <Form.Label className="text-white">Username</Form.Label>
               <Form.Control
                 type="text"
@@ -71,8 +61,7 @@ const SettingsPage = () => {
                 required
               />
             </Form.Group>
-
-            <Form.Group controlId="formEmail" className="mb-3">
+            <Form.Group className="mb-3" controlId="email">
               <Form.Label className="text-white">Email</Form.Label>
               <Form.Control
                 type="email"
@@ -81,18 +70,16 @@ const SettingsPage = () => {
                 required
               />
             </Form.Group>
-
-            <Form.Group controlId="formPassword" className="mb-4">
-              <Form.Label className="text-white">New Password (optional)</Form.Label>
+            <Form.Group className="mb-4" controlId="password">
+              <Form.Label className="text-white">New Password</Form.Label>
               <Form.Control
                 type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Leave blank to keep current password"
-                value={profile.password}
-                onChange={(e) => setProfile({ ...profile, password: e.target.value })}
               />
             </Form.Group>
-
-            <Button type="submit" variant="light" className="w-100 text-dark fw-semibold">
+            <Button variant="light" type="submit" className="fw-semibold text-dark">
               Save Changes
             </Button>
           </Form>
