@@ -24,25 +24,30 @@ const TakeTestPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // Redirect if testId is missing
-    if (!testId) {
-      navigate("/dashboard", {
-        state: { flash: "Invalid test access. Please generate a test first." },
-      });
-      return;
-    }
-
-    const fetchTest = async () => {
+    const fetchTest = async (retry = false) => {
       try {
         const response = await api.get(`/tests/${testId}`);
         setTest(response.data);
+        console.log("✅ Test loaded:", response.data);
       } catch (err) {
-        console.error("Error fetching test:", err);
-        setError("Failed to load test. Please try again.");
+        if (!retry) {
+          console.warn("Initial fetch failed. Retrying after 300ms...");
+          setTimeout(() => fetchTest(true), 300);
+        } else {
+          console.error("❌ Failed after retry:", err);
+          setError("Failed to load test. Please try again.");
+        }
       } finally {
         setLoading(false);
       }
     };
+
+    if (!testId) {
+      navigate("/dashboard", {
+        state: { flash: "Missing test ID. Please generate a test first." },
+      });
+      return;
+    }
 
     fetchTest();
   }, [testId, navigate]);
@@ -105,7 +110,6 @@ const TakeTestPage = () => {
                     {idx + 1}. {q.question || q.questionText || "Unnamed Question"}
                   </Form.Label>
 
-                  {/* Multiple Choice Handling */}
                   {Array.isArray(q.options) && q.options.length > 0 ? (
                     <div className="ms-3">
                       {q.options.map((option, optIdx) => (
@@ -122,7 +126,6 @@ const TakeTestPage = () => {
                       ))}
                     </div>
                   ) : (
-                    // Short Answer Fallback
                     <Form.Control
                       className="bg-light text-dark"
                       type="text"
