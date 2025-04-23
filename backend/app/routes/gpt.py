@@ -19,11 +19,12 @@ class PromptRequest(BaseModel):
     study_material_id: int | None = None
 
 def parse_raw_mcq(raw_text: str):
-    """Parse fallback GPT output for MCQs and optional answer key"""
+    """Parse GPT fallback output with questions and extract answer key if present"""
     pattern = re.compile(
-        r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a[).]\s*(.*?)\s*b[).]\s*(.*?)\s*c[).]\s*(.*?)\s*d[).]\s*(.*?)(?=\n(?:\d+\.|Question \d+:)|\Z)",
+        r"(?:\d+[).])\s*(.*?)\n\s*a[).]\s*(.*?)\n\s*b[).]\s*(.*?)\n\s*c[).]\s*(.*?)\n\s*d[).]\s*(.*?)(?=\n\d+[).]|$)",
         re.DOTALL | re.IGNORECASE
     )
+
     matches = pattern.findall(raw_text)
     print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
 
@@ -36,11 +37,11 @@ def parse_raw_mcq(raw_text: str):
             "difficulty": "medium"
         })
 
-    # ✅ Try to pull answer key from bottom
-    answer_block = re.search(r"Answers:\s*((?:\d+\.\s*[a-dA-D]\s*)+)", raw_text, re.IGNORECASE | re.DOTALL)
+    # 🧠 Try to pull embedded answer key (e.g., "Answers:\n1. c\n2. a...")
+    answer_block = re.search(r"Answers:\s*((?:\d+[).]?\s*[a-dA-D]\s*)+)", raw_text, re.IGNORECASE)
     if answer_block:
         print("✅ Answer key detected in GPT output.")
-        answers = re.findall(r"(\d+)\.\s*([a-dA-D])", answer_block.group(1))
+        answers = re.findall(r"(\d+)[).]?\s*([a-dA-D])", answer_block.group(1))
         for num_str, letter in answers:
             idx = int(num_str) - 1
             if 0 <= idx < len(questions):
@@ -65,20 +66,16 @@ async def generate_test(
         if not file.extracted_text or not file.extracted_text.strip():
             raise HTTPException(status_code=400, detail="No extracted text found in file.")
 
-        # 🔁 Prompt with answer key expectation
+        # Prompt template that expects an answer key at the end
         base_prompt = request.prompt or (
-            "You are a helpful assistant for test generation. "
-            "From the following study material, create exactly 5 multiple-choice questions. "
-            "Each question must have 4 answer options labeled a) b) c) d). "
-            "After all the questions, include a line that says:\n\n"
-            "Answers:\n1. b\n2. d\n3. a\n...\n\n"
-            "Use this format exactly — do not include any extra comments or explanations. "
-            "Your response should look like:\n"
-            "1. What is the capital of France?\n"
-            "a) Berlin\nb) Paris\nc) Rome\nd) Madrid\n\n"
-            "Answers:\n1. b\n2. d\n3. a\n4. c\n5. d"
+            "You are a helpful assistant for test generation.\n"
+            "From the following study material, create exactly 5 multiple-choice questions.\n"
+            "Each question must be labeled like this:\n"
+            "1) What is ...?\n"
+            "a) Option A\nb) Option B\nc) Option C\nd) Option D\n\n"
+            "At the end, add:\nAnswers:\n1. b\n2. a...\n\n"
+            "No extra comments or explanations. Output ONLY the questions and answers."
         )
-
 
         full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:6000]}"
 
@@ -90,11 +87,10 @@ async def generate_test(
             model="gpt-4",
             messages=[{"role": "user", "content": full_prompt}]
         )
-
         raw_output = response.choices[0].message["content"]
         print("GPT RAW OUTPUT:\n", raw_output)
 
-        # Try JSON first
+        # Try parsing as JSON first
         try:
             questions = json.loads(raw_output)
             if not isinstance(questions, list):
@@ -103,7 +99,7 @@ async def generate_test(
             print("⚠️ GPT returned invalid JSON. Falling back to raw parsing...")
             questions = parse_raw_mcq(raw_output)
 
-        # ✅ Clean and validate
+        # Clean and validate
         valid_questions = [
             q for q in questions
             if isinstance(q, dict)
@@ -115,7 +111,12 @@ async def generate_test(
         if not valid_questions:
             raise HTTPException(status_code=400, detail="No valid questions parsed from GPT output.")
 
-        # ✅ Save to DB
+        # Patch missing answers
+        for q in valid_questions:
+            if not q.get("answer"):
+                q["answer"] = "Unknown"
+
+        # Save to DB
         new_test = Test(
             user_id=current_user.id,
             name="Generated Test",
