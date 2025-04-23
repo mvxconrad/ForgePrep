@@ -24,9 +24,11 @@ const TakeTestPage = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    // Redirect if testId is missing
     if (!testId) {
-      setError("Missing test ID.");
-      setLoading(false);
+      navigate("/dashboard", {
+        state: { flash: "Invalid test access. Please generate a test first." },
+      });
       return;
     }
 
@@ -43,7 +45,7 @@ const TakeTestPage = () => {
     };
 
     fetchTest();
-  }, [testId]);
+  }, [testId, navigate]);
 
   const handleChange = (questionIndex, value) => {
     setAnswers((prev) => ({ ...prev, [questionIndex]: value }));
@@ -159,6 +161,12 @@ const TakeTestPage = () => {
           ) : (
             <div className="text-center">
               <p className="text-muted mt-4">No questions available for this test.</p>
+              <Button
+                variant="outline-light"
+                onClick={() => navigate("/dashboard")}
+              >
+                Return to Dashboard
+              </Button>
             </div>
           )}
         </Card>

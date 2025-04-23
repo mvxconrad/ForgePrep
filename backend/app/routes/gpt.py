@@ -9,6 +9,7 @@ import os
 import openai
 import json
 from datetime import datetime
+import re
 
 router = APIRouter()
 
@@ -18,22 +19,24 @@ class PromptRequest(BaseModel):
     study_material_id: int | None = None
 
 
-@router.get("/tests/{test_id}")
-async def get_test_by_id(
-    test_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_from_cookie)
-):
-    test = db.query(Test).filter_by(id=test_id, user_id=current_user.id).first()
-    if not test:
-        raise HTTPException(status_code=404, detail="Test not found.")
-    
-    return {
-        "test_id": test.id,
-        "study_material_id": test.study_material_id,
-        "test_metadata": test.test_metadata,
-        "created_at": test.created_at,
-    }
+def parse_raw_mcq(raw_text: str):
+    """Fallback parser for GPT outputs that return plain-text formatted MCQs"""
+    pattern = re.compile(
+        r"\d+\.\s*(.*?)\s*a\)\s*(.*?)\s*b\)\s*(.*?)\s*c\)\s*(.*?)\s*d\)\s*(.*?)(?=\n\d+\.|\Z)",
+        re.DOTALL | re.IGNORECASE
+    )
+    matches = pattern.findall(raw_text)
+    print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
+
+    structured = []
+    for question, opt1, opt2, opt3, opt4 in matches:
+        structured.append({
+            "question": question.strip(),
+            "options": [opt1.strip(), opt2.strip(), opt3.strip(), opt4.strip()],
+            "answer": None,
+            "difficulty": "medium"
+        })
+    return structured
 
 
 @router.post("/gpt/generate")
@@ -49,7 +52,7 @@ async def generate_test(
         if not file.extracted_text or not file.extracted_text.strip():
             raise HTTPException(status_code=400, detail="No extracted text found in file.")
 
-        # Stronger, enforced prompt
+        # Prompt definition
         base_prompt = request.prompt or (
             "You are a helpful assistant for test generation. "
             "From the following study material, create 5 multiple-choice questions. "
@@ -60,16 +63,17 @@ async def generate_test(
             "    \"options\": [\"Paris\", \"London\", \"Berlin\", \"Rome\"],\n"
             "    \"answer\": \"Paris\",\n"
             "    \"difficulty\": \"easy\"\n"
-            "  },\n"
-            "  ...\n"
+            "  }\n"
             "]\n\n"
-            "Return ONLY the JSON array. Do NOT include any explanations or notes."
+            "Return ONLY the JSON array. Do NOT include explanations."
         )
 
-        full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:8000]}"
+        full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:6000]}"
 
-        # GPT API call
         openai.api_key = os.getenv("OPENAI_API_KEY")
+        if not openai.api_key:
+            raise HTTPException(status_code=500, detail="OpenAI API key is not set.")
+
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
@@ -77,24 +81,28 @@ async def generate_test(
             ]
         )
         raw_output = response.choices[0].message["content"]
-        print("GPT RAW OUTPUT:", raw_output)
+        print("GPT RAW OUTPUT:\n", raw_output)
 
-        # Parse JSON
+        # Attempt to parse as JSON first
         try:
             questions = json.loads(raw_output)
             if not isinstance(questions, list):
-                raise ValueError("Expected a JSON array")
+                raise ValueError("Expected a list of questions")
         except Exception as parse_err:
-            raise HTTPException(status_code=500, detail=f"Failed to parse GPT response: {str(parse_err)}")
+            print("⚠️ GPT returned invalid JSON. Falling back to raw parsing...")
+            questions = parse_raw_mcq(raw_output)
 
-        # Validate structure
-        valid_questions = []
-        for q in questions:
-            if all(k in q for k in ("question", "options", "answer")) and isinstance(q["options"], list):
-                valid_questions.append(q)
+        # Validate and clean questions
+        valid_questions = [
+            q for q in questions
+            if isinstance(q, dict)
+            and "question" in q
+            and "options" in q
+            and isinstance(q["options"], list)
+        ]
 
         if not valid_questions:
-            raise HTTPException(status_code=400, detail="No valid questions were parsed from GPT output.")
+            raise HTTPException(status_code=400, detail="No valid questions parsed from GPT output.")
 
         # Save to DB
         new_test = Test(
