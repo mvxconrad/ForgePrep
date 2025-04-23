@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import AppNavbar from '../components/AppNavbar';
 import background1 from '../assets/background_abstract.png';
 import background2 from '../assets/background_abstract2.png';
+import logo from '../assets/forgepreplogo.png';
 
 const features = [
   { title: "Upload & Transform", desc: "Supports PDF only, more to come in the future!" },
@@ -22,12 +22,23 @@ const LandingPage = () => {
       <img
         src={background1}
         alt="Top Background"
-        className="bg-abstract position-absolute w-100"
-        style={{ top: 0, height: '100vh', zIndex: 0 }}
+        className="position-absolute w-100 h-100"
+        style={{ top: 0, left: 0, objectFit: 'cover', zIndex: 0, opacity: 0.3 }}
       />
 
-      {/* ✅ Universal AppNavbar */}
-      <AppNavbar />
+      {/* ✅ Landing-specific navbar */}
+      <nav className="navbar navbar-expand-lg navbar-dark px-4 py-2 position-fixed w-100"
+        style={{ zIndex: 10, backgroundColor: 'rgba(13, 17, 23, 0.85)', backdropFilter: 'blur(12px)' }}>
+        <div className="container-fluid d-flex justify-content-between align-items-center">
+          <Link to="/" className="navbar-brand d-flex align-items-center">
+            <img src={logo} alt="ForgePrep Logo" height="48" />
+          </Link>
+          <div className="d-flex gap-2">
+            <Link to="/login" className="btn btn-outline-light btn-sm">Log In</Link>
+            <Link to="/register" className="btn btn-light btn-sm text-dark fw-semibold">Sign Up</Link>
+          </div>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <section className="d-flex align-items-center justify-content-center text-center"
@@ -35,8 +46,10 @@ const LandingPage = () => {
         <div className="container">
           <div className="glass p-5 rounded-4 mx-auto shadow-lg" style={{ maxWidth: '720px' }}>
             <h1 className="display-4 fw-bold text-white mb-3 text-shadow">
-              Turn Notes Into <br /> <span className="text-primary"
-                style={{ fontWeight: '900', textShadow: '0 0 6px rgba(255,255,255,0.8)' }}>Practice</span>
+              Turn Notes Into <br />
+              <span className="text-primary" style={{ fontWeight: '900', textShadow: '0 0 6px rgba(255,255,255,0.8)' }}>
+                Practice
+              </span>
             </h1>
             <p className="lead text-white mb-4 text-shadow">
               ForgePrep converts your study materials into AI-powered quizzes instantly.
@@ -48,16 +61,16 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Half Grey / Half Normal Section */}
+      {/* Half Grey Section */}
       <div className="w-100 position-relative" style={{ backgroundColor: '#1c1f26', zIndex: 2 }}>
         <img
           src={background2}
           alt="Bottom Background"
-          className="bg-abstract position-absolute w-100"
+          className="position-absolute w-100"
           style={{ top: 0, height: '100%', opacity: 0.25, zIndex: 0 }}
         />
 
-        {/* Core Features Section */}
+        {/* Core Features */}
         <section className="py-5 position-relative" style={{ zIndex: 2 }}>
           <div className="container">
             <h2 className="display-6 fw-bold text-center mb-5 text-white text-shadow">Core Features</h2>
@@ -74,7 +87,7 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
+        {/* CTA */}
         <section className="py-5 text-center position-relative" style={{ zIndex: 2 }}>
           <div className="container text-white">
             <h2 className="display-6 fw-bold mb-3 text-white text-shadow">Start Acing Exams Today</h2>

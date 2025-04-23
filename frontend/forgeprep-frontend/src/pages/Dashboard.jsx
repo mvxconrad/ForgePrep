@@ -1,44 +1,29 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Container, Row, Col, Card, ListGroup,
   ProgressBar, Button, Form, Spinner
 } from "react-bootstrap";
 import { AuthContext } from "../components/AuthContext";
-import AppNavbar from "../components/AppNavbar";
 import styles from "./Dashboard.module.css";
 import statisticsImage from "../assets/statistics.png";
+import backgroundFallback from "../assets/background_abstract2.png";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-
   const [currentUser, setCurrentUser] = useState(null);
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
-  const [statistics, setStatistics] = useState(null);
-  const [backgroundImage, setBackgroundImage] = useState("");
+  const [statistics, setStatistics] = useState({});
+  const [backgroundImage, setBackgroundImage] = useState(backgroundFallback);
   const [prompt, setPrompt] = useState("");
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [error, setError] = useState("");
   const [notifications, setNotifications] = useState([]);
 
-  const getGreeting = () => {
-    const estTime = new Date().toLocaleString("en-US", {
-      timeZone: "America/New_York",
-      hour: "numeric",
-      hour12: false,
-    });
-    const hour = parseInt(estTime);
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
-  };
-
   useEffect(() => {
-    window.scrollTo(0, 0); // Scroll to top on page load
-    fetchDashboardData();
+    window.scrollTo(0, 0);
     fetchUser();
+    fetchDashboardData();
   }, []);
 
   const fetchUser = async () => {
@@ -46,11 +31,11 @@ const Dashboard = () => {
       const res = await fetch("https://forgeprep.net/api/auth/me", {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch user.");
+      if (!res.ok) throw new Error("Failed to fetch user");
       const data = await res.json();
       setCurrentUser(data);
     } catch (err) {
-      console.error("User fetch error:", err);
+      console.error("[Dashboard] User fetch error:", err);
     }
   };
 
@@ -59,15 +44,15 @@ const Dashboard = () => {
       const res = await fetch("https://forgeprep.net/api/dashboard", {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Dashboard fetch failed.");
+      if (!res.ok) throw new Error("Dashboard fetch failed");
       const data = await res.json();
       setRecentTests(data.recent_tests || []);
       setGoals(data.goals || []);
-      setStatistics(data.statistics || null);
+      setStatistics(data.statistics || {});
       setNotifications(data.notifications || []);
-      setBackgroundImage(data.background_image || "");
+      setBackgroundImage(data.background_image || backgroundFallback);
     } catch (err) {
-      console.error("Dashboard error:", err);
+      console.error("[Dashboard] Data fetch error:", err);
     }
   };
 
@@ -82,9 +67,16 @@ const Dashboard = () => {
       const data = await res.json();
       setGeneratedQuestions(data.questions || []);
     } catch (err) {
-      console.error("Question generation failed:", err);
+      console.error("[Dashboard] Question generation failed:", err);
       setError("Could not generate questions.");
     }
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
   };
 
   if (!currentUser) {
@@ -106,14 +98,13 @@ const Dashboard = () => {
         backgroundPosition: "center"
       }}
     >
-      <AppNavbar />
-
       <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
         <h1 className="display-5 fw-bold text-white mb-5">
-          {getGreeting()}, {currentUser?.username || user?.username || "User"} 👋
+          {getGreeting()}, {currentUser.username || user?.username || "User"} 👋
         </h1>
 
         <Row className="g-4">
+          {/* Recent Tests */}
           <Col md={6}>
             <Card className={styles.glassCard}>
               <div className={styles.cardHeader}>Recent Tests</div>
@@ -132,6 +123,7 @@ const Dashboard = () => {
             </Card>
           </Col>
 
+          {/* Goals */}
           <Col md={6}>
             <Card className={styles.glassCard}>
               <div className={styles.cardHeader}>Your Goals</div>
@@ -150,11 +142,12 @@ const Dashboard = () => {
             </Card>
           </Col>
 
+          {/* Statistics */}
           <Col md={12}>
             <Card className={styles.glassCard}>
               <div className={styles.cardHeader}>Past Test Statistics</div>
-              {statistics?.image && <img src={statisticsImage} alt="Statistics" className="w-100 mb-3 rounded" />}
-              {statistics?.average_score !== null ? (
+              <img src={statisticsImage} alt="Statistics" className="w-100 mb-3 rounded" />
+              {statistics?.average_score !== undefined ? (
                 <div>
                   <p><strong>Average Score:</strong> {statistics.average_score}</p>
                   <p><strong>Best Score:</strong> {statistics.best_score}</p>
@@ -166,6 +159,7 @@ const Dashboard = () => {
             </Card>
           </Col>
 
+          {/* GPT Generator */}
           <Col md={12}>
             <Card className={styles.glassCard}>
               <div className={styles.cardHeader}>AI-Powered Question Generator</div>
@@ -184,19 +178,23 @@ const Dashboard = () => {
             </Card>
           </Col>
 
+          {/* Generated Results */}
           {generatedQuestions.length > 0 && (
             <Col md={12}>
               <Card className={styles.glassCard}>
                 <div className={styles.cardHeader}>Generated Questions</div>
                 <ListGroup>
                   {generatedQuestions.map((q, idx) => (
-                    <ListGroup.Item key={idx} className="bg-transparent text-white">{q}</ListGroup.Item>
+                    <ListGroup.Item key={idx} className="bg-transparent text-white">
+                      {q}
+                    </ListGroup.Item>
                   ))}
                 </ListGroup>
               </Card>
             </Col>
           )}
 
+          {/* Notifications */}
           <Col md={12}>
             <Card className={styles.glassCard}>
               <div className={styles.cardHeader}>Notifications</div>
