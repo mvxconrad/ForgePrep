@@ -22,19 +22,18 @@ const TestResults = () => {
       setTestResult(location.state.result);
       setLoading(false);
     } else {
-      fetchLastTestResult();
+      fetchLatestResult();
     }
   }, []);
 
-  const fetchLastTestResult = async () => {
+  const fetchLatestResult = async () => {
     try {
       const res = await api.get("/tests/results");
       if (Array.isArray(res.data) && res.data.length > 0) {
-        const latest = res.data[0]; // Assuming newest is first
-        setTestResult(latest);
+        setTestResult(res.data[0]); // Most recent first
       }
     } catch (err) {
-      console.error("Failed to fetch test results from DB:", err);
+      console.error("Error fetching test results:", err);
     } finally {
       setLoading(false);
     }
@@ -59,13 +58,16 @@ const TestResults = () => {
   if (!testResult) {
     return (
       <Container className="mt-5">
-        <Alert variant="danger">No result data found. Please take a test first.</Alert>
+        <Alert variant="danger">
+          No test results found. Please take a test first.
+        </Alert>
       </Container>
     );
   }
 
-  const questions = testResult?.test_metadata?.questions || [];
-  const answers = testResult?.submitted_answers || {};
+  const { test_id, score, correct, total, test_metadata, submitted_answers } = testResult;
+  const questions = test_metadata?.questions || [];
+  const answers = submitted_answers || {};
 
   return (
     <div
@@ -79,18 +81,21 @@ const TestResults = () => {
     >
       <Container className="py-5">
         <Card className={`${styles.glassCard} p-4 border-0 shadow-lg`}>
-          <h2 className="fw-bold text-white mb-4">🧠 Test Results</h2>
+          <h2 className="fw-bold text-white mb-4">📊 Test Results</h2>
 
           <h5 className="text-light mb-4">
-            <Badge bg="success" className="me-2">Test ID: {testResult.test_id}</Badge>
-            Score: <strong>{testResult.score}%</strong> (
-            {testResult.correct} / {testResult.total})
+            <Badge bg="secondary" className="me-2">Test ID: {test_id}</Badge>
+            Score: <strong>{score}%</strong> ({correct} / {total})
           </h5>
 
           <ListGroup variant="flush">
             {questions.map((q, index) => {
-              const userAnswer = answers[index.toString()] || "";
-              const isCorrect = q?.answer?.toLowerCase().trim() === userAnswer?.toLowerCase().trim();
+              const userAnswer = answers[index.toString()] || null;
+              const correctAnswer = q?.answer || "";
+              const isCorrect =
+                userAnswer &&
+                correctAnswer &&
+                userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
 
               return (
                 <ListGroup.Item
@@ -99,39 +104,32 @@ const TestResults = () => {
                   style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
                 >
                   <div className="mb-2 fw-semibold">
-                    {index + 1}. {q?.question || "No question text"}
+                    {index + 1}. {q?.question || "Untitled Question"}
                   </div>
 
                   <ul className="ps-3 mb-2">
                     {q?.options?.map((opt, i) => {
-                      const isSelected = opt === userAnswer;
-                      const isAnswer = opt === q?.answer;
+                      const selected = userAnswer === opt;
+                      const isActualAnswer = correctAnswer === opt;
+                      const showCorrect = !isCorrect && isActualAnswer;
+
+                      let className = "text-light";
+                      if (selected && isCorrect) className = "text-success fw-bold";
+                      else if (selected && !isCorrect) className = "text-danger fw-bold";
+                      else if (showCorrect) className = "text-info fw-semibold";
+
                       return (
-                        <li
-                          key={i}
-                          className={`mb-1 ${
-                            isSelected
-                              ? isCorrect
-                                ? "text-success"
-                                : "text-danger"
-                              : isAnswer && !isCorrect
-                              ? "text-info"
-                              : "text-light"
-                          }`}
-                          style={{ fontWeight: isSelected ? "600" : "400" }}
-                        >
+                        <li key={i} className={className}>
                           {opt}
-                          {isSelected && " (Your answer)"}
-                          {!isSelected && isAnswer && !isCorrect && " (Correct)"}
+                          {selected && " (Your Answer)"}
+                          {showCorrect && " (Correct Answer)"}
                         </li>
                       );
                     })}
                   </ul>
 
-                  {!isCorrect && (
-                    <div className="text-muted small">
-                      Correct answer: <strong>{q?.answer || "?"}</strong>
-                    </div>
+                  {!userAnswer && (
+                    <p className="text-muted small fst-italic">No answer selected.</p>
                   )}
                 </ListGroup.Item>
               );
