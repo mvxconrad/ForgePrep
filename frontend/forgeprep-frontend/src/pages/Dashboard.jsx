@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Container, Row, Col, Card, ListGroup,
-  ProgressBar, Button, Form, Navbar, Nav
+  ProgressBar, Button, Form, Spinner
 } from "react-bootstrap";
 import { AuthContext } from "../components/AuthContext";
+import AppNavbar from "../components/AppNavbar";
 import styles from "./Dashboard.module.css";
-import logo from "../assets/forgepreplogo.png";
+import statisticsImage from "../assets/statistics.png";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -35,6 +36,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on page load
     fetchDashboardData();
     fetchUser();
   }, []);
@@ -85,7 +87,13 @@ const Dashboard = () => {
     }
   };
 
-  if (!currentUser) return <p className="text-white text-center mt-5">Loading...</p>;
+  if (!currentUser) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+        <Spinner animation="border" variant="light" />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -98,19 +106,7 @@ const Dashboard = () => {
         backgroundPosition: "center"
       }}
     >
-      <Navbar expand="lg" className="px-4 py-2 position-sticky top-0 w-100" style={{ zIndex: 10, backgroundColor: 'rgba(13, 17, 23, 0.85)', backdropFilter: 'blur(12px)' }}>
-        <Container fluid className="d-flex justify-content-between align-items-center">
-          <Link to="/" className="navbar-brand d-flex align-items-center">
-            <img src={logo} alt="ForgePrep Logo" height="64" />
-          </Link>
-          <Nav className="gap-2">
-            <Link to="/upload" className="btn btn-outline-light btn-sm">Upload</Link>
-            <Link to="/testgenerator" className="btn btn-outline-light btn-sm">Test Generator</Link>
-            <Link to="/study-sets" className="btn btn-outline-light btn-sm">Study Sets</Link>
-            <Link to="/logout" className="btn btn-light btn-sm text-dark fw-semibold">Log Out</Link>
-          </Nav>
-        </Container>
-      </Navbar>
+      <AppNavbar />
 
       <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
         <h1 className="display-5 fw-bold text-white mb-5">
@@ -119,8 +115,8 @@ const Dashboard = () => {
 
         <Row className="g-4">
           <Col md={6}>
-            <Card className="glassCard">
-              <div className="cardHeader">Recent Tests</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Recent Tests</div>
               {recentTests.length ? (
                 <ListGroup variant="flush">
                   {recentTests.map((test) => (
@@ -137,8 +133,8 @@ const Dashboard = () => {
           </Col>
 
           <Col md={6}>
-            <Card className="glassCard">
-              <div className="cardHeader">Your Goals</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Your Goals</div>
               {goals.length ? (
                 <ListGroup variant="flush">
                   {goals.map((goal) => (
@@ -155,9 +151,9 @@ const Dashboard = () => {
           </Col>
 
           <Col md={12}>
-            <Card className="glassCard">
-              <div className="cardHeader">Past Test Statistics</div>
-              {statistics?.image && <img src={statistics.image} alt="Statistics" className="w-100 mb-3 rounded" />}
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Past Test Statistics</div>
+              {statistics?.image && <img src={statisticsImage} alt="Statistics" className="w-100 mb-3 rounded" />}
               {statistics?.average_score !== null ? (
                 <div>
                   <p><strong>Average Score:</strong> {statistics.average_score}</p>
@@ -171,8 +167,8 @@ const Dashboard = () => {
           </Col>
 
           <Col md={12}>
-            <Card className="glassCard">
-              <div className="cardHeader">AI-Powered Question Generator</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>AI-Powered Question Generator</div>
               <Form.Group controlId="formPrompt" className="mb-3">
                 <Form.Control
                   type="text"
@@ -190,8 +186,8 @@ const Dashboard = () => {
 
           {generatedQuestions.length > 0 && (
             <Col md={12}>
-              <Card className="glassCard">
-                <div className="cardHeader">Generated Questions</div>
+              <Card className={styles.glassCard}>
+                <div className={styles.cardHeader}>Generated Questions</div>
                 <ListGroup>
                   {generatedQuestions.map((q, idx) => (
                     <ListGroup.Item key={idx} className="bg-transparent text-white">{q}</ListGroup.Item>
@@ -202,8 +198,8 @@ const Dashboard = () => {
           )}
 
           <Col md={12}>
-            <Card className="glassCard">
-              <div className="cardHeader">Notifications</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Notifications</div>
               {notifications.length > 0 ? (
                 <ListGroup>
                   {notifications.map((note, idx) => (

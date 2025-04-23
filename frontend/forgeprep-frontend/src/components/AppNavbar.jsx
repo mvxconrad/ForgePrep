@@ -1,12 +1,20 @@
 import React, { useContext, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Navbar as BootstrapNavbar, Nav, Container, Button, Toast, ToastContainer } from "react-bootstrap";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Navbar as BootstrapNavbar,
+  Nav,
+  Container,
+  Button,
+  Toast,
+  ToastContainer,
+} from "react-bootstrap";
 import { AuthContext } from "../components/AuthContext";
 import logo from "../assets/forgepreplogo.png";
 import background from "../assets/login_background.png";
 
 const AppNavbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, setUser } = useContext(AuthContext);
   const [showToast, setShowToast] = useState(false);
 
@@ -24,7 +32,7 @@ const AppNavbar = () => {
     }
   };
 
-  const getActiveClass = (path) => (window.location.pathname === path ? "active" : "");
+  const isActive = (path) => location.pathname === path;
 
   return (
     <>
@@ -52,30 +60,34 @@ const AppNavbar = () => {
             <Nav className="me-auto">
               {user && (
                 <>
-                  <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-                  <Nav.Link as={Link} to="/upload">File Upload</Nav.Link>
-                  <Nav.Link as={Link} to="/testgenerator">Test Generator</Nav.Link>
-                  <Nav.Link as={Link} to="/classes">Classes</Nav.Link>
-                  <Nav.Link as={Link} to="/templates">Templates</Nav.Link>
-                  <Nav.Link as={Link} to="/study-sets">Study Sets</Nav.Link>
-                  <Nav.Link as={Link} to="/test-results">Test Results</Nav.Link>
-                  <Nav.Link as={Link} to="/profile">Profile</Nav.Link>
-                  <Nav.Link as={Link} to="/settings">Settings</Nav.Link>
+                  <Nav.Link as={Link} to="/dashboard" active={isActive("/dashboard")}>Dashboard</Nav.Link>
+                  <Nav.Link as={Link} to="/upload" active={isActive("/upload")}>File Upload</Nav.Link>
+                  <Nav.Link as={Link} to="/testgenerator" active={isActive("/testgenerator")}>Test Generator</Nav.Link>
+                  <Nav.Link as={Link} to="/classes" active={isActive("/classes")}>Classes</Nav.Link>
+                  <Nav.Link as={Link} to="/templates" active={isActive("/templates")}>Templates</Nav.Link>
+                  <Nav.Link as={Link} to="/study-sets" active={isActive("/study-sets")}>Study Sets</Nav.Link>
+                  <Nav.Link as={Link} to="/test-results" active={isActive("/test-results")}>Test Results</Nav.Link>
+                  <Nav.Link as={Link} to="/profile" active={isActive("/profile")}>Profile</Nav.Link>
+                  <Nav.Link as={Link} to="/settings" active={isActive("/settings")}>Settings</Nav.Link>
                 </>
               )}
             </Nav>
 
             {user ? (
-              <div className="d-flex align-items-center gap-3">
+              <div className="d-flex flex-wrap align-items-center gap-3 mt-2 mt-lg-0">
                 <span className="text-white fw-semibold">Hi, {user.username || "User"}</span>
                 <Button variant="danger" size="sm" onClick={handleLogout}>
                   Logout
                 </Button>
               </div>
             ) : (
-              <div className="d-flex gap-2">
-                <Button as={Link} to="/login" variant="outline-light" size="sm">Login</Button>
-                <Button as={Link} to="/register" variant="light" size="sm">Sign Up</Button>
+              <div className="d-flex gap-2 mt-2 mt-lg-0">
+                <Button as={Link} to="/login" variant="outline-light" size="sm">
+                  Login
+                </Button>
+                <Button as={Link} to="/register" variant="light" size="sm">
+                  Sign Up
+                </Button>
               </div>
             )}
           </BootstrapNavbar.Collapse>
