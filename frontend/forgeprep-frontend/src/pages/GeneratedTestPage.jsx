@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Container, Button, Alert, Spinner } from "react-bootstrap";
-import api from "../util/apiService"; // Centralized API service
+import { Container, Button, Alert, Spinner, Card, ListGroup } from "react-bootstrap";
+import api from "../util/apiService";
 
 const GeneratedTestPage = () => {
   const location = useLocation();
@@ -51,24 +51,30 @@ const GeneratedTestPage = () => {
   }
 
   return (
-    <Container className="mt-4">
-      <h1 className="mb-4">Generated Test Preview</h1>
-      <ul>
-        {test.test_metadata?.questions.map((question, index) => (
-          <li key={index} className="mb-3">
-            <strong>{question.question || question.questionText}</strong>
-            {Array.isArray(question.options) && (
-              <ul>
-                {question.options.map((option, idx) => (
-                  <li key={idx}>{option}</li>
+    <Container className="mt-5">
+      <h2 className="mb-4">🧠 Test Preview</h2>
+      {test.test_metadata?.questions.map((q, index) => (
+        <Card key={index} className="mb-4 shadow-sm">
+          <Card.Body>
+            <Card.Title>Question {index + 1}</Card.Title>
+            <Card.Text>{q.question}</Card.Text>
+            {Array.isArray(q.options) && (
+              <ListGroup variant="flush">
+                {q.options.map((option, idx) => (
+                  <ListGroup.Item key={idx}>{option}</ListGroup.Item>
                 ))}
-              </ul>
+              </ListGroup>
             )}
-          </li>
-        ))}
-      </ul>
+            {q.answer && (
+              <div className="mt-2 text-muted">
+                <small>✅ Answer: <strong>{q.answer}</strong></small>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      ))}
       <div className="text-center mt-4">
-        <Button onClick={handleStartTest} variant="primary" size="lg">
+        <Button onClick={handleStartTest} variant="success" size="lg">
           Start Test
         </Button>
       </div>

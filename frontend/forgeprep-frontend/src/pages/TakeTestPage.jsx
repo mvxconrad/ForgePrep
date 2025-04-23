@@ -103,20 +103,24 @@ const TakeTestPage = () => {
                     {idx + 1}. {q.question || q.questionText || "Unnamed Question"}
                   </Form.Label>
 
+                  {/* Multiple Choice Handling */}
                   {Array.isArray(q.options) && q.options.length > 0 ? (
-                    q.options.map((option, optIdx) => (
-                      <Form.Check
-                        key={optIdx}
-                        type="radio"
-                        name={`question-${idx}`}
-                        label={option}
-                        value={option}
-                        checked={answers[idx] === option}
-                        onChange={() => handleChange(idx, option)}
-                        className="text-white"
-                      />
-                    ))
+                    <div className="ms-3">
+                      {q.options.map((option, optIdx) => (
+                        <Form.Check
+                          key={optIdx}
+                          type="radio"
+                          name={`question-${idx}`}
+                          label={option}
+                          value={option}
+                          checked={answers[idx] === option}
+                          onChange={() => handleChange(idx, option)}
+                          className="text-white"
+                        />
+                      ))}
+                    </div>
                   ) : (
+                    // Short Answer Fallback
                     <Form.Control
                       className="bg-light text-dark"
                       type="text"

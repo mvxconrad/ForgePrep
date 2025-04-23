@@ -24,7 +24,6 @@ async def get_test_by_id(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie)
 ):
-    """Retrieve a test by ID for the current user."""
     test = db.query(Test).filter_by(id=test_id, user_id=current_user.id).first()
     if not test:
         raise HTTPException(status_code=404, detail="Test not found.")
@@ -43,27 +42,30 @@ async def generate_test(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie)
 ):
-    """Generate a test from study material using GPT."""
     try:
         file = db.query(FileModel).filter_by(id=request.file_id, user_id=current_user.id).first()
         if not file:
             raise HTTPException(status_code=404, detail="File not found or access denied.")
-
         if not file.extracted_text or not file.extracted_text.strip():
             raise HTTPException(status_code=400, detail="No extracted text found in file.")
 
-        # Build prompt
+        # Stronger, enforced prompt
         base_prompt = request.prompt or (
-            "You are provided with study material. Generate a JSON array of questions like this:\n"
+            "You are a helpful assistant for test generation. "
+            "From the following study material, create 5 multiple-choice questions. "
+            "Each question must be returned in valid JSON format like this:\n\n"
             "[\n"
             "  {\n"
             "    \"question\": \"What is the capital of France?\",\n"
+            "    \"options\": [\"Paris\", \"London\", \"Berlin\", \"Rome\"],\n"
             "    \"answer\": \"Paris\",\n"
             "    \"difficulty\": \"easy\"\n"
             "  },\n"
             "  ...\n"
-            "]"
+            "]\n\n"
+            "Return ONLY the JSON array. Do NOT include any explanations or notes."
         )
+
         full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:8000]}"
 
         # GPT API call
@@ -71,41 +73,30 @@ async def generate_test(
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant for test generation."},
                 {"role": "user", "content": full_prompt}
             ]
         )
         raw_output = response.choices[0].message["content"]
         print("GPT RAW OUTPUT:", raw_output)
 
-        # Parse output
+        # Parse JSON
         try:
-            parsed = json.loads(raw_output)
-            if isinstance(parsed, dict) and "questions" in parsed:
-                questions = parsed["questions"]
-            elif isinstance(parsed, list):
-                questions = parsed
-            else:
-                raise ValueError("Invalid GPT response structure.")
-        except Exception:
-            questions = [
-                {
-                    "question": raw_output.strip(),
-                    "answer": "Unstructured GPT response",
-                    "difficulty": "unknown"
-                }
-            ]
+            questions = json.loads(raw_output)
+            if not isinstance(questions, list):
+                raise ValueError("Expected a JSON array")
+        except Exception as parse_err:
+            raise HTTPException(status_code=500, detail=f"Failed to parse GPT response: {str(parse_err)}")
 
-        # Validate each question
-        valid_questions = [
-            q for q in questions
-            if isinstance(q, dict) and "question" in q and "answer" in q
-        ]
+        # Validate structure
+        valid_questions = []
+        for q in questions:
+            if all(k in q for k in ("question", "options", "answer")) and isinstance(q["options"], list):
+                valid_questions.append(q)
 
         if not valid_questions:
-            raise HTTPException(status_code=400, detail="No valid questions generated.")
+            raise HTTPException(status_code=400, detail="No valid questions were parsed from GPT output.")
 
-        # Save test
+        # Save to DB
         new_test = Test(
             user_id=current_user.id,
             study_material_id=request.study_material_id,
