@@ -19,27 +19,38 @@ class PromptRequest(BaseModel):
     study_material_id: int | None = None
 
 def parse_raw_mcq(raw_text: str):
-    """Improved parser for GPT outputs that may use 'Question X:' or numbered formats"""
     pattern = re.compile(
-        r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a[).]\s*(.*?)\s*b[).]\s*(.*?)\s*c[).]\s*(.*?)\s*d[).]\s*(.*?)(?=\n(?:\d+\.|Question \d+:)|\Z)",
+        r"(?:\d+\.|Question \d+:)\s*(.*?)\s+a[).]\s*(.*?)\s+b[).]\s*(.*?)\s+c[).]\s*(.*?)\s+d[).]\s*(.*?)(?=\n(?:\d+\.|Question \d+:)|\Z)",
         re.DOTALL | re.IGNORECASE,
     )
-
     matches = pattern.findall(raw_text)
     print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
 
     structured = []
-    for question, opt1, opt2, opt3, opt4 in matches:
+    for i, (question, opt1, opt2, opt3, opt4) in enumerate(matches, 1):
+        question_block = f"{question}\na) {opt1}\nb) {opt2}\nc) {opt3}\nd) {opt4}"
+        # Find matching answer from raw output
+        answer_match = re.search(
+            rf"{i}\.\s*[a-dA-D]\)", raw_text
+        ) or re.search(
+            rf"{i}\s*[-:]?\s*([a-dA-D])", raw_text
+        )
+        answer_letter = answer_match.group(0)[-2].lower() if answer_match else None
+        answer_index = ord(answer_letter) - ord("a") if answer_letter else None
+
+        answer_value = None
+        if answer_index is not None and 0 <= answer_index < 4:
+            answer_value = [opt1, opt2, opt3, opt4][answer_index].strip()
+
         structured.append({
             "question": question.strip(),
             "options": [opt1.strip(), opt2.strip(), opt3.strip(), opt4.strip()],
-            "answer": None,
+            "answer": answer_value or "Unknown",
             "difficulty": "medium"
         })
 
-    # ✅ Fallback if nothing matched
     if not structured:
-        print("⚠️ No valid MCQs parsed. Returning default fallback question.")
+        print("⚠️ No valid MCQs parsed. Returning fallback.")
         return [{
             "question": "⚠️ Unable to parse structured questions from GPT response.",
             "options": [],
