@@ -29,6 +29,7 @@ async def get_test_by_id(
     test = db.query(Test).filter_by(id=test_id, user_id=current_user.id).first()
     if not test:
         raise HTTPException(status_code=404, detail="Test not found.")
+    
     return {
         "test_id": test.id,
         "study_material_id": test.study_material_id,
@@ -45,7 +46,6 @@ async def generate_test(
 ):
     """Generate a test from study material using GPT."""
     try:
-        # Step 1: Validate file access
         file = db.query(FileModel).filter_by(id=request.file_id, user_id=current_user.id).first()
         if not file:
             raise HTTPException(status_code=404, detail="File not found or access denied.")
@@ -53,14 +53,14 @@ async def generate_test(
         if not file.extracted_text or not file.extracted_text.strip():
             raise HTTPException(status_code=400, detail="No extracted text found in file.")
 
-        # Step 2: Build GPT prompt
+        # Build GPT prompt
         base_prompt = request.prompt or (
             "You are provided with study material. Generate a JSON-formatted test. "
             "Each question must include: question text, correct answer, and difficulty (easy, medium, hard)."
         )
         full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:8000]}"
 
-        # Step 3: OpenAI request
+        # GPT request
         openai.api_key = os.environ.get("OPENAI_API_KEY")
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -70,14 +70,28 @@ async def generate_test(
             ]
         )
 
-        # Step 4: Parse GPT response
         raw_output = response.choices[0].message["content"]
-        try:
-            questions = json.loads(raw_output)
-        except json.JSONDecodeError:
-            questions = {"raw_text": raw_output}
 
-        # Step 5: Save to DB
+        # Attempt to parse JSON
+        try:
+            parsed = json.loads(raw_output)
+            if isinstance(parsed, dict) and "questions" in parsed:
+                questions = parsed["questions"]
+            elif isinstance(parsed, list):
+                questions = parsed
+            else:
+                raise ValueError("Unexpected structure.")
+        except Exception:
+            questions = [
+                {
+                    "id": 1,
+                    "text": raw_output.strip(),
+                    "answer": "Unstructured GPT response",
+                    "difficulty": "unknown"
+                }
+            ]
+
+        # Save to DB
         new_test = Test(
             user_id=current_user.id,
             study_material_id=request.study_material_id,

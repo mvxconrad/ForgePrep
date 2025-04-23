@@ -66,7 +66,12 @@ const TakeTestPage = () => {
     return (
       <div
         className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "100vh", backgroundColor: "#0b0c10" }}
+        style={{
+          minHeight: "100vh",
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
         <Spinner animation="border" variant="light" />
       </div>
@@ -94,7 +99,7 @@ const TakeTestPage = () => {
               {test.test_metadata.questions.map((q, idx) => (
                 <Form.Group className="mb-4" key={idx}>
                   <Form.Label className="text-white fw-semibold">
-                    {idx + 1}. {q.question || q.text}
+                    {idx + 1}. {q.question || q.text || "Unnamed Question"}
                   </Form.Label>
                   <Form.Control
                     className="bg-light"
@@ -108,8 +113,8 @@ const TakeTestPage = () => {
 
               <div className="text-center">
                 <Button
-                  variant="primary"
-                  className="px-5 py-2 fw-semibold"
+                  variant="light"
+                  className="text-dark px-5 py-2 fw-semibold"
                   onClick={handleSubmitTest}
                   disabled={submitting}
                 >

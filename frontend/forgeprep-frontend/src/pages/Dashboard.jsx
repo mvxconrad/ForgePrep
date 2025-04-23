@@ -70,13 +70,14 @@ const Dashboard = () => {
 
   return (
     <div
-      className="bg-dark text-light position-relative"
+      className="text-light position-relative"
       style={{
         zIndex: 1,
         minHeight: "100vh",
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
-        backgroundPosition: "center"
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
       }}
     >
       <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
