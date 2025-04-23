@@ -46,6 +46,8 @@ async def generate_test(
     current_user: User = Depends(get_current_user_from_cookie)
 ):
     try:
+        print(f"📥 Generating test for user: {current_user.email} (ID: {current_user.id})")
+
         file = db.query(FileModel).filter_by(id=request.file_id, user_id=current_user.id).first()
         if not file:
             raise HTTPException(status_code=404, detail="File not found or access denied.")
@@ -114,6 +116,8 @@ async def generate_test(
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
+
+        print(f"✅ Saved test: ID {new_test.id} for user {current_user.email}")
 
         return {"test_id": new_test.id, "metadata": new_test.test_metadata}
 
