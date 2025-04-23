@@ -75,7 +75,9 @@ const AppNavbar = () => {
 
             {user ? (
               <div className="d-flex flex-wrap align-items-center gap-3 mt-2 mt-lg-0">
-                <span className="text-white fw-semibold">Hi, {user.username || "User"}</span>
+                <span className="text-white fw-semibold">
+                  {user?.username ? `Hi, ${user.username}` : "Welcome"}
+                </span>
                 <Button variant="danger" size="sm" onClick={handleLogout}>
                   Logout
                 </Button>
