@@ -1,8 +1,7 @@
-// SettingsPage.jsx
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button, Alert, Row, Col } from "react-bootstrap";
 import api from "../util/apiService";
-import styles from "./Dashboard.module.css"; // reuse styling
+import styles from "./Dashboard.module.css";
 import backgroundImage from "../assets/background_abstract2.png";
 
 const SettingsPage = () => {
@@ -57,45 +56,56 @@ const SettingsPage = () => {
   return (
     <div
       className="bg-dark text-light"
-      style={{ minHeight: "100vh", backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      style={{
+        minHeight: "100vh",
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
       <Container className="py-5">
         <Row className="justify-content-center">
-          <Col md={6}>
-            <Card className={`${styles.glassCard} border-0 p-4`}>
+          <Col lg={6} md={8}>
+            <Card className={`${styles.glassCard} border-0 shadow p-4`}>
               <Card.Body>
-                <h3 className="text-white mb-4 fw-bold text-center">Edit Profile</h3>
+                <h3 className="text-white mb-4 fw-bold">Account Settings</h3>
+
                 {message.error && <Alert variant="danger">{message.error}</Alert>}
                 {message.success && <Alert variant="success">{message.success}</Alert>}
 
                 <Form onSubmit={handleUpdate}>
+                  <h5 className="text-white mb-3">Account Info</h5>
+
                   <Form.Group className="mb-3" controlId="formUsername">
-                    <Form.Label className="text-white">Username</Form.Label>
+                    <Form.Label className="text-white fw-semibold">Username</Form.Label>
                     <Form.Control
                       type="text"
                       value={profile.username}
                       onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                       required
+                      className="glass"
                     />
                   </Form.Group>
 
                   <Form.Group className="mb-3" controlId="formEmail">
-                    <Form.Label className="text-white">Email</Form.Label>
+                    <Form.Label className="text-white fw-semibold">Email</Form.Label>
                     <Form.Control
                       type="email"
                       value={profile.email}
                       onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                       required
+                      className="glass"
                     />
                   </Form.Group>
 
                   <Form.Group className="mb-4" controlId="formPassword">
-                    <Form.Label className="text-white">New Password</Form.Label>
+                    <Form.Label className="text-white fw-semibold">New Password</Form.Label>
                     <Form.Control
                       type="password"
                       placeholder="Leave blank to keep current password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="glass"
                     />
                   </Form.Group>
 
@@ -105,6 +115,13 @@ const SettingsPage = () => {
                 </Form>
               </Card.Body>
             </Card>
+
+            {/* Optional: Delete account or logout below */}
+            <div className="text-center mt-4">
+              <Button variant="outline-danger" size="sm" disabled>
+                Delete Account (Coming Soon)
+              </Button>
+            </div>
           </Col>
         </Row>
       </Container>
