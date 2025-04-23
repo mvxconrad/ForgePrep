@@ -8,6 +8,38 @@ from app.routes.auth import get_current_user_from_cookie
 
 router = APIRouter()
 
+# ------------------ AUTHENTICATED USER ROUTES ------------------ #
+
+@router.get("/profile")
+def get_user_profile(current_user: User = Depends(get_current_user_from_cookie)):
+    """Fetch profile of the logged-in user"""
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email
+    }
+
+@router.put("/profile")
+def update_user_profile(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    """Update profile of the authenticated user"""
+    if user_update.username:
+        current_user.username = user_update.username
+    if user_update.email:
+        current_user.email = user_update.email
+    if user_update.password:
+        current_user.hashed_password = hash_password(user_update.password)
+
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "username": current_user.username,
+        "email": current_user.email
+    }
+
 # ------------------ PUBLIC + ADMIN ROUTES ------------------ #
 
 @router.get("/")
@@ -56,35 +88,3 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     return db_user
-
-# ------------------ AUTHENTICATED USER ROUTES ------------------ #
-
-@router.get("/profile")
-def get_user_profile(current_user: User = Depends(get_current_user_from_cookie)):
-    """Fetch profile of the logged-in user"""
-    return {
-        "id": current_user.id,
-        "username": current_user.username,
-        "email": current_user.email
-    }
-
-@router.put("/profile")
-def update_user_profile(
-    user_update: UserUpdate,
-    current_user: User = Depends(get_current_user_from_cookie),
-    db: Session = Depends(get_db)
-):
-    """Update profile of the authenticated user"""
-    if user_update.username:
-        current_user.username = user_update.username
-    if user_update.email:
-        current_user.email = user_update.email
-    if user_update.password:
-        current_user.hashed_password = hash_password(user_update.password)
-
-    db.commit()
-    db.refresh(current_user)
-    return {
-        "username": current_user.username,
-        "email": current_user.email
-    }
