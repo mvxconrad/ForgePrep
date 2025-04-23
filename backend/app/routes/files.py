@@ -11,22 +11,19 @@ from app.services.file_handler import save_and_scan_file
 
 router = APIRouter()
 
-# ------------------ UTILITY ------------------ #
+# ------------------ UTILITY FUNCTIONS ------------------ #
 
 async def extract_text_from_pdf(file: UploadFile) -> str:
-    """Extract text from uploaded PDF file using PyMuPDF."""
+    """Extract readable text from a PDF file using PyMuPDF."""
     contents = await file.read()
-    await file.seek(0)
+    await file.seek(0)  # Reset stream
     pdf = fitz.open(stream=contents, filetype="pdf")
-    text = ""
-    for page in pdf:
-        text += page.get_text()
+    text = "".join(page.get_text() for page in pdf)
     pdf.close()
     return text
 
-
 async def is_valid_pdf(file: UploadFile) -> bool:
-    """Ensure the uploaded file has a valid PDF header."""
+    """Check if the uploaded file is a valid PDF based on header."""
     header = await file.read(4)
     await file.seek(0)
     return header == b"%PDF"
@@ -38,18 +35,17 @@ async def list_files(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """List files uploaded by the current user."""
+    """Return all files uploaded by the current user."""
     files = db.query(FileModel).filter(FileModel.user_id == current_user.id).all()
     return [
         {
             "file_id": f.id,
             "filename": f.filename,
             "uploadedAt": f.created_at,
-            "size": len(f.content) / 1024,  # KB
+            "size": len(f.content) / 1024  # KB
         }
         for f in files
     ]
-
 
 @router.post("/upload/raw/")
 async def upload_raw(
@@ -57,7 +53,7 @@ async def upload_raw(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """Upload a raw PDF file (no scan, dev only)."""
+    """Directly upload PDF (for testing, no virus scan)."""
     if (
         not file.filename.lower().endswith(".pdf")
         or file.content_type != "application/pdf"
@@ -69,22 +65,21 @@ async def upload_raw(
     await file.seek(0)
     extracted_text = await extract_text_from_pdf(file)
 
-    new_file = FileModel(
+    db_file = FileModel(
         filename=file.filename,
         content=file_data,
         extracted_text=extracted_text,
         user_id=current_user.id
     )
-    db.add(new_file)
+    db.add(db_file)
     db.commit()
-    db.refresh(new_file)
+    db.refresh(db_file)
 
     return {
         "message": "File uploaded successfully",
-        "file_id": new_file.id,
+        "file_id": db_file.id,
         "extracted_text": extracted_text[:1000]
     }
-
 
 @router.post("/upload/scan/")
 async def upload_scanned(
@@ -92,13 +87,19 @@ async def upload_scanned(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """Upload a scanned and validated PDF (production safe)."""
+    """Upload a PDF after AV scan and extract text."""
     if (
         not file.filename.lower().endswith(".pdf")
         or file.content_type != "application/pdf"
         or not await is_valid_pdf(file)
     ):
         raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
+
+    # Read file once
+    file_data = await file.read()
+    if not file_data:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    await file.seek(0)
 
     try:
         scan_result = save_and_scan_file(file)
@@ -107,9 +108,10 @@ async def upload_scanned(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Virus scan failed: {str(e)}")
 
+    # Extract text
     extracted_text = await extract_text_from_pdf(file)
-    file_data = await file.read()
 
+    # Save file to DB
     db_file = FileModel(
         filename=file.filename,
         content=file_data,
@@ -126,13 +128,12 @@ async def upload_scanned(
         "extracted_text": extracted_text[:1000]
     }
 
-
 @router.get("/download/{file_id}")
 async def download_file(
     file_id: int,
     db: Session = Depends(get_db),
 ):
-    """Download a file from the database by ID."""
+    """Download a previously uploaded file by ID."""
     db_file = db.query(FileModel).filter(FileModel.id == file_id).first()
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
