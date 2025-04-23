@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ component: Component }) => {
-  const [authChecked, setAuthChecked] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -11,19 +10,17 @@ const ProtectedRoute = ({ component: Component }) => {
         const res = await fetch("https://forgeprep.net/api/auth/me", {
           credentials: "include",
         });
-        setAuthenticated(res.ok);
-      } catch {
-        setAuthenticated(false);
-      } finally {
-        setAuthChecked(true);
+        setIsAuthenticated(res.ok);
+      } catch (err) {
+        setIsAuthenticated(false);
       }
     };
-
     checkAuth();
   }, []);
 
-  if (!authChecked) return null; // or a loading spinner
-  return authenticated ? <Component /> : <Navigate to="/login" />;
+  if (isAuthenticated === null) return null; // or a loading spinner
+
+  return isAuthenticated ? <Component /> : <Navigate to="/login" />;
 };
 
 export default ProtectedRoute;
