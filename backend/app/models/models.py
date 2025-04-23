@@ -107,6 +107,24 @@ class Test(Base):
 
     study_material = relationship("StudyMaterial", back_populates="tests")
 
+
+class TestResult(Base):
+    __tablename__ = "test_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("tests.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    score = Column(Float)
+    correct = Column(Integer)
+    total = Column(Integer)
+    submitted_answers = Column(JSON)
+    submitted_at = Column(DateTime, default=datetime.utcnow)
+
+    # Optional: relationships
+    test = relationship("Test", backref="results")
+    user = relationship("User", backref="results")
+
+
 #class Goal(Base):
  #   __tablename__ = "goals"
 #

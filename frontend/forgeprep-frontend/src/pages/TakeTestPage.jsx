@@ -59,15 +59,26 @@ const TakeTestPage = () => {
   const handleSubmitTest = async () => {
     setSubmitting(true);
     try {
-      const response = await api.post("/tests/submit", { testId, answers });
+      // 🧠 Convert keys to strings to match Pydantic expectations
+      const stringifiedAnswers = {};
+      Object.entries(answers).forEach(([key, value]) => {
+        stringifiedAnswers[String(key)] = value;
+      });
+  
+      const payload = {
+        test_id: testId,
+        answers: stringifiedAnswers,
+      };
+  
+      const response = await api.post("/tests/submit", payload);
       navigate("/test-results", { state: { result: response.data } });
     } catch (err) {
-      console.error("Error submitting test:", err);
+      console.error("❌ Error submitting test:", err);
       setError("Failed to submit test. Please try again.");
     } finally {
       setSubmitting(false);
     }
-  };
+  };  
 
   if (loading) {
     return (
