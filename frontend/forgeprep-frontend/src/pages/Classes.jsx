@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Form, Button, ListGroup, Card, Alert } from "react-bootstrap";
-import api from "../util/apiService"; // Centralized API service
+import { Container, Row, Col, Form, Button, ListGroup, Card, Alert, Spinner } from "react-bootstrap";
+import api from "../util/apiService";
 import classesImage from "../assets/classroom.jpg";
 
 const Classes = () => {
@@ -9,15 +9,22 @@ const Classes = () => {
   const [syllabus, setSyllabus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await api.get("/classes/");
-        setClasses(response.data);
+        const response = await api.get("/classes/", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (response.data && response.data.length > 0) {
+          setClasses(response.data);
+        } else {
+          setError("No classes available.");
+        }
       } catch (err) {
-        console.error("Error fetching classes:", err);
-        setError("Failed to load classes. Please try again.");
+        console.error("Error fetching classes:", err.response?.data || err.message);
+        setError(err.response?.data?.message || "Failed to load classes. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -27,37 +34,49 @@ const Classes = () => {
   }, []);
 
   const handleAddClass = async () => {
-    if (!newClass) return;
+    if (!newClass.trim()) {
+      setError("Class name cannot be empty.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("name", newClass);
     if (syllabus) formData.append("syllabus", syllabus);
 
     try {
-      const response = await api.post("/classes/", formData);
+      const response = await api.post("/classes/", formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setClasses([...classes, response.data]);
       setNewClass("");
       setSyllabus(null);
+      setMessage("Class added successfully!");
+      setError("");
     } catch (err) {
-      console.error("Error adding class:", err);
-      setError("Failed to add class. Please try again.");
+      console.error("Error adding class:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Failed to add class. Please try again.");
     }
   };
 
   const handleRemoveClass = async (id) => {
     try {
-      await api.delete(`/classes/${id}`);
+      await api.delete(`/classes/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
       setClasses(classes.filter((c) => c.id !== id));
+      setMessage("Class removed successfully!");
     } catch (err) {
-      console.error("Error removing class:", err);
-      setError("Failed to remove class. Please try again.");
+      console.error("Error removing class:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Failed to remove class. Please try again.");
     }
   };
 
   if (loading) {
     return (
-      <Container className="mt-4">
-        <p>Loading classes...</p>
+      <Container className="mt-4 text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
       </Container>
     );
   }
@@ -66,6 +85,7 @@ const Classes = () => {
     <Container className="mt-4">
       <h2>Classes</h2>
       {error && <Alert variant="danger">{error}</Alert>}
+      {message && <Alert variant="success">{message}</Alert>}
       <Row>
         <Col md={6}>
           <Card className="mb-4">
@@ -116,7 +136,7 @@ const Classes = () => {
                     </ListGroup.Item>
                   ))
                 ) : (
-                  <ListGroup.Item>No classes available</ListGroup.Item>
+                  <ListGroup.Item className="text-muted">No classes available.</ListGroup.Item>
                 )}
               </ListGroup>
             </Card.Body>
