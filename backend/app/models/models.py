@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from database.database import Base
+from app.security.security import verify_password
 
 class UserProgress(Base):
     __tablename__ = "user_progress"

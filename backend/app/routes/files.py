@@ -3,10 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import fitz  # PyMuPDF
-
 from database.database import get_db
 from app.models.models import File as FileModel, User
-from app.routes.auth import get_current_user
+from app.routes.auth import get_current_user_from_cookie
 from app.services.file_handler import save_and_scan_file, insert_file_to_db
 
 router = APIRouter()
@@ -32,7 +31,7 @@ async def is_valid_pdf(file: UploadFile) -> bool:
 @router.get("/")
 async def list_files(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_cookie),
 ):
     # Query files only for the current user
     files = db.query(FileModel).filter(FileModel.user_id == current_user.id).all()
@@ -51,7 +50,7 @@ async def list_files(
 async def upload_raw(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_cookie),
 ):
     # Validate the file type and ensure it's a valid PDF
     if (
@@ -77,7 +76,7 @@ async def upload_raw(
     db.refresh(db_file)
 
     return {
-        "message": "✅ File uploaded successfully",
+        "message": "File uploaded successfully",
         "file_id": db_file.id,
         "extracted_text": extracted_text[:1000]  # Preview of the extracted text
     }
@@ -87,7 +86,7 @@ async def upload_raw(
 async def upload_scanned(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_from_cookie),
 ):
     # Validate file is actually a PDF
     if (
@@ -100,7 +99,7 @@ async def upload_scanned(
     # Scan the file with your AV logic (ClamAV or similar)
     status = save_and_scan_file(file)
     if status == "infected":
-        raise HTTPException(status_code=400, detail="⚠️ File is infected and was removed!")
+        raise HTTPException(status_code=400, detail="File is infected and was removed!")
 
     # Extract text after the clean scan
     extracted_text = await extract_text_from_pdf(file)
@@ -118,7 +117,7 @@ async def upload_scanned(
     db.refresh(db_file)
 
     return {
-        "message": f"✅ {file.filename} uploaded and scanned successfully!",
+        "message": f"{file.filename} uploaded and scanned successfully!",
         "file_id": db_file.id,
         "extracted_text": extracted_text[:1000]  # Preview of the extracted text
     }

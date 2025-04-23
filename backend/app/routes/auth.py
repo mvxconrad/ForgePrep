@@ -102,13 +102,13 @@ def logout():
 
 
 @router.get("/me")
-def get_current_user_info(current_user: User = Depends(lambda: get_current_user_from_cookie())):
+def get_current_user_info(request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user_from_cookie(request, db)
     return {
         "id": current_user.id,
         "username": current_user.username,
         "email": current_user.email
     }
-
 
 # ------------------ OAUTH ROUTES ------------------ #
 
@@ -136,13 +136,14 @@ async def auth_provider(request: Request, provider: str):
 
 
 @router.get("/protected/")
-async def protected_route(current_user: User = Depends(lambda: get_current_user_from_cookie())):
+async def protected_route(request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user_from_cookie(request, db)
     return {"message": f"Hello, {current_user.username}!"}
 
 
 # ------------------ HELPER ------------------ #
 
-def get_current_user_from_cookie(request: Request = Depends(), db: Session = Depends(get_db)) -> User:
+def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)) -> User:
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")

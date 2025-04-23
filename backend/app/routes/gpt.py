@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from .auth import get_current_user
+from app.routes.auth import get_current_user_from_cookie
 from database.database import get_db
 from app.models import Test  # SQLAlchemy Test model
+from app.models.models import User
 from app.models.models import File as FileModel  # SQLAlchemy File model
 import os
 import openai
@@ -23,7 +24,7 @@ class PromptRequest(BaseModel):
 async def generate_test(
     request: PromptRequest,
     db: Session = Depends(get_db),  # Dependency for DB session
-    user=Depends(get_current_user)  # Dependency for current authenticated user
+    current_user: User = Depends(get_current_user_from_cookie)  # Dependency for current authenticated user
 ):
     try:
         # Step 1: Check if the current user is authorized (admin-level check)
