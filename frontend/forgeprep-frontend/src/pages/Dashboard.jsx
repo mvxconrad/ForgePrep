@@ -165,14 +165,14 @@ const Dashboard = () => {
               <div className="d-flex flex-wrap gap-3 p-3">
                 <Button
                   variant="light"
-                  className="text-dark fw-semibold"
+                  className="fw-semibold shadow-sm rounded-pill px-4 py-2 text-dark custom-hover"
                   onClick={() => window.location.href = "/upload"}
                 >
                   📁 Upload Study Guide
                 </Button>
                 <Button
-                  variant="primary"
-                  className="fw-semibold"
+                  variant="light"
+                  className="fw-semibold shadow-sm rounded-pill px-4 py-2 text-dark custom-hover"
                   onClick={() => window.location.href = "/testgenerator"}
                 >
                   🧠 Generate Test
@@ -182,6 +182,17 @@ const Dashboard = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* Button hover override */}
+      <style>
+        {`
+          .custom-hover:hover {
+            background-color: #f0f0f0 !important;
+            color: #000 !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
+          }
+        `}
+      </style>
     </div>
   );
 };
