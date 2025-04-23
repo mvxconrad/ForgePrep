@@ -12,10 +12,30 @@ from datetime import datetime
 
 router = APIRouter()
 
+
 class PromptRequest(BaseModel):
     file_id: int
     prompt: str | None = None
     study_material_id: int | None = None
+
+
+@router.get("/tests/{test_id}")
+async def get_test_by_id(
+    test_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie)
+):
+    """Retrieve a test by ID for the current user."""
+    test = db.query(Test).filter_by(id=test_id, user_id=current_user.id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found.")
+    return {
+        "test_id": test.id,
+        "study_material_id": test.study_material_id,
+        "test_metadata": test.test_metadata,
+        "created_at": test.created_at,
+    }
+
 
 @router.post("/gpt/generate")
 async def generate_test(
@@ -23,41 +43,41 @@ async def generate_test(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie)
 ):
+    """Generate a test from study material using GPT."""
     try:
-        # Step 1: Find file
+        # Step 1: Validate file access
         file = db.query(FileModel).filter_by(id=request.file_id, user_id=current_user.id).first()
         if not file:
-            raise HTTPException(status_code=404, detail="File not found or access denied")
+            raise HTTPException(status_code=404, detail="File not found or access denied.")
 
-        # Step 2: Ensure text exists
-        if not file.extracted_text or len(file.extracted_text.strip()) == 0:
-            raise HTTPException(status_code=400, detail="No extracted text available for this file")
+        if not file.extracted_text or not file.extracted_text.strip():
+            raise HTTPException(status_code=400, detail="No extracted text found in file.")
 
-        # Step 3: Build prompt
+        # Step 2: Build GPT prompt
         base_prompt = request.prompt or (
-            "You are provided with study material. Generate a test based on this material in JSON format. "
-            "Each item should have a question, answer, and difficulty (easy, medium, hard)."
+            "You are provided with study material. Generate a JSON-formatted test. "
+            "Each question must include: question text, correct answer, and difficulty (easy, medium, hard)."
         )
         full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:8000]}"
 
-        # Step 4: OpenAI call
+        # Step 3: OpenAI request
         openai.api_key = os.environ.get("OPENAI_API_KEY")
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # use a valid model name, like "gpt-3.5-turbo" or "gpt-4"
+            model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a helpful test generator assistant."},
+                {"role": "system", "content": "You are a helpful assistant for test generation."},
                 {"role": "user", "content": full_prompt}
             ]
         )
 
-        # Step 5: Parse output
+        # Step 4: Parse GPT response
         raw_output = response.choices[0].message["content"]
         try:
             questions = json.loads(raw_output)
         except json.JSONDecodeError:
             questions = {"raw_text": raw_output}
 
-        # Step 6: Save test
+        # Step 5: Save to DB
         new_test = Test(
             user_id=current_user.id,
             study_material_id=request.study_material_id,
