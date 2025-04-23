@@ -68,11 +68,17 @@ async def generate_test(
         # 🔁 Prompt with answer key expectation
         base_prompt = request.prompt or (
             "You are a helpful assistant for test generation. "
-            "From the following study material, create 5 multiple-choice questions. "
-            "Each question must have 4 options (a–d). After all questions, include an answer key like this:\n"
-            "Answers:\n1. b\n2. d\n3. a\n4. c\n5. b\n"
-            "Do not include explanations or any extra text—just the questions and the key."
+            "From the following study material, create exactly 5 multiple-choice questions. "
+            "Each question must have 4 answer options labeled a) b) c) d). "
+            "After all the questions, include a line that says:\n\n"
+            "Answers:\n1. b\n2. d\n3. a\n...\n\n"
+            "Use this format exactly — do not include any extra comments or explanations. "
+            "Your response should look like:\n"
+            "1. What is the capital of France?\n"
+            "a) Berlin\nb) Paris\nc) Rome\nd) Madrid\n\n"
+            "Answers:\n1. b\n2. d\n3. a\n4. c\n5. d"
         )
+
 
         full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:6000]}"
 
