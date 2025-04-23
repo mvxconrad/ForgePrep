@@ -68,13 +68,14 @@ const SettingsPage = () => {
           <Col lg={6} md={8}>
             <Card className={`${styles.glassCard} border-0 shadow p-4`}>
               <Card.Body>
-                <h3 className="text-white mb-4 fw-bold">Account Settings</h3>
+                <h3 className="text-white mb-4 fw-bold text-center">Account Settings</h3>
 
                 {message.error && <Alert variant="danger">{message.error}</Alert>}
                 {message.success && <Alert variant="success">{message.success}</Alert>}
 
                 <Form onSubmit={handleUpdate}>
-                  <h5 className="text-white mb-3">Account Info</h5>
+                  <h5 className="text-light mb-3">Account Info</h5>
+                  <hr className="mb-4 border-secondary" />
 
                   <Form.Group className="mb-3" controlId="formUsername">
                     <Form.Label className="text-white fw-semibold">Username</Form.Label>
@@ -83,7 +84,7 @@ const SettingsPage = () => {
                       value={profile.username}
                       onChange={(e) => setProfile({ ...profile, username: e.target.value })}
                       required
-                      className="glass"
+                      className={styles.glassInput}
                     />
                   </Form.Group>
 
@@ -94,7 +95,7 @@ const SettingsPage = () => {
                       value={profile.email}
                       onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                       required
-                      className="glass"
+                      className={styles.glassInput}
                     />
                   </Form.Group>
 
@@ -105,7 +106,7 @@ const SettingsPage = () => {
                       placeholder="Leave blank to keep current password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="glass"
+                      className={styles.glassInput}
                     />
                   </Form.Group>
 
@@ -116,7 +117,6 @@ const SettingsPage = () => {
               </Card.Body>
             </Card>
 
-            {/* Optional: Delete account or logout below */}
             <div className="text-center mt-4">
               <Button variant="outline-danger" size="sm" disabled>
                 Delete Account (Coming Soon)

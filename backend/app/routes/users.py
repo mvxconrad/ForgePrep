@@ -8,6 +8,8 @@ from app.routes.auth import get_current_user_from_cookie
 
 router = APIRouter()
 
+# ------------------ PUBLIC + ADMIN ROUTES ------------------ #
+
 @router.get("/")
 def get_users(db: Session = Depends(get_db)):
     """Fetch all users (admin route?)"""
@@ -23,12 +25,6 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-@router.get("/{user_id}/progress")
-async def get_user_progress(user_id: int, db: Session = Depends(get_db)):
-    """Retrieve user progress"""
-    progress_data = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
-    return {"user_id": user_id, "progress": progress_data}
-
 @router.get("/{user_id}")
 def get_user(user_id: int, db: Session = Depends(get_db)):
     """Fetch a single user by ID"""
@@ -37,9 +33,15 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@router.get("/{user_id}/progress")
+def get_user_progress(user_id: int, db: Session = Depends(get_db)):
+    """Retrieve user progress"""
+    progress_data = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
+    return {"user_id": user_id, "progress": progress_data}
+
 @router.put("/{user_id}")
 def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
-    """Update user information"""
+    """Update user info by ID (admin-level)"""
     db_user = db.query(User).filter(User.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -48,31 +50,37 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
         db_user.username = user.username
     if user.email:
         db_user.email = user.email
+    if user.password:
+        db_user.hashed_password = hash_password(user.password)
 
     db.commit()
     db.refresh(db_user)
     return db_user
 
+# ------------------ AUTHENTICATED USER ROUTES ------------------ #
+
 @router.get("/profile")
-async def get_user_profile(current_user: User = Depends(get_current_user_from_cookie)):
-    """Fetch authenticated user's profile"""
+def get_user_profile(current_user: User = Depends(get_current_user_from_cookie)):
+    """Fetch profile of the logged-in user"""
     return {
+        "id": current_user.id,
         "username": current_user.username,
-        "email": current_user.email,
-        "id": current_user.id
+        "email": current_user.email
     }
 
 @router.put("/profile")
-async def update_user_profile(
+def update_user_profile(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user_from_cookie),
     db: Session = Depends(get_db)
 ):
-    """Update authenticated user's profile"""
+    """Update profile of the authenticated user"""
     if user_update.username:
         current_user.username = user_update.username
     if user_update.email:
         current_user.email = user_update.email
+    if user_update.password:
+        current_user.hashed_password = hash_password(user_update.password)
 
     db.commit()
     db.refresh(current_user)

@@ -1,26 +1,23 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
-from pydantic import EmailStr
 
-# User Creation Schema
+# ---------- USER SCHEMAS ---------- #
+
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
-    password: str  # Plaintext password before hashing
+    password: str
 
-# Login Schema
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
-# User Update Schema (with optional fields)
 class UserUpdate(BaseModel):
-    username: Optional[str] = None  # Optional fields for update
+    username: Optional[str] = None
     email: Optional[EmailStr] = None
     password: Optional[str] = None
 
-# User Response Schema (to serialize the output)
 class UserResponse(BaseModel):
     id: int
     username: str
@@ -28,20 +25,18 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True  # Allows conversion from SQLAlchemy models
+        from_attributes = True
 
-# Study Set Create Schema
+# ---------- STUDY SET SCHEMAS ---------- #
+
 class StudySetCreate(BaseModel):
     title: str
     description: str
 
-# Study Set Response Schema (with additional fields and orm_mode)
 class StudySetResponse(StudySetCreate):
     id: int
-    title: str
-    description: str
     user_id: int
     created_at: datetime
 
     class Config:
-        orm_mode = True  # This allows SQLAlchemy models to be converted into Pydantic models
+        orm_mode = True
