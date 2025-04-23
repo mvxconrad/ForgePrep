@@ -3,8 +3,9 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from app.models import Base  # assuming models.py is at app/models.py
-from app import models
+from database.database import Base  # ✅ correct Base import
+from app.models import models       # ✅ forces model registration
+
 
 from alembic import context
 
