@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Card, Form, Button, Container, Row, Col, Alert } from "react-bootstrap";
+import {
+  Card,
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  Alert
+} from "react-bootstrap";
+import AppNavbar from "../components/AppNavbar"; // ✅ Universal navbar
 import background1 from "../assets/signup_background.png";
-import logo from "../assets/forgepreplogo.png";
 import signupImage from "../assets/signupicon.png";
 
 const SignupPage = () => {
@@ -21,6 +29,7 @@ const SignupPage = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
+        credentials: "include", // Prep for cookie-based auth
       });
 
       if (!response.ok) {
@@ -29,7 +38,7 @@ const SignupPage = () => {
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("token", data.token); // Optional — future improvement: move to context
       navigate("/dashboard");
     } catch (err) {
       console.error("Signup error:", err);
@@ -47,22 +56,8 @@ const SignupPage = () => {
         style={{ opacity: 0.25, zIndex: 0 }}
       />
 
-      {/* Navbar */}
-      <nav
-        className="navbar navbar-expand-lg navbar-dark px-4 py-2 position-fixed w-100"
-        style={{ zIndex: 10, backgroundColor: "rgba(13, 17, 23, 0.85)", backdropFilter: "blur(12px)" }}
-      >
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          <Link to="/" className="navbar-brand d-flex align-items-center">
-            <img src={logo} alt="ForgePrep Logo" height="64" />
-          </Link>
-          <div className="d-flex gap-2">
-            <Link to="/login" className="btn btn-outline-light btn-sm">
-              Login
-            </Link>
-          </div>
-        </div>
-      </nav>
+      {/* ✅ Universal Navbar */}
+      <AppNavbar />
 
       {/* Signup Form Section */}
       <Container
@@ -79,7 +74,13 @@ const SignupPage = () => {
                   <p className="text-white-50">Start your journey to academic success with us.</p>
                 </div>
                 <h2 className="mb-4 text-center text-white">Sign Up</h2>
-                {error && <Alert variant="danger" className="text-center">{error}</Alert>}
+
+                {error && (
+                  <Alert variant="danger" className="text-center">
+                    {error}
+                  </Alert>
+                )}
+
                 <Form onSubmit={handleSignup}>
                   <Form.Group className="mb-3" controlId="formUsername">
                     <Form.Label className="text-white">Username</Form.Label>
@@ -91,6 +92,7 @@ const SignupPage = () => {
                       required
                     />
                   </Form.Group>
+
                   <Form.Group className="mb-3" controlId="formEmail">
                     <Form.Label className="text-white">Email</Form.Label>
                     <Form.Control
@@ -101,6 +103,7 @@ const SignupPage = () => {
                       required
                     />
                   </Form.Group>
+
                   <Form.Group className="mb-3" controlId="formPassword">
                     <Form.Label className="text-white">Password</Form.Label>
                     <Form.Control
@@ -111,23 +114,24 @@ const SignupPage = () => {
                       required
                     />
                   </Form.Group>
+
                   <Button variant="light" type="submit" className="w-100 text-dark fw-semibold">
                     Sign Up
                   </Button>
                 </Form>
+
                 <p className="mt-3 text-center">
-                  Already have an account? <a href="/login" className="text-info">Login</a>
+                  Already have an account?{" "}
+                  <Link to="/login" className="text-info">
+                    Login
+                  </Link>
                 </p>
 
-                {/* Future social auth buttons */}
-                {/**
-                <Button variant="outline-light" className="w-100 mt-2">
-                  Sign up with Google
-                </Button>
-                <Button variant="outline-light" className="w-100 mt-2">
-                  Sign up with Facebook
-                </Button>
-                **/}
+                {/* Optional social login buttons */}
+                {/* 
+                <Button variant="outline-light" className="w-100 mt-2">Sign up with Google</Button>
+                <Button variant="outline-light" className="w-100 mt-2">Sign up with Facebook</Button>
+                */}
               </Card.Body>
             </Card>
           </Col>

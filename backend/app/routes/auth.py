@@ -14,9 +14,13 @@ from app.security.security import (
 from database.database import get_db
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
 load_dotenv()
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
 
 # JWT config
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
@@ -162,3 +166,22 @@ def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="User not found")
 
     return user
+
+# ------------------ PASSWORD RESET ------------------ #
+
+@router.post("/forgot-password/")
+async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    email = request.email
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        # Avoid leaking user existence info
+        return JSONResponse(
+            status_code=200,
+            content={"message": "If an account with that email exists, a reset link has been sent."}
+        )
+
+    # TODO: Generate token & send email here
+    print(f"[DEBUG] Password reset requested for: {email}")
+
+    return {"message": "If an account with that email exists, a reset link has been sent."}

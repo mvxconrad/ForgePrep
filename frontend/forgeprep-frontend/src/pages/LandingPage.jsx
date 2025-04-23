@@ -1,10 +1,9 @@
-// LandingPage.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import AppNavbar from '../components/AppNavbar';
 import background1 from '../assets/background_abstract.png';
 import background2 from '../assets/background_abstract2.png';
-import logo from '../assets/forgepreplogo.png';
 
 const features = [
   { title: "Upload & Transform", desc: "Supports PDF only, more to come in the future!" },
@@ -27,19 +26,8 @@ const LandingPage = () => {
         style={{ top: 0, height: '100vh', zIndex: 0 }}
       />
 
-      {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-dark px-4 py-2 position-fixed w-100"
-        style={{ zIndex: 10, backgroundColor: 'rgba(13, 17, 23, 0.85)', backdropFilter: 'blur(12px)' }}>
-        <div className="container-fluid d-flex justify-content-between align-items-center">
-          <Link to="/" className="navbar-brand d-flex align-items-center">
-            <img src={logo} alt="ForgePrep Logo" height="64" />
-          </Link>
-          <div className="d-flex gap-2">
-            <Link to="/login" className="btn btn-outline-light btn-sm">Log In</Link>
-            <Link to="/register" className="btn btn-light btn-sm text-dark fw-semibold">Sign Up</Link>
-          </div>
-        </div>
-      </nav>
+      {/* ✅ Universal AppNavbar */}
+      <AppNavbar />
 
       {/* Hero Section */}
       <section className="d-flex align-items-center justify-content-center text-center"
@@ -98,7 +86,7 @@ const LandingPage = () => {
         </section>
       </div>
 
-      {/* Footer (Purple, No Glass) */}
+      {/* Footer */}
       <footer className="py-4 text-center text-white-50"
         style={{ background: 'linear-gradient(135deg, #6f42c1, #4b0082)', zIndex: 2 }}>
         <div className="container">
