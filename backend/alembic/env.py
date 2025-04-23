@@ -6,6 +6,7 @@ from sqlalchemy import pool
 from database.database import Base  # ✅ correct Base import
 from app.models import models       # ✅ forces model registration
 
+
 from alembic import context
 
 import os
