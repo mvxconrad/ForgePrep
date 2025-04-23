@@ -1,15 +1,50 @@
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database.database import get_db
 from app.models.models import User, UserProgress
 from app.schemas.schemas import UserCreate, UserUpdate
-from app.security.security import hash_password, decode_access_token
+from app.security.security import hash_password
+from app.routes.auth import get_current_user_from_cookie
 
 router = APIRouter()
 
+# ------------------ AUTHENTICATED USER ROUTES ------------------ #
+
+@router.get("/profile")
+def get_user_profile(current_user: User = Depends(get_current_user_from_cookie)):
+    """Fetch profile of the logged-in user"""
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email
+    }
+
+@router.put("/profile")
+def update_user_profile(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    """Update profile of the authenticated user"""
+    if user_update.username:
+        current_user.username = user_update.username
+    if user_update.email:
+        current_user.email = user_update.email
+    if user_update.password:
+        current_user.hashed_password = hash_password(user_update.password)
+
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "username": current_user.username,
+        "email": current_user.email
+    }
+
+# ------------------ PUBLIC + ADMIN ROUTES ------------------ #
+
 @router.get("/")
 def get_users(db: Session = Depends(get_db)):
-    """Fetch all users"""
+    """Fetch all users (admin route?)"""
     return db.query(User).all()
 
 @router.post("/")
@@ -22,12 +57,6 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-@router.get("/{user_id}/progress")
-async def get_user_progress(user_id: int, db: Session = Depends(get_db)):
-    """Retrieve user progress"""
-    progress_data = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
-    return {"user_id": user_id, "progress": progress_data}
-
 @router.get("/{user_id}")
 def get_user(user_id: int, db: Session = Depends(get_db)):
     """Fetch a single user by ID"""
@@ -36,9 +65,15 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@router.get("/{user_id}/progress")
+def get_user_progress(user_id: int, db: Session = Depends(get_db)):
+    """Retrieve user progress"""
+    progress_data = db.query(UserProgress).filter(UserProgress.user_id == user_id).all()
+    return {"user_id": user_id, "progress": progress_data}
+
 @router.put("/{user_id}")
 def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
-    """Update user information"""
+    """Update user info by ID (admin-level)"""
     db_user = db.query(User).filter(User.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -47,33 +82,9 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
         db_user.username = user.username
     if user.email:
         db_user.email = user.email
+    if user.password:
+        db_user.hashed_password = hash_password(user.password)
 
     db.commit()
     db.refresh(db_user)
     return db_user
-
-@router.get("/profile")
-async def get_user_profile(token: str = Security(decode_access_token), db: Session = Depends(get_db)):
-    """Fetch user profile"""
-    user_data = decode_access_token(token)
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return {"username": user.username, "email": user.email}
-
-@router.put("/profile")
-async def update_user_profile(user_update: UserUpdate, token: str = Security(decode_access_token), db: Session = Depends(get_db)):
-    """Update user profile"""
-    user_data = decode_access_token(token)
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if user_update.username:
-        user.username = user_update.username
-    if user_update.email:
-        user.email = user_update.email
-
-    db.commit()
-    db.refresh(user)
-    return {"username": user.username, "email": user.email}

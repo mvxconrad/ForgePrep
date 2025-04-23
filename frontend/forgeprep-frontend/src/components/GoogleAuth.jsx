@@ -17,7 +17,7 @@ const GoogleAuth = () => {
 
     const initializeGoogleSignIn = () => {
       window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID, // Use environment variable
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
         callback: handleGoogleSignIn,
       });
 
@@ -35,27 +35,24 @@ const GoogleAuth = () => {
     console.log("Google login success:", idToken);
 
     try {
-      const res = await fetch("https://forgeprep.net/auth/google", {
+      const res = await fetch("https://forgeprep.net/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Crucial for setting cookie
         body: JSON.stringify({ token: idToken }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Google login failed");
 
-      localStorage.setItem("token", data.token);
-      window.location.href = "/dashboard"; // Redirect after login
+      // Cookie is set server-side — no localStorage needed
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error("Google login error:", err);
     }
   };
 
-  return (
-    <div>
-      <div id="googleSignInDiv"></div>
-    </div>
-  );
+  return <div id="googleSignInDiv"></div>;
 };
 
 export default GoogleAuth;

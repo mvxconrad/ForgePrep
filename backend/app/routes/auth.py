@@ -1,7 +1,12 @@
-from fastapi import APIRouter, status, Depends, HTTPException, Security, Request
+from fastapi import APIRouter, status, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
+from authlib.integrations.starlette_client import OAuth
+from jose import JWTError
+from pydantic import BaseModel, EmailStr
+import os
+from dotenv import load_dotenv
+
 from app.models.models import User
 from app.schemas.schemas import UserCreate, LoginRequest
 from app.security.security import (
@@ -11,62 +16,55 @@ from app.security.security import (
     hash_password
 )
 from database.database import get_db
-from authlib.integrations.starlette_client import OAuth
-from jose import JWTError, jwt
-import os
-from dotenv import load_dotenv
 
+load_dotenv()
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-# OAuth Setup
-oauth = OAuth()
-oauth.register(
-    name="google",
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    authorize_url="https://accounts.google.com/o/oauth2/auth",
-    access_token_url="https://oauth2.googleapis.com/token",
-    client_kwargs={"scope": "openid email profile"},
-)
-
-# Facebook OAuth Configuration
-oauth.register(
-    name="facebook",
-    client_id=os.getenv("FACEBOOK_CLIENT_ID"),
-    client_secret=os.getenv("FACEBOOK_CLIENT_SECRET"),
-    authorize_url="https://www.facebook.com/v12.0/dialog/oauth",
-    access_token_url="https://graph.facebook.com/v12.0/oauth/access_token",
-    client_kwargs={"scope": "public_profile email"},
-)
-
-# GitHub OAuth Configuration
-oauth.register(
-    name="github",
-    client_id=os.getenv("GITHUB_CLIENT_ID"),
-    client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
-    authorize_url="https://github.com/login/oauth/authorize",
-    access_token_url="https://github.com/login/oauth/access_token",
-    client_kwargs={"scope": "user:email"},
-)
-
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")  
+# JWT config
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
 ALGORITHM = "HS256"
+
+# OAuth setup
+oauth = OAuth()
+
+if os.getenv("GOOGLE_CLIENT_ID"):
+    oauth.register(
+        name="google",
+        client_id=os.getenv("GOOGLE_CLIENT_ID"),
+        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        authorize_url="https://accounts.google.com/o/oauth2/auth",
+        access_token_url="https://oauth2.googleapis.com/token",
+        client_kwargs={"scope": "openid email profile"},
+    )
+
+if os.getenv("FACEBOOK_CLIENT_ID"):
+    oauth.register(
+        name="facebook",
+        client_id=os.getenv("FACEBOOK_CLIENT_ID"),
+        client_secret=os.getenv("FACEBOOK_CLIENT_SECRET"),
+        authorize_url="https://www.facebook.com/v12.0/dialog/oauth",
+        access_token_url="https://graph.facebook.com/v12.0/oauth/access_token",
+        client_kwargs={"scope": "public_profile email"},
+    )
+
+if os.getenv("GITHUB_CLIENT_ID"):
+    oauth.register(
+        name="github",
+        client_id=os.getenv("GITHUB_CLIENT_ID"),
+        client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+        authorize_url="https://github.com/login/oauth/authorize",
+        access_token_url="https://github.com/login/oauth/access_token",
+        client_kwargs={"scope": "user:email"},
+    )
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
 
 @router.post("/register/")
 async def register_user(request: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == request.email).first()
-
-# Debugging output
-    if existing_user:
-        print(f"DEBUG: Email {request.email} already exists in the database: {existing_user}")
-    else:
-        print(f"DEBUG: Email {request.email} is NOT found in the database.")
-
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-
 
     hashed_password = hash_password(request.password)
     new_user = User(username=request.username, email=request.email, hashed_password=hashed_password)
@@ -77,74 +75,80 @@ async def register_user(request: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login")
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
-    email = data.email
-    password = data.password
-
-    user = db.query(User).filter(User.email == email).first()
-
-    if not user or not user.verify_password(password):
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token_data = {"id": user.id, "sub": user.email}
     access_token = create_access_token(token_data)
 
-    # Set the token in a secure, HttpOnly cookie
     response = JSONResponse(content={"message": "Login successful"})
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="Lax",
-        max_age=86400,  # 1 day in seconds
+        samesite="None",
+        max_age=86400,
         path="/"
     )
     return response
 
+@router.post("/logout")
+def logout():
+    response = JSONResponse(content={"message": "Logged out"})
+    response.delete_cookie("access_token")
+    return response
+
+@router.get("/me")
+def get_current_user_info(request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user_from_cookie(request, db)
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email
+    }
+
 @router.get("/login/{provider}")
 async def login_provider(request: Request, provider: str):
-    """OAuth login for Google, Facebook, GitHub"""
-    if provider not in ["google", "facebook", "github"]:
-        raise HTTPException(status_code=400, detail="Unsupported provider")
+    if provider not in oauth:
+        raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
     redirect_uri = request.url_for("auth_provider", provider=provider)
     return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
 
 @router.get("/{provider}")
 async def auth_provider(request: Request, provider: str):
-    """OAuth authentication callback"""
     client = oauth.create_client(provider)
+    if not client:
+        raise HTTPException(status_code=500, detail=f"OAuth provider '{provider}' not configured")
+
     token = await client.authorize_access_token(request)
-    user = await client.parse_id_token(request, token) if provider == "google" else token
+    user = (
+        await client.parse_id_token(request, token)
+        if provider == "google"
+        else token
+    )
     return {"provider": provider, "user": user}
 
 @router.get("/protected/")
-async def protected_route(token: str = Security(oauth2_scheme)):
-    """A protected route that requires authentication"""
-    user_data = decode_access_token(token)
-    return {"message": f"Hello, {user_data['sub']}!"}
+async def protected_route(request: Request, db: Session = Depends(get_db)):
+    current_user = get_current_user_from_cookie(request, db)
+    return {"message": f"Hello, {current_user.username}!"}
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
+@router.post("/forgot-password/")
+async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    email = request.email
     user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    if not user:
+        return JSONResponse(status_code=200, content={"message": "If an account with that email exists, a reset link has been sent."})
 
-@router.get("/me")
-def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)):
+    # TODO: implement secure token creation and send email
+    print(f"[DEBUG] Password reset requested for: {email}")
+
+    return {"message": "If an account with that email exists, a reset link has been sent."}
+
+# ------------------ HELPER ------------------ #
+def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)) -> User:
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -154,21 +158,12 @@ def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)
         email = payload.get("sub")
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
+    except JWTError as e:
+        print("JWT error:", str(e))
         raise HTTPException(status_code=401, detail="Token decoding failed")
 
     user = db.query(User).filter(User.email == email).first()
-    if user is None:
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return {
-        "email": user.email,
-        "username": user.username,
-        "id": user.id
-    }
-
-@router.post("/logout")
-def logout():
-    response = JSONResponse(content={"message": "Logged out"})
-    response.delete_cookie("access_token")
-    return response
+    return user

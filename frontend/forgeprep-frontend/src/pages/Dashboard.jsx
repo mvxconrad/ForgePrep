@@ -1,54 +1,41 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import {
   Container, Row, Col, Card, ListGroup,
-  ProgressBar, Button, Form, Navbar, Nav
+  ProgressBar, Button, Form, Spinner
 } from "react-bootstrap";
 import { AuthContext } from "../components/AuthContext";
 import styles from "./Dashboard.module.css";
-import logo from "../assets/forgepreplogo.png";
 import statisticsImage from "../assets/statistics.png";
+import backgroundFallback from "../assets/background_abstract2.png";
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-
   const [currentUser, setCurrentUser] = useState(null);
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
-  const [statistics, setStatistics] = useState(null);
+  const [statistics, setStatistics] = useState({});
+  const [backgroundImage, setBackgroundImage] = useState(backgroundFallback);
   const [prompt, setPrompt] = useState("");
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [error, setError] = useState("");
   const [notifications, setNotifications] = useState([]);
 
-  const getGreeting = () => {
-    const estTime = new Date().toLocaleString("en-US", {
-      timeZone: "America/New_York",
-      hour: "numeric",
-      hour12: false,
-    });
-    const hour = parseInt(estTime);
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
-  };
-  
   useEffect(() => {
-    fetchDashboardData();
+    window.scrollTo(0, 0);
     fetchUser();
+    fetchDashboardData();
   }, []);
-  
+
   const fetchUser = async () => {
     try {
       const res = await fetch("https://forgeprep.net/api/auth/me", {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch user.");
+      if (!res.ok) throw new Error("Failed to fetch user");
       const data = await res.json();
       setCurrentUser(data);
     } catch (err) {
-      console.error("User fetch error:", err);
+      console.error("[Dashboard] User fetch error:", err);
     }
   };
 
@@ -57,14 +44,15 @@ const Dashboard = () => {
       const res = await fetch("https://forgeprep.net/api/dashboard", {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Dashboard fetch failed.");
+      if (!res.ok) throw new Error("Dashboard fetch failed");
       const data = await res.json();
       setRecentTests(data.recent_tests || []);
       setGoals(data.goals || []);
-      setStatistics(data.statistics || null);
+      setStatistics(data.statistics || {});
       setNotifications(data.notifications || []);
+      setBackgroundImage(data.background_image || backgroundFallback);
     } catch (err) {
-      console.error("Dashboard error:", err);
+      console.error("[Dashboard] Data fetch error:", err);
     }
   };
 
@@ -79,39 +67,47 @@ const Dashboard = () => {
       const data = await res.json();
       setGeneratedQuestions(data.questions || []);
     } catch (err) {
-      console.error("Question generation failed:", err);
+      console.error("[Dashboard] Question generation failed:", err);
       setError("Could not generate questions.");
     }
   };
 
-  if (!currentUser) return <p className="text-white text-center mt-5">Loading...</p>;
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  if (!currentUser) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+        <Spinner animation="border" variant="light" />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-dark text-light" style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
-      {/* Navbar */}
-      <Navbar expand="lg" className="px-4 py-2 position-sticky top-0 w-100" style={{ zIndex: 10, backgroundColor: 'rgba(13, 17, 23, 0.85)', backdropFilter: 'blur(12px)' }}>
-        <Container fluid className="d-flex justify-content-between align-items-center">
-          <Link to="/" className="navbar-brand d-flex align-items-center">
-            <img src={logo} alt="ForgePrep Logo" height="64" />
-          </Link>
-          <Nav className="gap-2">
-            <Link to="/upload" className="btn btn-outline-light btn-sm">Upload</Link>
-            <Link to="/testgenerator" className="btn btn-outline-light btn-sm">Test Generator</Link>
-            <Link to="/study-sets" className="btn btn-outline-light btn-sm">Study Sets</Link>
-            <Link to="/logout" className="btn btn-light btn-sm text-dark fw-semibold">Log Out</Link>
-          </Nav>
-        </Container>
-      </Navbar>
-
+    <div
+      className="bg-dark text-light position-relative"
+      style={{
+        zIndex: 1,
+        minHeight: "100vh",
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center"
+      }}
+    >
       <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
         <h1 className="display-5 fw-bold text-white mb-5">
-          {getGreeting()}, {currentUser?.username || user?.username || "User"} 👋
+          {getGreeting()}, {currentUser.username || user?.username || "User"} 👋
         </h1>
 
         <Row className="g-4">
+          {/* Recent Tests */}
           <Col md={6}>
-            <Card className="glassCard">
-              <div className="cardHeader">Recent Tests</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Recent Tests</div>
               {recentTests.length ? (
                 <ListGroup variant="flush">
                   {recentTests.map((test) => (
@@ -122,14 +118,15 @@ const Dashboard = () => {
                   ))}
                 </ListGroup>
               ) : (
-                <p className="text-muted">No recent tests.</p>
+                <p className="text-muted">No recent tests yet.</p>
               )}
             </Card>
           </Col>
 
+          {/* Goals */}
           <Col md={6}>
-            <Card className="glassCard">
-              <div className="cardHeader">Your Goals</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Your Goals</div>
               {goals.length ? (
                 <ListGroup variant="flush">
                   {goals.map((goal) => (
@@ -145,25 +142,27 @@ const Dashboard = () => {
             </Card>
           </Col>
 
+          {/* Statistics */}
           <Col md={12}>
-            <Card className="glassCard">
-              <div className="cardHeader">Past Test Statistics</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Past Test Statistics</div>
               <img src={statisticsImage} alt="Statistics" className="w-100 mb-3 rounded" />
-              {statistics ? (
+              {statistics?.average_score !== undefined ? (
                 <div>
-                  <p><strong>Average Score:</strong> {statistics.averageScore}%</p>
-                  <p><strong>Best Score:</strong> {statistics.bestScore}%</p>
-                  <p><strong>Lowest Score:</strong> {statistics.worstScore}%</p>
+                  <p><strong>Average Score:</strong> {statistics.average_score}</p>
+                  <p><strong>Best Score:</strong> {statistics.best_score}</p>
+                  <p><strong>Lowest Score:</strong> {statistics.worst_score}</p>
                 </div>
               ) : (
-                <p className="text-muted">No statistics available.</p>
+                <p className="text-muted">No statistics available yet.</p>
               )}
             </Card>
           </Col>
 
+          {/* GPT Generator */}
           <Col md={12}>
-            <Card className="glassCard">
-              <div className="cardHeader">AI-Powered Question Generator</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>AI-Powered Question Generator</div>
               <Form.Group controlId="formPrompt" className="mb-3">
                 <Form.Control
                   type="text"
@@ -179,22 +178,26 @@ const Dashboard = () => {
             </Card>
           </Col>
 
+          {/* Generated Results */}
           {generatedQuestions.length > 0 && (
             <Col md={12}>
-              <Card className="glassCard">
-                <div className="cardHeader">Generated Questions</div>
+              <Card className={styles.glassCard}>
+                <div className={styles.cardHeader}>Generated Questions</div>
                 <ListGroup>
                   {generatedQuestions.map((q, idx) => (
-                    <ListGroup.Item key={idx} className="bg-transparent text-white">{q}</ListGroup.Item>
+                    <ListGroup.Item key={idx} className="bg-transparent text-white">
+                      {q}
+                    </ListGroup.Item>
                   ))}
                 </ListGroup>
               </Card>
             </Col>
           )}
 
+          {/* Notifications */}
           <Col md={12}>
-            <Card className="glassCard">
-              <div className="cardHeader">Notifications</div>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>Notifications</div>
               {notifications.length > 0 ? (
                 <ListGroup>
                   {notifications.map((note, idx) => (

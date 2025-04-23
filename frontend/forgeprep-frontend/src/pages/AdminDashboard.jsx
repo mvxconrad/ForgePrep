@@ -14,7 +14,7 @@ const AdminDashboard = () => {
     const fetchAdminData = async () => {
       try {
         const response = await axios.get("https://forgeprep.net/api/admin/data", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          withCredentials: true, // ✅ Send HttpOnly cookies
         });
 
         setUsers(response.data.users || []);
@@ -34,42 +34,42 @@ const AdminDashboard = () => {
   }, []);
 
   return (
-    <PageWrapper>
-      <Container className="mt-4">
-        <h1>Admin Dashboard</h1>
-        {loading ? (
-          <Spinner animation="border" />
-        ) : error ? (
-          <Alert variant="danger">{error}</Alert>
-        ) : (
-          <>
-            <h2>Manage Users</h2>
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Actions</th>
+    <Container className="mt-4">
+      <h1>Admin Dashboard</h1>
+      {loading ? (
+        <Spinner animation="border" />
+      ) : error ? (
+        <Alert variant="danger">{error}</Alert>
+      ) : (
+        <>
+          <h2>Manage Users</h2>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>{user.username}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <Button variant="danger" size="sm">Delete</Button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.id}</td>
-                    <td>{user.username}</td>
-                    <td>{user.email}</td>
-                    <td>
-                      <Button variant="danger" size="sm">Delete</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </>
-        )}
-      </Container>
-    </PageWrapper>
+              ))}
+            </tbody>
+          </Table>
+
+          {/* 🔧 TODO: Add tables for Study Sets and Files */}
+        </>
+      )}
+    </Container>
   );
 };
 

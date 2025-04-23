@@ -14,8 +14,10 @@ export const AuthProvider = ({ children }) => {
       if (!res.ok) throw new Error();
       const data = await res.json();
       setUser(data);
+      console.log("[AuthContext] Fetched user:", data);
     } catch (err) {
       setUser(null);
+      console.warn("[AuthContext] Failed to fetch user");
     } finally {
       setLoading(false);
     }

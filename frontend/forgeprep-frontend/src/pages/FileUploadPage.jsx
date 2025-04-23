@@ -1,173 +1,166 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Container, Form, Button, ProgressBar, Table, Card } from "react-bootstrap";
+import {
+  Container,
+  Form,
+  Button,
+  ProgressBar,
+  Table,
+  Card
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import studyGuideImage from "../assets/study_guide.jpg"; // Import the image
-import PageWrapper from "../components/PageWrapper"; // Import PageWrapper
+import styles from "./Dashboard.module.css";
+import backgroundImage from "../assets/background_abstract2.png";
 
 const FileUploadPage = () => {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [fileHistory, setFileHistory] = useState([]); // Initialize as an empty array
-  const [uploadedFileId, setUploadedFileId] = useState(null); // Track the uploaded file ID
+  const [fileHistory, setFileHistory] = useState([]);
+  const [uploadedFileId, setUploadedFileId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchFileHistory = async () => {
+    const fetchHistory = async () => {
       try {
-        const response = await axios.get(
-          `https://forgeprep.net/api/files/`, // Updated API URL
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-          }
-        );
-        console.log("API response:", response.data); // Debugging log
-        setFileHistory(Array.isArray(response.data) ? response.data : []); // Ensure response data is an array
-      } catch (error) {
-        console.error("Error fetching file history:", error);
-        setFileHistory([]); // Set to empty array on error
+        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/files/`, {
+          withCredentials: true,
+        });
+        setFileHistory(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Fetch history failed:", err);
+        setFileHistory([]);
       }
     };
-
-    fetchFileHistory();
+    fetchHistory();
   }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+    setMessage("");
   };
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-    if (!file) {
-      setMessage("No file selected.");
-      return;
-    }
+    if (!file) return;
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      console.log("Uploading file:", file.name); // Debugging log
-      const response = await fetch("https://forgeprep.net/api/files/upload/scan/", {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/files/upload/scan/`, {
         method: "POST",
         body: formData,
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        credentials: "include",
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText); // Debugging log
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Upload failed.");
       }
 
-      const data = await response.json();
-      console.log("File uploaded successfully:", data); // Debugging log
-      setMessage("File uploaded successfully!");
+      const data = await res.json();
+      setUploadedFileId(data.file_id);
+      setMessage("✅ File uploaded and scanned successfully!");
       setFile(null);
       setUploadProgress(0);
 
-      // Add the uploaded file to the file history
-      const newFile = {
-        id: data.file_id, // Assuming the backend returns a file ID
-        filename: file.name,
-        uploadedAt: new Date(),
-        size: file.size / 1024,
-      };
-      setFileHistory([...fileHistory, newFile]);
-      setUploadedFileId(data.file_id); // Save the uploaded file ID
+      setFileHistory((prev) => [
+        ...prev,
+        {
+          filename: file.name,
+          size: file.size / 1024,
+          uploadedAt: new Date(),
+        },
+      ]);
     } catch (err) {
-      console.error("Error uploading file:", err); // Debugging log
-      setMessage("Error uploading file.");
+      console.error("Upload error:", err);
+      setMessage("❌ Upload failed. Check console.");
     }
   };
 
   const handleGenerateTest = () => {
-    // Navigate to the test generator page with the uploaded file ID
     navigate("/testgenerator", { state: { fileId: uploadedFileId } });
   };
 
   return (
-    <PageWrapper>
-      <Container className="mt-4">
-        <Card className="shadow">
+    <div
+      className="bg-dark text-light"
+      style={{
+        minHeight: "100vh",
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        paddingBottom: "3rem",
+      }}
+    >
+      <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
+        <Card className={`${styles.glassCard} border-0 shadow p-4`}>
           <Card.Body>
-            <h2>File Upload</h2>
+            <h3 className="fw-bold text-white mb-4">Upload Study Guide</h3>
             <Form onSubmit={handleFileUpload}>
-              <Form.Group controlId="formFile" className="mb-3">
-                <Form.Label>Choose file</Form.Label>
-                <Form.Control type="file" onChange={handleFileChange} accept=".pdf,.docx,.txt" />
+              <Form.Group className="mb-3">
+                <Form.Label className="text-white">Upload a PDF file</Form.Label>
+                <Form.Control type="file" accept=".pdf" onChange={handleFileChange} className="glass" />
               </Form.Group>
-              <Form.Group controlId="formFileCategory" className="mb-3">
-                <Form.Label>File Category</Form.Label>
-                <Form.Select>
-                  <option value="study-material">Study Material</option>
-                  <option value="assignments">Assignments</option>
-                  <option value="notes">Notes</option>
-                </Form.Select>
-              </Form.Group>
+
               {file && (
-                <Card className="mb-3">
-                  <Card.Body>
-                    <p><strong>File Name:</strong> {file.name}</p>
-                    <p><strong>File Size:</strong> {(file.size / 1024).toFixed(2)} KB</p>
-                  </Card.Body>
+                <Card className="mb-3 p-3 glass border-0">
+                  <strong className="text-white">Name:</strong> {file.name}<br />
+                  <strong className="text-white">Size:</strong> {(file.size / 1024).toFixed(2)} KB
                 </Card>
               )}
-              <Button variant="primary" type="submit" disabled={!file}>Upload</Button>
+
+              <div className="d-flex flex-wrap gap-2">
+                <Button type="submit" variant="light" className="fw-semibold text-dark" disabled={!file}>
+                  Upload & Scan
+                </Button>
+
+                {uploadedFileId && (
+                  <Button variant="success" onClick={handleGenerateTest}>
+                    Generate Test
+                  </Button>
+                )}
+              </div>
+
+              {uploadProgress > 0 && (
+                <ProgressBar now={uploadProgress} className="mt-3" animated />
+              )}
+
+              {message && <p className="mt-3 text-white">{message}</p>}
             </Form>
-            {message && <p className="mt-3">{message}</p>}
-            {uploadProgress > 0 && (
-              <ProgressBar
-                now={uploadProgress}
-                label={`${uploadProgress}%`}
-                className="mt-3"
-              />
-            )}
-            {uploadedFileId && (
-              <Button
-                variant="success"
-                className="mt-3"
-                onClick={handleGenerateTest}
-              >
-                Generate Test
-              </Button>
-            )}
           </Card.Body>
         </Card>
 
-        {/* File Upload History */}
-        <Card className="p-3">
-          <h3>Upload History</h3>
-          <Table striped bordered hover>
+        <Card className={`${styles.glassCard} mt-5 p-4`}>
+          <h4 className="fw-bold text-white mb-3">Upload History</h4>
+          <Table responsive bordered variant="dark" className="glass text-white">
             <thead>
               <tr>
                 <th>Filename</th>
-                <th>Uploaded On</th>
+                <th>Uploaded</th>
                 <th>Size</th>
               </tr>
             </thead>
             <tbody>
               {fileHistory.length > 0 ? (
-                fileHistory.map((file, index) => (
-                  <tr key={index}>
-                    <td>{file.filename}</td>
-                    <td>{new Date(file.uploadedAt).toLocaleString()}</td>
-                    <td>{file.size.toFixed(2)} KB</td>
+                fileHistory.map((f, idx) => (
+                  <tr key={idx}>
+                    <td>{f.filename}</td>
+                    <td>{new Date(f.uploadedAt).toLocaleString()}</td>
+                    <td>{f.size.toFixed(2)} KB</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="text-center">
-                    No files uploaded yet
-                  </td>
+                  <td colSpan="3" className="text-center text-muted">No uploads yet.</td>
                 </tr>
               )}
             </tbody>
           </Table>
         </Card>
       </Container>
-    </PageWrapper>
+    </div>
   );
 };
 

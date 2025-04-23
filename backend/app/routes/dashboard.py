@@ -1,35 +1,61 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from database.database import get_db
 from app.models.models import User, Test
-from app.security.security import decode_access_token
+from app.routes.auth import get_current_user_from_cookie
 
 router = APIRouter()
 
 @router.get("/")
-async def get_dashboard(token: str = Query(...), db: Session = Depends(get_db)):
-    """Retrieve user dashboard information"""
-    user_data = decode_access_token(token)
-    print("Decoded user data:", user_data)  # Debugging log
+async def get_dashboard(
+    current_user: User = Depends(get_current_user_from_cookie),
+    db: Session = Depends(get_db)
+):
+    print("Authenticated user:", current_user.username)
 
-    user = db.query(User).filter(User.email == user_data["sub"]).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    # Recent tests
+    recent_tests = (
+        db.query(Test)
+        .filter(Test.user_id == current_user.id)
+        .order_by(Test.created_at.desc())
+        .limit(5)
+        .all()
+    )
 
-    print("Retrieved user:", user.username)  # Debugging log
+    # Placeholder goals
+    goals = [
+        {"id": 1, "title": "Finish Chapter 5", "progress": 60},
+        {"id": 2, "title": "Revise Midterms", "progress": 30},
+    ]
 
-    recent_tests = db.query(Test).filter(Test.user_id == user.id).order_by(Test.created_at.desc()).limit(5).all()
-#    goals = db.query(Goal).filter(Goal.user_id == user.id).all()
+    # Placeholder notifications
+    notifications_query = []  # Replace with db query if needed
+    notifications = notifications_query if notifications_query else [
+        {"message": "You have no notifications yet."}
+    ]
+
+    # Statistics
+    statistics_query = (
+        db.query(func.avg(Test.score), func.max(Test.score), func.min(Test.score))
+        .filter(Test.user_id == current_user.id)
+        .first()
+    )
+
     statistics = {
-        "average_score": db.query(func.avg(Test.score)).filter(Test.user_id == user.id).scalar() or 0,
-        "best_score": db.query(func.max(Test.score)).filter(Test.user_id == user.id).scalar() or 0,
-        "worst_score": db.query(func.min(Test.score)).filter(Test.user_id == user.id).scalar() or 0,
+        "average_score": round(statistics_query[0], 2) if statistics_query[0] is not None else None,
+        "best_score": statistics_query[1] if statistics_query[1] is not None else None,
+        "worst_score": statistics_query[2] if statistics_query[2] is not None else None,
+        "image": "/assets/statistics.png"
     }
 
     return {
-        "username": user.username,
-        "recent_tests": [{"id": t.id, "name": t.name, "score": t.score} for t in recent_tests],
-#        "goals": [{"id": g.id, "title": g.title, "progress": g.progress} for g in goals],
+        "username": current_user.username,
+        "recent_tests": [
+            {"id": t.id, "name": t.name, "score": t.score} for t in recent_tests
+        ] if recent_tests else [],
+        "goals": goals,
+        "notifications": notifications,
         "statistics": statistics,
+        "background_image": "/assets/background_abstract2.png"
     }

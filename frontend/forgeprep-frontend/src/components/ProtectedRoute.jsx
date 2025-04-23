@@ -1,25 +1,16 @@
-import React from "react";
+// components/ProtectedRoute.jsx
+import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
+import { AuthContext } from "./AuthContext";
 
-const ProtectedRoute = ({ component: Component }) => {
-  const isAuthenticated = () => {
-    const token = localStorage.getItem("token");
-    if (!token) return false;
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
 
-    try {
-      const { exp } = JSON.parse(atob(token.split(".")[1]));
-      return Date.now() < exp * 1000;
-    } catch (err) {
-      console.error("Error decoding token:", err);
-      return false;
-    }
-  };
+  console.log("[ProtectedRoute] loading:", loading, "user:", user);
 
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" />;
-  }
+  if (loading) return <div className="text-center text-white">Checking authentication...</div>;
 
-  return <Component />;
+  return user ? children : <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;

@@ -1,81 +1,103 @@
-import React, { useState, useEffect } from "react";
-import { Container, Card, Button } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Container, Card, Row, Col, ListGroup, Spinner, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import api from "../utils/apiService"; // Import the centralized API service
-import PageWrapper from "../components/PageWrapper"; // Import PageWrapper
+import api from "../util/apiService";
+import backgroundImage from "../assets/background_abstract2.png";
+import statisticsImage from "../assets/statistics.png";
+import styles from "./Dashboard.module.css"; // reuse for glassCard
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState({ username: "", email: "" });
+  const [recentTests, setRecentTests] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("Token is missing. Please log in again.");
-        }
-
-        const response = await api.get("/users/");
-        setProfile(response.data);
+        const [profileRes, testsRes] = await Promise.all([
+          api.get("/auth/me"),
+          api.get("/dashboard"),
+        ]);
+        setProfile(profileRes.data);
+        setRecentTests(testsRes.data?.recent_tests || []);
       } catch (err) {
-        console.error("Error fetching profile:", err.response?.data || err.message);
-        if (err.response?.status === 401) {
-          localStorage.removeItem("token");
-          window.location.href = "/login";
-        } else {
-          setError("Failed to fetch profile. Please try again.");
-        }
+        console.error("Profile/test load error:", err);
+        setError("Failed to load profile or recent tests.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, []);
 
   if (loading) {
     return (
-      <PageWrapper>
-        <Container className="mt-4 text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </Container>
-      </PageWrapper>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageWrapper>
-        <Container className="mt-4 text-center">
-          <p className="text-danger">{error}</p>
-          <button onClick={() => window.location.reload()} className="btn btn-primary">
-            Retry
-          </button>
-        </Container>
-      </PageWrapper>
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+        <Spinner animation="border" variant="light" />
+      </Container>
     );
   }
 
   return (
-    <PageWrapper>
-      <Container className="mt-4">
-        <Card className="shadow">
-          <Card.Body>
-            <h2>Profile</h2>
-            {error && <p className="text-danger">{error}</p>}
-            <p><strong>Username:</strong> {profile.username || "N/A"}</p>
-            <p><strong>Email:</strong> {profile.email || "N/A"}</p>
-            <Button as={Link} to="/settings" variant="primary">
-              Go to Settings
-            </Button>
-          </Card.Body>
-        </Card>
+    <div
+      className="bg-dark text-light"
+      style={{
+        minHeight: "100vh",
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col lg={6}>
+            {/* Profile Card */}
+            <Card className={`${styles.glassCard} border-0 p-4 shadow mb-4`}>
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h3 className="text-white fw-bold mb-0">Your Profile</h3>
+                  <Button as={Link} to="/settings" variant="outline-light" size="sm">
+                    Edit Profile
+                  </Button>
+                </div>
+                {error ? (
+                  <p className="text-danger">{error}</p>
+                ) : (
+                  <>
+                    <p className="mb-2"><strong>Username:</strong> {profile.username}</p>
+                    <p className="mb-0"><strong>Email:</strong> {profile.email}</p>
+                  </>
+                )}
+              </Card.Body>
+            </Card>
+
+            {/* Recent Tests */}
+            <Card className={`${styles.glassCard} border-0 p-4 shadow`}>
+              <Card.Body>
+                <h4 className="fw-bold mb-3 text-white">Recent Tests</h4>
+                {recentTests.length > 0 ? (
+                  <ListGroup variant="flush">
+                    {recentTests.map((test) => (
+                      <ListGroup.Item
+                        key={test.id}
+                        className="bg-transparent d-flex justify-content-between align-items-center text-white"
+                      >
+                        {test.name}
+                        <span className="badge bg-primary">{test.score}%</span>
+                      </ListGroup.Item>
+                    ))}
+                  </ListGroup>
+                ) : (
+                  <p className="text-muted">No recent tests found.</p>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
-    </PageWrapper>
+    </div>
   );
 };
 
