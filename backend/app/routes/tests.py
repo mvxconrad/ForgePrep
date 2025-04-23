@@ -9,12 +9,13 @@ from app.routes.auth import get_current_user_from_cookie
 
 router = APIRouter()
 
-# Pydantic request model
+# Request model for test submission
 class SubmitTestRequest(BaseModel):
     test_id: int
     answers: dict
 
-# Fetch a test by ID
+
+# GET /tests/{test_id} — fetch test metadata for user
 @router.get("/tests/{test_id}")
 async def get_test_by_id(
     test_id: int,
@@ -22,7 +23,7 @@ async def get_test_by_id(
     current_user: User = Depends(get_current_user_from_cookie)
 ):
     print(f"🔍 Fetching test {test_id} for user {current_user.id} ({current_user.email})")
-    
+
     test = db.query(Test).filter_by(id=test_id, user_id=current_user.id).first()
     if not test:
         raise HTTPException(status_code=404, detail="Test not found or access denied.")
@@ -34,7 +35,8 @@ async def get_test_by_id(
         "created_at": test.created_at,
     }
 
-# Submit a test, score it, and store the result
+
+# POST /tests/submit — score test & save result
 @router.post("/tests/submit")
 async def submit_test(
     submission: SubmitTestRequest,
@@ -54,13 +56,17 @@ async def submit_test(
     for idx, q in enumerate(questions):
         submitted = submission.answers.get(str(idx)) or submission.answers.get(idx)
         correct_answer = q.get("answer")
+
+        # 🔍 Debug log
+        print(f"🧠 Question {idx + 1}: submitted = {submitted}, correct = {correct_answer}")
+
         if submitted and correct_answer:
             if submitted.strip().lower() == correct_answer.strip().lower():
                 correct += 1
 
     score = round((correct / total) * 100, 2) if total > 0 else 0
 
-    # Save the result in the test_results table
+    # Save score in the TestResult table
     new_result = TestResult(
         test_id=submission.test_id,
         user_id=current_user.id,
@@ -79,10 +85,12 @@ async def submit_test(
         "score": score,
         "correct": correct,
         "total": total,
-        "submitted_answers": submission.answers
+        "submitted_answers": submission.answers,
+        "test_metadata": test.test_metadata
     }
 
-# Optional: Get all results for the current user
+
+# GET /tests/results — view all test results for user
 @router.get("/tests/results")
 async def get_all_results(
     db: Session = Depends(get_db),

@@ -124,7 +124,9 @@ async def generate_test(
             and "question" in q
             and "options" in q
             and isinstance(q["options"], list)
+            and "answer" in q and q["answer"]
         ]
+
 
         if not valid_questions:
             raise HTTPException(status_code=400, detail="No valid questions parsed from GPT output.")
