@@ -18,7 +18,6 @@ class PromptRequest(BaseModel):
     prompt: str | None = None
     study_material_id: int | None = None
 
-
 def parse_raw_mcq(raw_text: str):
     """Improved parser for GPT outputs that may use 'Question X:' or numbered formats"""
     pattern = re.compile(
@@ -124,9 +123,12 @@ async def generate_test(
             and "question" in q
             and "options" in q
             and isinstance(q["options"], list)
-            and "answer" in q and q["answer"]
         ]
 
+        # ✅ Patch missing answers
+        for q in valid_questions:
+            if "answer" not in q or not q["answer"]:
+                q["answer"] = "Unknown"
 
         if not valid_questions:
             raise HTTPException(status_code=400, detail="No valid questions parsed from GPT output.")
@@ -134,12 +136,11 @@ async def generate_test(
         # Save to DB
         new_test = Test(
             user_id=current_user.id,
-            name="Generated Test",  
+            name="Generated Test",
             study_material_id=request.study_material_id,
             test_metadata={"questions": valid_questions},
             created_at=datetime.utcnow()
         )
-
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
