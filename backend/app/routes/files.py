@@ -87,7 +87,7 @@ async def upload_scanned(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """Upload a PDF after AV scan and extract text."""
+    """Upload a PDF after AV scan and extract text (safely reads stream once)."""
     if (
         not file.filename.lower().endswith(".pdf")
         or file.content_type != "application/pdf"
@@ -95,23 +95,33 @@ async def upload_scanned(
     ):
         raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
-    # Read file once
+    # STEP 1: Read the file once
     file_data = await file.read()
     if not file_data:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-    await file.seek(0)
 
+    # STEP 2: Run virus scan using a file-like buffer
     try:
-        scan_result = save_and_scan_file(file)
-        if scan_result == "infected":
-            raise HTTPException(status_code=400, detail="File is infected and was removed.")
+        from tempfile import SpooledTemporaryFile
+
+        with SpooledTemporaryFile() as temp:
+            temp.write(file_data)
+            temp.seek(0)
+            scan_result = save_and_scan_file(temp)  # Pass file-like object to your AV
+            if scan_result == "infected":
+                raise HTTPException(status_code=400, detail="File is infected and was removed.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Virus scan failed: {str(e)}")
 
-    # Extract text
-    extracted_text = await extract_text_from_pdf(file)
+    # STEP 3: Extract text from the original in-memory stream
+    try:
+        pdf = fitz.open(stream=file_data, filetype="pdf")
+        extracted_text = "".join(page.get_text() for page in pdf)
+        pdf.close()
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to extract text from PDF.")
 
-    # Save file to DB
+    # STEP 4: Save the file
     db_file = FileModel(
         filename=file.filename,
         content=file_data,
