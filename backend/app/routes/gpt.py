@@ -22,9 +22,10 @@ class PromptRequest(BaseModel):
 def parse_raw_mcq(raw_text: str):
     """Improved parser for GPT outputs that may use 'Question X:' or numbered formats"""
     pattern = re.compile(
-        r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a\)\s*(.*?)\s*b\)\s*(.*?)\s*c\)\s*(.*?)\s*d\)\s*(.*?)(?=(?:\n(?:\d+\.|Question \d+:)|\Z))",
+        r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a[).]\s*(.*?)\s*b[).]\s*(.*?)\s*c[).]\s*(.*?)\s*d[).]\s*(.*?)(?=\n(?:\d+\.|Question \d+:)|\Z)",
         re.DOTALL | re.IGNORECASE,
     )
+
     matches = pattern.findall(raw_text)
     print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
 
@@ -37,8 +38,17 @@ def parse_raw_mcq(raw_text: str):
             "difficulty": "medium"
         })
 
-    return structured
+    # ✅ Fallback if nothing matched
+    if not structured:
+        print("⚠️ No valid MCQs parsed. Returning default fallback question.")
+        return [{
+            "question": "⚠️ Unable to parse structured questions from GPT response.",
+            "options": [],
+            "answer": None,
+            "difficulty": "unknown"
+        }]
 
+    return structured
 
 @router.post("/gpt/generate")
 async def generate_test(
