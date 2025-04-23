@@ -105,6 +105,18 @@ async def generate_test(
             print("⚠️ GPT returned invalid JSON. Falling back to raw parsing...")
             questions = parse_raw_mcq(raw_output)
 
+            # ✅ Extract answers from the footer if they exist
+            answer_block = re.search(r"Answers:\s*((?:\d+\.\s*[a-dA-D]\s*)+)", raw_output, re.IGNORECASE | re.DOTALL)
+            if answer_block:
+                print("✅ Answer key detected in GPT output.")
+                answers = re.findall(r"(\d+)\.\s*([a-dA-D])", answer_block.group(1))
+                for num_str, letter in answers:
+                    idx = int(num_str) - 1
+                    if 0 <= idx < len(questions):
+                        option_index = ord(letter.lower()) - ord("a")
+                        if 0 <= option_index < len(questions[idx]["options"]):
+                            questions[idx]["answer"] = questions[idx]["options"][option_index]
+
         # Validate and clean questions
         valid_questions = [
             q for q in questions
