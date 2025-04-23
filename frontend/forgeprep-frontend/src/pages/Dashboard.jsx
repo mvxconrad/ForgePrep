@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import {
   Container, Row, Col, Card, ListGroup,
-  ProgressBar, Button, Form, Spinner
+  ProgressBar, Button, Spinner
 } from "react-bootstrap";
 import { AuthContext } from "../components/AuthContext";
 import styles from "./Dashboard.module.css";
@@ -14,11 +14,8 @@ const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState({});
-  const [backgroundImage, setBackgroundImage] = useState(backgroundFallback);
-  const [prompt, setPrompt] = useState("");
-  const [generatedQuestions, setGeneratedQuestions] = useState([]);
-  const [error, setError] = useState("");
   const [notifications, setNotifications] = useState([]);
+  const [backgroundImage, setBackgroundImage] = useState(backgroundFallback);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -53,22 +50,6 @@ const Dashboard = () => {
       setBackgroundImage(data.background_image || backgroundFallback);
     } catch (err) {
       console.error("[Dashboard] Data fetch error:", err);
-    }
-  };
-
-  const handleGenerateQuestions = async () => {
-    try {
-      const res = await fetch("/api/gpt/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json();
-      setGeneratedQuestions(data.questions || []);
-    } catch (err) {
-      console.error("[Dashboard] Question generation failed:", err);
-      setError("Could not generate questions.");
     }
   };
 
@@ -159,41 +140,6 @@ const Dashboard = () => {
             </Card>
           </Col>
 
-          {/* GPT Generator */}
-          <Col md={12}>
-            <Card className={styles.glassCard}>
-              <div className={styles.cardHeader}>AI-Powered Question Generator</div>
-              <Form.Group controlId="formPrompt" className="mb-3">
-                <Form.Control
-                  type="text"
-                  placeholder="Enter a topic or prompt"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-              </Form.Group>
-              <Button onClick={handleGenerateQuestions} variant="primary">
-                Generate Questions
-              </Button>
-              {error && <p className="text-danger mt-3">{error}</p>}
-            </Card>
-          </Col>
-
-          {/* Generated Results */}
-          {generatedQuestions.length > 0 && (
-            <Col md={12}>
-              <Card className={styles.glassCard}>
-                <div className={styles.cardHeader}>Generated Questions</div>
-                <ListGroup>
-                  {generatedQuestions.map((q, idx) => (
-                    <ListGroup.Item key={idx} className="bg-transparent text-white">
-                      {q}
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              </Card>
-            </Col>
-          )}
-
           {/* Notifications */}
           <Col md={12}>
             <Card className={styles.glassCard}>
@@ -209,6 +155,29 @@ const Dashboard = () => {
               ) : (
                 <p className="text-muted">No notifications at this time.</p>
               )}
+            </Card>
+          </Col>
+
+          {/* Quick Actions */}
+          <Col md={12}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>🧰 Quick Actions</div>
+              <div className="d-flex flex-wrap gap-3 p-3">
+                <Button
+                  variant="light"
+                  className="text-dark fw-semibold"
+                  onClick={() => window.location.href = "/upload"}
+                >
+                  📁 Upload Study Guide
+                </Button>
+                <Button
+                  variant="primary"
+                  className="fw-semibold"
+                  onClick={() => window.location.href = "/testgenerator"}
+                >
+                  🧠 Generate Test
+                </Button>
+              </div>
             </Card>
           </Col>
         </Row>
