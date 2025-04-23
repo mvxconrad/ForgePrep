@@ -1,25 +1,29 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ component: Component }) => {
-  const isAuthenticated = () => {
-    const token = localStorage.getItem("token");
-    if (!token) return false;
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
 
-    try {
-      const { exp } = JSON.parse(atob(token.split(".")[1]));
-      return Date.now() < exp * 1000;
-    } catch (err) {
-      console.error("Error decoding token:", err);
-      return false;
-    }
-  };
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch("https://forgeprep.net/api/auth/me", {
+          credentials: "include",
+        });
+        setAuthenticated(res.ok);
+      } catch {
+        setAuthenticated(false);
+      } finally {
+        setAuthChecked(true);
+      }
+    };
 
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" />;
-  }
+    checkAuth();
+  }, []);
 
-  return <Component />;
+  if (!authChecked) return null; // or a loading spinner
+  return authenticated ? <Component /> : <Navigate to="/login" />;
 };
 
 export default ProtectedRoute;
