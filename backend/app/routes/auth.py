@@ -87,7 +87,7 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="Lax",
+        samesite="None",  # ← allows cross-origin requests
         max_age=86400,
         path="/"
     )
