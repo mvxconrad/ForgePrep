@@ -22,9 +22,10 @@ class PromptRequest(BaseModel):
 def parse_raw_mcq(raw_text: str):
     """Improved parser for GPT outputs that may use 'Question X:' or numbered formats"""
     pattern = re.compile(
-        r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a\)\s*(.*?)\s*b\)\s*(.*?)\s*c\)\s*(.*?)\s*d\)\s*(.*?)(?=(?:\n(?:\d+\.|Question \d+:)|\Z))",
+        r"(?:\d+\.|Question \d+:)\s*(.*?)\s*a[).]\s*(.*?)\s*b[).]\s*(.*?)\s*c[).]\s*(.*?)\s*d[).]\s*(.*?)(?=\n(?:\d+\.|Question \d+:)|\Z)",
         re.DOTALL | re.IGNORECASE,
     )
+
     matches = pattern.findall(raw_text)
     print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
 
@@ -37,8 +38,17 @@ def parse_raw_mcq(raw_text: str):
             "difficulty": "medium"
         })
 
-    return structured
+    # ✅ Fallback if nothing matched
+    if not structured:
+        print("⚠️ No valid MCQs parsed. Returning default fallback question.")
+        return [{
+            "question": "⚠️ Unable to parse structured questions from GPT response.",
+            "options": [],
+            "answer": None,
+            "difficulty": "unknown"
+        }]
 
+    return structured
 
 @router.post("/gpt/generate")
 async def generate_test(
@@ -94,6 +104,18 @@ async def generate_test(
         except Exception as parse_err:
             print("⚠️ GPT returned invalid JSON. Falling back to raw parsing...")
             questions = parse_raw_mcq(raw_output)
+
+            # ✅ Extract answers from the footer if they exist
+            answer_block = re.search(r"Answers:\s*((?:\d+\.\s*[a-dA-D]\s*)+)", raw_output, re.IGNORECASE | re.DOTALL)
+            if answer_block:
+                print("✅ Answer key detected in GPT output.")
+                answers = re.findall(r"(\d+)\.\s*([a-dA-D])", answer_block.group(1))
+                for num_str, letter in answers:
+                    idx = int(num_str) - 1
+                    if 0 <= idx < len(questions):
+                        option_index = ord(letter.lower()) - ord("a")
+                        if 0 <= option_index < len(questions[idx]["options"]):
+                            questions[idx]["answer"] = questions[idx]["options"][option_index]
 
         # Validate and clean questions
         valid_questions = [
