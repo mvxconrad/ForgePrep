@@ -1,28 +1,16 @@
-import React, { useEffect, useState } from "react";
+// components/ProtectedRoute.jsx
+import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
+import { AuthContext } from "./AuthContext";
 
-const ProtectedRoute = ({ component: Component }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch("https://forgeprep.net/api/auth/me", {
-          credentials: "include",
-        });
-        setIsAuthenticated(res.ok);
-      } catch (err) {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
-  }, []);
+  console.log("[ProtectedRoute] loading:", loading, "user:", user);
 
-  if (isAuthenticated === null) {
-    return <div className="text-center text-white">Checking authentication...</div>;
-  }  
+  if (loading) return <div className="text-center text-white">Checking authentication...</div>;
 
-  return isAuthenticated ? <Component /> : <Navigate to="/login" />;
+  return user ? children : <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;

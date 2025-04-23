@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 from authlib.integrations.starlette_client import OAuth
 from jose import JWTError
+from pydantic import BaseModel, EmailStr
+import os
+from dotenv import load_dotenv
+
 from app.models.models import User
 from app.schemas.schemas import UserCreate, LoginRequest
 from app.security.security import (
@@ -12,15 +16,9 @@ from app.security.security import (
     hash_password
 )
 from database.database import get_db
-import os
-from dotenv import load_dotenv
-from pydantic import BaseModel, EmailStr
 
-router = APIRouter()
 load_dotenv()
-
-class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+router = APIRouter()
 
 # JWT config
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
@@ -59,7 +57,8 @@ if os.getenv("GITHUB_CLIENT_ID"):
         client_kwargs={"scope": "user:email"},
     )
 
-# ------------------ AUTH ROUTES ------------------ #
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
 
 @router.post("/register/")
 async def register_user(request: UserCreate, db: Session = Depends(get_db)):
@@ -74,11 +73,9 @@ async def register_user(request: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return {"message": "User registered successfully"}
 
-
 @router.post("/login")
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
-
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -91,19 +88,17 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         value=access_token,
         httponly=True,
         secure=True,
-        samesite="None",  # ← allows cross-origin requests
+        samesite="None",
         max_age=86400,
         path="/"
     )
     return response
-
 
 @router.post("/logout")
 def logout():
     response = JSONResponse(content={"message": "Logged out"})
     response.delete_cookie("access_token")
     return response
-
 
 @router.get("/me")
 def get_current_user_info(request: Request, db: Session = Depends(get_db)):
@@ -114,15 +109,12 @@ def get_current_user_info(request: Request, db: Session = Depends(get_db)):
         "email": current_user.email
     }
 
-# ------------------ OAUTH ROUTES ------------------ #
-
 @router.get("/login/{provider}")
 async def login_provider(request: Request, provider: str):
     if provider not in oauth:
         raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
     redirect_uri = request.url_for("auth_provider", provider=provider)
     return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
-
 
 @router.get("/{provider}")
 async def auth_provider(request: Request, provider: str):
@@ -138,15 +130,24 @@ async def auth_provider(request: Request, provider: str):
     )
     return {"provider": provider, "user": user}
 
-
 @router.get("/protected/")
 async def protected_route(request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user_from_cookie(request, db)
     return {"message": f"Hello, {current_user.username}!"}
 
+@router.post("/forgot-password/")
+async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    email = request.email
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        return JSONResponse(status_code=200, content={"message": "If an account with that email exists, a reset link has been sent."})
+
+    # TODO: implement secure token creation and send email
+    print(f"[DEBUG] Password reset requested for: {email}")
+
+    return {"message": "If an account with that email exists, a reset link has been sent."}
 
 # ------------------ HELPER ------------------ #
-
 def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)) -> User:
     token = request.cookies.get("access_token")
     if not token:
@@ -166,22 +167,3 @@ def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="User not found")
 
     return user
-
-# ------------------ PASSWORD RESET ------------------ #
-
-@router.post("/forgot-password/")
-async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    email = request.email
-
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        # Avoid leaking user existence info
-        return JSONResponse(
-            status_code=200,
-            content={"message": "If an account with that email exists, a reset link has been sent."}
-        )
-
-    # TODO: Generate token & send email here
-    print(f"[DEBUG] Password reset requested for: {email}")
-
-    return {"message": "If an account with that email exists, a reset link has been sent."}

@@ -31,6 +31,8 @@ const AppContent = () => {
   const { user, loading } = useContext(AuthContext);
   const location = useLocation();
 
+  console.log("[AppContent] Auth state check:", { loading, user });
+
   const showNavbar = !["/", "/login", "/register"].includes(location.pathname);
 
   if (loading) return <div className="text-white text-center mt-5">Loading...</div>;
