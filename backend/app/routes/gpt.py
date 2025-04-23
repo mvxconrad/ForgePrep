@@ -19,12 +19,11 @@ class PromptRequest(BaseModel):
     study_material_id: int | None = None
 
 def parse_raw_mcq(raw_text: str):
-    """Parse GPT fallback output with questions and extract answer key if present"""
+    """Parse fallback GPT output for MCQs and extract answer key properly."""
     pattern = re.compile(
-        r"(?:\d+[).])\s*(.*?)\n\s*a[).]\s*(.*?)\n\s*b[).]\s*(.*?)\n\s*c[).]\s*(.*?)\n\s*d[).]\s*(.*?)(?=\n\d+[).]|$)",
+        r"(?:\d+\.|\d+\))\s*(.*?)\n\s*a[).]\s*(.*?)\n\s*b[).]\s*(.*?)\n\s*c[).]\s*(.*?)\n\s*d[).]\s*(.*?)(?=\n\d+[).]|$)",
         re.DOTALL | re.IGNORECASE
     )
-
     matches = pattern.findall(raw_text)
     print(f"🧪 Parsed {len(matches)} fallback questions from raw GPT output.")
 
@@ -33,15 +32,15 @@ def parse_raw_mcq(raw_text: str):
         questions.append({
             "question": question.strip(),
             "options": [opt1.strip(), opt2.strip(), opt3.strip(), opt4.strip()],
-            "answer": "Unknown",
+            "answer": "Unknown",  # placeholder, will patch next
             "difficulty": "medium"
         })
 
-    # 🧠 Try to pull embedded answer key (e.g., "Answers:\n1. c\n2. a...")
-    answer_block = re.search(r"Answers:\s*((?:\d+[).]?\s*[a-dA-D]\s*)+)", raw_text, re.IGNORECASE)
+    # ✅ FIXED: Detect and parse answer key
+    answer_block = re.search(r"Answers:\s*((?:\d+\.\s*[a-dA-D]\s*)+)", raw_text, re.IGNORECASE)
     if answer_block:
-        print("✅ Answer key detected in GPT output.")
-        answers = re.findall(r"(\d+)[).]?\s*([a-dA-D])", answer_block.group(1))
+        print("✅ Answer key detected.")
+        answers = re.findall(r"(\d+)\.\s*([a-dA-D])", answer_block.group(1))
         for num_str, letter in answers:
             idx = int(num_str) - 1
             if 0 <= idx < len(questions):
