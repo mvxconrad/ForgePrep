@@ -87,6 +87,7 @@ class Test(Base):
 
 class TestResult(Base):
     __tablename__ = "test_results"
+
     id = Column(Integer, primary_key=True, index=True)
     test_id = Column(Integer, ForeignKey("tests.id"))
     user_id = Column(Integer, ForeignKey("users.id"))
@@ -94,8 +95,10 @@ class TestResult(Base):
     correct = Column(Integer)
     total = Column(Integer)
     submitted_answers = Column(JSON)
-    test_metadata = Column(JSON, nullable=True)  # ✅ NEW: full test snapshot
     submitted_at = Column(DateTime, default=datetime.utcnow)
+
+    # ✅ Add this
+    test_metadata = Column(JSON, nullable=True)
 
     test = relationship("Test", backref="results")
     user = relationship("User", backref="results")
