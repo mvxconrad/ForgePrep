@@ -134,10 +134,12 @@ async def generate_test(
         # Save to DB
         new_test = Test(
             user_id=current_user.id,
+            name="Generated Test",  
             study_material_id=request.study_material_id,
             test_metadata={"questions": valid_questions},
             created_at=datetime.utcnow()
         )
+
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
