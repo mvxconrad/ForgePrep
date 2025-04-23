@@ -172,3 +172,17 @@ async def download_file(
         media_type="application/octet-stream",
         headers={"Content-Disposition": f"attachment; filename={db_file.filename}"}
     )
+
+@router.delete("/{file_id}")
+async def delete_file(
+    file_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    file = db.query(FileModel).filter_by(id=file_id, user_id=current_user.id).first()
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found or unauthorized.")
+    db.delete(file)
+    db.commit()
+    return {"message": "File deleted successfully."}
+
