@@ -20,9 +20,25 @@ const TestResults = () => {
   useEffect(() => {
     if (location.state?.result) {
       setTestResult(location.state.result);
+      setLoading(false);
+    } else {
+      fetchLastTestResult();
     }
-    setLoading(false);
   }, []);
+
+  const fetchLastTestResult = async () => {
+    try {
+      const res = await api.get("/tests/results");
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        const latest = res.data[0]; // Assuming newest is first
+        setTestResult(latest);
+      }
+    } catch (err) {
+      console.error("Failed to fetch test results from DB:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -74,8 +90,7 @@ const TestResults = () => {
           <ListGroup variant="flush">
             {questions.map((q, index) => {
               const userAnswer = answers[index.toString()] || "";
-              const isCorrect =
-                q?.answer?.toLowerCase().trim() === userAnswer?.toLowerCase().trim();
+              const isCorrect = q?.answer?.toLowerCase().trim() === userAnswer?.toLowerCase().trim();
 
               return (
                 <ListGroup.Item
@@ -91,16 +106,20 @@ const TestResults = () => {
                     {q?.options?.map((opt, i) => {
                       const isSelected = opt === userAnswer;
                       const isAnswer = opt === q?.answer;
-                      const classes = isSelected
-                        ? isCorrect
-                          ? "text-success fw-bold"
-                          : "text-danger fw-bold"
-                        : isAnswer && !isCorrect
-                        ? "text-info"
-                        : "text-light";
-
                       return (
-                        <li key={i} className={`mb-1 ${classes}`}>
+                        <li
+                          key={i}
+                          className={`mb-1 ${
+                            isSelected
+                              ? isCorrect
+                                ? "text-success"
+                                : "text-danger"
+                              : isAnswer && !isCorrect
+                              ? "text-info"
+                              : "text-light"
+                          }`}
+                          style={{ fontWeight: isSelected ? "600" : "400" }}
+                        >
                           {opt}
                           {isSelected && " (Your answer)"}
                           {!isSelected && isAnswer && !isCorrect && " (Correct)"}
