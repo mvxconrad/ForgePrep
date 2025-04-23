@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Container,
-  Form,
-  Button,
-  ProgressBar,
-  Table,
-  Card
-} from "react-bootstrap";
+import { Container, Form, Button, ProgressBar, Table, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import styles from "./Dashboard.module.css";
 import backgroundImage from "../assets/background_abstract2.png";
@@ -91,31 +84,29 @@ const FileUploadPage = () => {
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        paddingBottom: "3rem",
       }}
     >
-      <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
-        <Card className={`${styles.glassCard} border-0 shadow p-4`}>
+      <Container className="py-5">
+        <Card className={`${styles.glassCard} p-4 border-0 shadow-lg`}>
           <Card.Body>
-            <h3 className="fw-bold text-white mb-4">Upload Study Guide</h3>
+            <h3 className="fw-bold mb-4 text-white">Upload Study Guide</h3>
             <Form onSubmit={handleFileUpload}>
               <Form.Group className="mb-3">
                 <Form.Label className="text-white">Upload a PDF file</Form.Label>
-                <Form.Control type="file" accept=".pdf" onChange={handleFileChange} className="glass" />
+                <Form.Control type="file" accept=".pdf" onChange={handleFileChange} />
               </Form.Group>
 
               {file && (
-                <Card className="mb-3 p-3 glass border-0">
-                  <strong className="text-white">Name:</strong> {file.name}<br />
-                  <strong className="text-white">Size:</strong> {(file.size / 1024).toFixed(2)} KB
+                <Card className="bg-transparent border-light-subtle p-3 mb-3">
+                  <div><strong>Name:</strong> {file.name}</div>
+                  <div><strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB</div>
                 </Card>
               )}
 
-              <div className="d-flex flex-wrap gap-2">
-                <Button type="submit" variant="light" className="fw-semibold text-dark" disabled={!file}>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                <Button type="submit" variant="light" className="text-dark fw-semibold" disabled={!file}>
                   Upload & Scan
                 </Button>
-
                 {uploadedFileId && (
                   <Button variant="success" onClick={handleGenerateTest}>
                     Generate Test
@@ -127,14 +118,18 @@ const FileUploadPage = () => {
                 <ProgressBar now={uploadProgress} className="mt-3" animated />
               )}
 
-              {message && <p className="mt-3 text-white">{message}</p>}
+              {message && (
+                <div className={`mt-3 fw-semibold ${message.includes("✅") ? "text-success" : "text-danger"}`}>
+                  {message}
+                </div>
+              )}
             </Form>
           </Card.Body>
         </Card>
 
-        <Card className={`${styles.glassCard} mt-5 p-4`}>
-          <h4 className="fw-bold text-white mb-3">Upload History</h4>
-          <Table responsive bordered variant="dark" className="glass text-white">
+        <Card className={`${styles.glassCard} p-4 border-0 shadow mt-5`}>
+          <h4 className="fw-semibold mb-3 text-white">Upload History</h4>
+          <Table striped hover responsive className="text-white">
             <thead>
               <tr>
                 <th>Filename</th>
