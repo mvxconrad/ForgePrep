@@ -90,7 +90,8 @@ const TakeTestPage = () => {
     >
       <Container className="py-5">
         <Card className={`${styles.glassCard} p-4 border-0 shadow-lg`}>
-          <h2 className="fw-bold mb-4">Take Your Test</h2>
+          <h2 className="fw-bold text-white mb-4">Take Your Test</h2>
+
           {error && <Alert variant="danger">{error}</Alert>}
 
           {Array.isArray(test?.test_metadata?.questions) &&
@@ -99,15 +100,31 @@ const TakeTestPage = () => {
               {test.test_metadata.questions.map((q, idx) => (
                 <Form.Group className="mb-4" key={idx}>
                   <Form.Label className="text-white fw-semibold">
-                    {idx + 1}. {q.question || q.text || "Unnamed Question"}
+                    {idx + 1}. {q.question || q.questionText || "Unnamed Question"}
                   </Form.Label>
-                  <Form.Control
-                    className="bg-light"
-                    type="text"
-                    value={answers[idx] || ""}
-                    onChange={(e) => handleChange(idx, e.target.value)}
-                    placeholder="Your answer"
-                  />
+
+                  {Array.isArray(q.options) && q.options.length > 0 ? (
+                    q.options.map((option, optIdx) => (
+                      <Form.Check
+                        key={optIdx}
+                        type="radio"
+                        name={`question-${idx}`}
+                        label={option}
+                        value={option}
+                        checked={answers[idx] === option}
+                        onChange={() => handleChange(idx, option)}
+                        className="text-white"
+                      />
+                    ))
+                  ) : (
+                    <Form.Control
+                      className="bg-light text-dark"
+                      type="text"
+                      value={answers[idx] || ""}
+                      onChange={(e) => handleChange(idx, e.target.value)}
+                      placeholder="Your answer"
+                    />
+                  )}
                 </Form.Group>
               ))}
 
@@ -136,7 +153,9 @@ const TakeTestPage = () => {
               </div>
             </Form>
           ) : (
-            <p className="text-muted">No questions available for this test.</p>
+            <div className="text-center">
+              <p className="text-muted mt-4">No questions available for this test.</p>
+            </div>
           )}
         </Card>
       </Container>

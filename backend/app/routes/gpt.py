@@ -12,7 +12,6 @@ from datetime import datetime
 
 router = APIRouter()
 
-
 class PromptRequest(BaseModel):
     file_id: int
     prompt: str | None = None
@@ -53,15 +52,22 @@ async def generate_test(
         if not file.extracted_text or not file.extracted_text.strip():
             raise HTTPException(status_code=400, detail="No extracted text found in file.")
 
-        # Build GPT prompt
+        # Build prompt
         base_prompt = request.prompt or (
-            "You are provided with study material. Generate a JSON-formatted test. "
-            "Each question must include: question text, correct answer, and difficulty (easy, medium, hard)."
+            "You are provided with study material. Generate a JSON array of questions like this:\n"
+            "[\n"
+            "  {\n"
+            "    \"question\": \"What is the capital of France?\",\n"
+            "    \"answer\": \"Paris\",\n"
+            "    \"difficulty\": \"easy\"\n"
+            "  },\n"
+            "  ...\n"
+            "]"
         )
         full_prompt = f"{base_prompt}\n\nStudy Material:\n{file.extracted_text[:8000]}"
 
-        # GPT request
-        openai.api_key = os.environ.get("OPENAI_API_KEY")
+        # GPT API call
+        openai.api_key = os.getenv("OPENAI_API_KEY")
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
@@ -69,10 +75,10 @@ async def generate_test(
                 {"role": "user", "content": full_prompt}
             ]
         )
-
         raw_output = response.choices[0].message["content"]
+        print("GPT RAW OUTPUT:", raw_output)
 
-        # Attempt to parse JSON
+        # Parse output
         try:
             parsed = json.loads(raw_output)
             if isinstance(parsed, dict) and "questions" in parsed:
@@ -80,22 +86,30 @@ async def generate_test(
             elif isinstance(parsed, list):
                 questions = parsed
             else:
-                raise ValueError("Unexpected structure.")
+                raise ValueError("Invalid GPT response structure.")
         except Exception:
             questions = [
                 {
-                    "id": 1,
-                    "text": raw_output.strip(),
+                    "question": raw_output.strip(),
                     "answer": "Unstructured GPT response",
                     "difficulty": "unknown"
                 }
             ]
 
-        # Save to DB
+        # Validate each question
+        valid_questions = [
+            q for q in questions
+            if isinstance(q, dict) and "question" in q and "answer" in q
+        ]
+
+        if not valid_questions:
+            raise HTTPException(status_code=400, detail="No valid questions generated.")
+
+        # Save test
         new_test = Test(
             user_id=current_user.id,
             study_material_id=request.study_material_id,
-            test_metadata=questions,
+            test_metadata={"questions": valid_questions},
             created_at=datetime.utcnow()
         )
         db.add(new_test)

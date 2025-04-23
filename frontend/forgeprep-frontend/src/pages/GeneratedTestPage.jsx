@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Container, Button, Alert } from "react-bootstrap";
+import { Container, Button, Alert, Spinner } from "react-bootstrap";
 import api from "../util/apiService"; // Centralized API service
 
 const GeneratedTestPage = () => {
@@ -43,30 +43,35 @@ const GeneratedTestPage = () => {
 
   if (!test) {
     return (
-      <Container className="mt-4">
-        <p>Loading test data...</p>
+      <Container className="mt-4 text-center">
+        <Spinner animation="border" role="status" />
+        <p className="mt-2">Loading test data...</p>
       </Container>
     );
   }
 
   return (
     <Container className="mt-4">
-      <h1>Generated Test</h1>
+      <h1 className="mb-4">Generated Test Preview</h1>
       <ul>
-        {test.questions.map((question, index) => (
-          <li key={index}>
-            <strong>{question.questionText}</strong>
-            <ul>
-              {question.options.map((option, idx) => (
-                <li key={idx}>{option}</li>
-              ))}
-            </ul>
+        {test.test_metadata?.questions.map((question, index) => (
+          <li key={index} className="mb-3">
+            <strong>{question.question || question.questionText}</strong>
+            {Array.isArray(question.options) && (
+              <ul>
+                {question.options.map((option, idx) => (
+                  <li key={idx}>{option}</li>
+                ))}
+              </ul>
+            )}
           </li>
         ))}
       </ul>
-      <Button onClick={handleStartTest} variant="primary">
-        Start Test
-      </Button>
+      <div className="text-center mt-4">
+        <Button onClick={handleStartTest} variant="primary" size="lg">
+          Start Test
+        </Button>
+      </div>
     </Container>
   );
 };
