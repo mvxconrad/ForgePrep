@@ -1,14 +1,20 @@
 import io
+import os
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import fitz  # PyMuPDF
 from tempfile import SpooledTemporaryFile
+from dotenv import load_dotenv
 
 from database.database import get_db
 from app.models.models import File as FileModel, User
 from app.routes.auth import get_current_user_from_cookie
-from app.services.file_handler import save_and_scan_file
+from app.services.antivirus import scan_file
+
+load_dotenv()
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter()
 
@@ -26,6 +32,26 @@ async def is_valid_pdf(file: UploadFile) -> bool:
     header = await file.read(4)
     await file.seek(0)
     return header == b"%PDF"
+
+def save_and_scan_file(filelike, filename: str) -> str:
+    """
+    Saves a file-like object to disk, scans it with ClamAV, and returns:
+    - The saved file path if clean
+    - "infected" if malicious
+    """
+    try:
+        filepath = os.path.join(UPLOAD_DIR, filename)
+        with open(filepath, "wb") as f:
+            f.write(filelike.read())
+        filelike.seek(0)
+
+        from app.services.antivirus import scan_file  # Ensure it's imported locally or globally
+        if not scan_file(filepath):
+            os.remove(filepath)
+            return "infected"
+        return filepath
+    except Exception as e:
+        raise RuntimeError(f"Scan failed: {e}")
 
 # ------------------ ROUTES ------------------ #
 
