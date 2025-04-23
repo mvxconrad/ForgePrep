@@ -75,6 +75,7 @@ async def submit_test(
         total=total,
         submitted_answers=submission.answers,
         submitted_at=datetime.utcnow(),
+        test_metadata=test.test_metadata
     )
     db.add(new_result)
     db.commit()

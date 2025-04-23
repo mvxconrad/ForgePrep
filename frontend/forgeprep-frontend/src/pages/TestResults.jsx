@@ -9,7 +9,7 @@ import {
   Alert,
   Badge,
 } from "react-bootstrap";
-import styles from "./Dashboard.module.css"; // for glassCard styling
+import styles from "./Dashboard.module.css";
 import backgroundImage from "../assets/background_abstract2.png";
 
 const TestResults = () => {
@@ -20,11 +20,8 @@ const TestResults = () => {
   useEffect(() => {
     if (location.state?.result) {
       setTestResult(location.state.result);
-      setLoading(false);
-    } else {
-      // fallback to result history if direct visit
-      setLoading(false);
     }
+    setLoading(false);
   }, []);
 
   if (loading) {
@@ -51,6 +48,9 @@ const TestResults = () => {
     );
   }
 
+  const questions = testResult?.test_metadata?.questions || [];
+  const answers = testResult?.submitted_answers || {};
+
   return (
     <div
       className="bg-dark text-light"
@@ -65,49 +65,58 @@ const TestResults = () => {
         <Card className={`${styles.glassCard} p-4 border-0 shadow-lg`}>
           <h2 className="fw-bold text-white mb-4">🧠 Test Results</h2>
 
-          <h5 className="text-light mb-3">
+          <h5 className="text-light mb-4">
             <Badge bg="success" className="me-2">Test ID: {testResult.test_id}</Badge>
             Score: <strong>{testResult.score}%</strong> (
             {testResult.correct} / {testResult.total})
           </h5>
 
           <ListGroup variant="flush">
-            {testResult?.submitted_answers &&
-              Object.entries(testResult.submitted_answers).map(([index, userAnswer], idx) => {
-                const q = testResult?.test_metadata?.questions?.[index];
-                const correct = q?.answer?.toLowerCase().trim() === userAnswer?.toLowerCase().trim();
+            {questions.map((q, index) => {
+              const userAnswer = answers[index.toString()] || "";
+              const isCorrect =
+                q?.answer?.toLowerCase().trim() === userAnswer?.toLowerCase().trim();
 
-                return (
-                  <ListGroup.Item
-                    key={idx}
-                    className="bg-transparent text-light"
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
-                  >
-                    <p className="mb-1 fw-semibold">
-                      {parseInt(index) + 1}. {q?.question}
-                    </p>
+              return (
+                <ListGroup.Item
+                  key={index}
+                  className="bg-transparent text-light"
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
+                >
+                  <div className="mb-2 fw-semibold">
+                    {index + 1}. {q?.question || "No question text"}
+                  </div>
 
-                    {q?.options?.length > 0 && (
-                      <ul className="mb-1">
-                        {q.options.map((opt, i) => (
-                          <li key={i}>{opt}</li>
-                        ))}
-                      </ul>
-                    )}
+                  <ul className="ps-3 mb-2">
+                    {q?.options?.map((opt, i) => {
+                      const isSelected = opt === userAnswer;
+                      const isAnswer = opt === q?.answer;
+                      const classes = isSelected
+                        ? isCorrect
+                          ? "text-success fw-bold"
+                          : "text-danger fw-bold"
+                        : isAnswer && !isCorrect
+                        ? "text-info"
+                        : "text-light";
 
-                    <p className="mb-0">
-                      <span className={`fw-bold ${correct ? "text-success" : "text-danger"}`}>
-                        Your answer: {userAnswer || "—"}
-                      </span>{" "}
-                      {!correct && (
-                        <span className="text-muted ms-2">
-                          (Correct: <strong>{q?.answer || "?"}</strong>)
-                        </span>
-                      )}
-                    </p>
-                  </ListGroup.Item>
-                );
-              })}
+                      return (
+                        <li key={i} className={`mb-1 ${classes}`}>
+                          {opt}
+                          {isSelected && " (Your answer)"}
+                          {!isSelected && isAnswer && !isCorrect && " (Correct)"}
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {!isCorrect && (
+                    <div className="text-muted small">
+                      Correct answer: <strong>{q?.answer || "?"}</strong>
+                    </div>
+                  )}
+                </ListGroup.Item>
+              );
+            })}
           </ListGroup>
         </Card>
       </Container>
