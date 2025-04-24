@@ -4,11 +4,7 @@ import { ArrowRight, FileText, Settings, BarChart, HelpCircle } from 'lucide-rea
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
-import background1 from '../assets/background_abstract.png';
-import background2 from '../assets/background_abstract2.png';
 import logo from '../assets/forgepreplogo.png';
-
-// Optional CSS module import — only keep if you're using `styles.xyz` classNames
 import styles from './LandingPage.module.css';
 
 const features = [
@@ -29,8 +25,8 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="landing-page bg-dark text-light">
-      <img src={background1} alt="Top Background" className="bg-image top" />
+    <div className={styles["landing-page"]}>
+      <div className={styles["bg-top-image"]}></div>
 
       {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-dark fixed-top blur-nav">
@@ -60,7 +56,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <img src={background2} alt="Bottom Background" className="bg-image bottom" />
+      <div className={styles["bg-bottom-image"]}></div>
 
       {/* Features */}
       <section className="features-section py-5" data-aos="fade-up">
