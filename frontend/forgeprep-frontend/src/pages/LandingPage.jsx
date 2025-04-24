@@ -30,7 +30,7 @@ const LandingPage = () => {
     <div className={styles['landing-page']}>
       <div
         className={styles['bg-top-image']}
-        style={{ backgroundImage: `url(${background1})` }}
+        style={{ backgroundImage: `url("${background1}")` }}
       ></div>
 
       {/* Navbar */}
@@ -63,7 +63,7 @@ const LandingPage = () => {
 
       <div
         className={styles['bg-bottom-image']}
-        style={{ backgroundImage: `url(${background2})` }}
+        style={{ backgroundImage: `url("${background2}")` }}
       ></div>
 
       {/* Features */}
