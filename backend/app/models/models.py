@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Text, Float, DateTime, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Text, Float, DateTime, JSON, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -47,11 +47,13 @@ class File(Base):
 
 class User(Base):
     __tablename__ = "users"
+    
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    is_verified = Column(Boolean, default=False)  # ✅ NEW FIELD
 
     sets = relationship("StudySet", back_populates="owner")
     progress = relationship("UserProgress", back_populates="user")
@@ -61,7 +63,7 @@ class User(Base):
 
     def verify_password(self, plain_password: str) -> bool:
         return verify_password(plain_password, self.hashed_password)
-
+    
 class StudyMaterial(Base):
     __tablename__ = "study_materials"
     id = Column(Integer, primary_key=True, index=True)

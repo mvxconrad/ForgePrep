@@ -1,4 +1,3 @@
-// components/ProtectedRoute.jsx
 import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { AuthContext } from "./AuthContext";
@@ -6,11 +5,18 @@ import { AuthContext } from "./AuthContext";
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
 
-  console.log("[ProtectedRoute] loading:", loading, "user:", user);
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center text-white" style={{ minHeight: "100vh" }}>
+        <span className="spinner-border text-light me-2" role="status" /> Checking credentials...
+      </div>
+    );
+  }
 
-  if (loading) return <div className="text-center text-white">Checking authentication...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.is_verified) return <Navigate to="/verify-email-prompt" replace />;
 
-  return user ? children : <Navigate to="/login" replace />;
+  return children;
 };
 
 export default ProtectedRoute;
