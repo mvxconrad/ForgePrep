@@ -28,7 +28,7 @@ load_dotenv()
 router = APIRouter()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
-EMAIL_VERIFICATION_ENABLED = True
+EMAIL_VERIFICATION_ENABLED = False # Change to True once Email Server is Set Up
 
 # ------------------ EMAIL MOCKS ------------------ #
 def send_verification_email(to_email: str, token: str):
@@ -58,8 +58,9 @@ async def register_user(request: UserCreate, background_tasks: BackgroundTasks, 
         username=request.username,
         email=request.email,
         hashed_password=hashed_password,
-        is_verified=False
+        is_verified=not EMAIL_VERIFICATION_ENABLED  # Change when DNS is Set Up / Automatically verify in dev
     )
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
