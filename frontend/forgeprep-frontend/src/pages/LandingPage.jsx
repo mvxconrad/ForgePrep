@@ -54,7 +54,7 @@ const LandingPage = () => {
               Turn Notes Into <span className="highlight-text">Practice</span>
             </h1>
             <p className="lead mb-4">ForgePrep converts your study materials into AI-powered quizzes instantly.</p>
-            <Link to="/register" className="btn btn-glow btn-lg fw-semibold text-dark">
+            <Link to="/register" className="btn btn-light btn-lg fw-semibold text-dark btn-glow">
               Get Started <ArrowRight className="ms-2" size={18} />
             </Link>
           </div>

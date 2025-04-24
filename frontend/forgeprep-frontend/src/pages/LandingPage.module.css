@@ -1,36 +1,33 @@
-/* Glassmorphic background styles */
 .glass {
     background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
   
-  /* Hero highlight text */
+  /* Hero highlight */
   .highlight-text {
     color: #a78bfa;
     text-shadow: 0 0 10px rgba(167, 139, 250, 0.6);
     font-weight: 900;
   }
   
-  /* Text shadow utility */
   .text-shadow {
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   }
   
-  /* Navbar blur */
   .blur-nav {
     background-color: rgba(13, 17, 23, 0.8);
     backdrop-filter: blur(12px);
     z-index: 10;
   }
   
-  /* Glow effect for CTAs (white button with smooth hover) */
+  /* Make Get Started match other white button, but glowing */
   .btn-glow {
     background-color: white !important;
     color: #121212 !important;
     border: none;
-    transition: all 0.3s ease;
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease;
   }
   
   .btn-glow:hover {
@@ -38,13 +35,7 @@
     transform: translateY(-2px);
   }
   
-  /* Footer gradient */
-  .footer {
-    background: linear-gradient(135deg, #6f42c1, #4b0082);
-    z-index: 3;
-  }
-  
-  /* Background containers – image set dynamically in JSX */
+  /* Background fix */
   .bg-top-image,
   .bg-bottom-image {
     position: fixed;
@@ -55,7 +46,6 @@
     background-position: center;
     z-index: -1;
     pointer-events: none;
-    opacity: 1;
   }
   
   .bg-top-image {
@@ -68,11 +58,11 @@
     left: 0;
   }
   
-  /* Container base */
   .landing-page {
     position: relative;
     overflow-x: hidden;
-    background-color: #121212;
     min-height: 100vh;
+    background-color: #121212;
+    z-index: 0;
   }
   
