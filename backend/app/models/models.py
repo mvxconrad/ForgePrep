@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Text, Float, DateTime, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Text, Float, DateTime, JSON, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -7,18 +7,16 @@ from app.security.security import verify_password
 
 class UserProgress(Base):
     __tablename__ = "user_progress"
-
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     study_set_id = Column(Integer, ForeignKey("study_sets.id"))
-    progress = Column(Float, default=0.0)  # Percentage of completion
+    progress = Column(Float, default=0.0)
 
     user = relationship("User", back_populates="progress")
     study_set = relationship("StudySet", back_populates="progress")
 
 class StudySet(Base):
     __tablename__ = "study_sets"
-
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String)
@@ -30,7 +28,6 @@ class StudySet(Base):
 
 class Flashcard(Base):
     __tablename__ = "flashcards"
-
     id = Column(Integer, primary_key=True, index=True)
     question = Column(String, index=True)
     answer = Column(String)
@@ -40,34 +37,23 @@ class Flashcard(Base):
 
 class File(Base):
     __tablename__ = "files"
-
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, nullable=False)
-    content = Column(LargeBinary, nullable=False)  # Stores file data as binary
+    content = Column(LargeBinary, nullable=False)
     extracted_text = Column(Text)
-
-    # New column for timestamp
-    created_at = Column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=datetime.utcnow,          # SQLAlchemy-level default
-        server_default="NOW()"            # Database-level default
-    )
-    
-    # Add user_id as foreign key, referencing the 'id' field of the users table
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)  # Link to user
-
-    # Define the relationship back to the User model (optional, but useful for querying)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, server_default="NOW()")
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="files")
 
 class User(Base):
     __tablename__ = "users"
-
+    
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    is_verified = Column(Boolean, default=False)  # ✅ NEW FIELD
 
     sets = relationship("StudySet", back_populates="owner")
     progress = relationship("UserProgress", back_populates="user")
@@ -77,11 +63,9 @@ class User(Base):
 
     def verify_password(self, plain_password: str) -> bool:
         return verify_password(plain_password, self.hashed_password)
-
-
+    
 class StudyMaterial(Base):
     __tablename__ = "study_materials"
-
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     filename = Column(String, nullable=False)
@@ -92,27 +76,31 @@ class StudyMaterial(Base):
 
 class Test(Base):
     __tablename__ = "tests"
-
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     name = Column(String, nullable=False)
     score = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)  # Add this field
-    test_metadata = Column(String)  # JSON or text field for test data
-
-    user = relationship("User", back_populates="tests")
-
-    study_material_id = Column(Integer, ForeignKey("study_materials.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
     test_metadata = Column(JSON, nullable=True)
 
+    user = relationship("User", back_populates="tests")
+    study_material_id = Column(Integer, ForeignKey("study_materials.id"))
     study_material = relationship("StudyMaterial", back_populates="tests")
 
-#class Goal(Base):
- #   __tablename__ = "goals"
-#
- #   id = Column(Integer, primary_key=True, index=True)
-  #  title = Column(String, nullable=False)
-   # progress = Column(Integer, default=0)
-    #user_id = Column(Integer, ForeignKey("users.id"))
+class TestResult(Base):
+    __tablename__ = "test_results"
 
-    #user = relationship("User", back_populates="goals")
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("tests.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    score = Column(Float)
+    correct = Column(Integer)
+    total = Column(Integer)
+    submitted_answers = Column(JSON)
+    submitted_at = Column(DateTime, default=datetime.utcnow)
+
+    # ✅ Add this
+    test_metadata = Column(JSON, nullable=True)
+
+    test = relationship("Test", backref="results")
+    user = relationship("User", backref="results")

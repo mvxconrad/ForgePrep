@@ -1,18 +1,25 @@
 from fastapi import APIRouter, status, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
-from authlib.integrations.starlette_client import OAuth
+from fastapi.background import BackgroundTasks
 from jose import JWTError
 from pydantic import BaseModel, EmailStr
 import os
 from dotenv import load_dotenv
+from starlette.responses import RedirectResponse
+from app.services.email_service import send_verification_email, send_password_reset_email
+
 
 from app.models.models import User
 from app.schemas.schemas import UserCreate, LoginRequest
 from app.security.security import (
     verify_password,
     create_access_token,
+    create_email_verification_token,
+    create_password_reset_token,
     decode_access_token,
+    decode_email_token,
+    decode_password_reset_token,
     hash_password
 )
 from database.database import get_db
@@ -20,64 +27,83 @@ from database.database import get_db
 load_dotenv()
 router = APIRouter()
 
-# JWT config
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
-ALGORITHM = "HS256"
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
+EMAIL_VERIFICATION_ENABLED = True
 
-# OAuth setup
-oauth = OAuth()
+# ------------------ EMAIL MOCKS ------------------ #
+def send_verification_email(to_email: str, token: str):
+    link = f"{FRONTEND_URL}/verify-email?token={token}"
+    print(f"[📧 EMAIL] Verify email: {link}")
 
-if os.getenv("GOOGLE_CLIENT_ID"):
-    oauth.register(
-        name="google",
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-        authorize_url="https://accounts.google.com/o/oauth2/auth",
-        access_token_url="https://oauth2.googleapis.com/token",
-        client_kwargs={"scope": "openid email profile"},
-    )
+def send_password_reset_email(to_email: str, token: str):
+    link = f"{FRONTEND_URL}/reset-password?token={token}"
+    print(f"[🔐 RESET] Password reset: {link}")
 
-if os.getenv("FACEBOOK_CLIENT_ID"):
-    oauth.register(
-        name="facebook",
-        client_id=os.getenv("FACEBOOK_CLIENT_ID"),
-        client_secret=os.getenv("FACEBOOK_CLIENT_SECRET"),
-        authorize_url="https://www.facebook.com/v12.0/dialog/oauth",
-        access_token_url="https://graph.facebook.com/v12.0/oauth/access_token",
-        client_kwargs={"scope": "public_profile email"},
-    )
-
-if os.getenv("GITHUB_CLIENT_ID"):
-    oauth.register(
-        name="github",
-        client_id=os.getenv("GITHUB_CLIENT_ID"),
-        client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
-        authorize_url="https://github.com/login/oauth/authorize",
-        access_token_url="https://github.com/login/oauth/access_token",
-        client_kwargs={"scope": "user:email"},
-    )
-
+# ------------------ MODELS ------------------ #
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+# ------------------ REGISTER ------------------ #
 @router.post("/register/")
-async def register_user(request: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == request.email).first()
-    if existing_user:
+async def register_user(request: UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.email == request.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_password = hash_password(request.password)
-    new_user = User(username=request.username, email=request.email, hashed_password=hashed_password)
+    new_user = User(
+        username=request.username,
+        email=request.email,
+        hashed_password=hashed_password,
+        is_verified=False
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return {"message": "User registered successfully"}
 
+    if EMAIL_VERIFICATION_ENABLED:
+        token = create_email_verification_token(request.email)
+        background_tasks.add_task(send_verification_email, request.email, token)
+
+    return {"message": "User registered. Check your email to verify your account."}
+
+# ------------------ EMAIL VERIFICATION ------------------ #
+@router.get("/verify-email/")
+async def verify_email(token: str, db: Session = Depends(get_db)):
+    try:
+        email = decode_email_token(token)
+    except HTTPException as e:
+        return JSONResponse(status_code=400, content={"error": e.detail})
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_verified = True
+    db.commit()
+    return RedirectResponse(url=f"{FRONTEND_URL}/login?verified=true")
+
+@router.post("/resend-verification/")
+async def resend_verification(request: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user or user.is_verified:
+        return {"message": "Email already verified or does not exist."}
+
+    token = create_email_verification_token(user.email)
+    background_tasks.add_task(send_verification_email, user.email, token)
+    return {"message": "A new verification email was sent."}
+
+# ------------------ LOGIN ------------------ #
 @router.post("/login")
 async def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+    if EMAIL_VERIFICATION_ENABLED and not user.is_verified:
+        raise HTTPException(status_code=403, detail="Please verify your email first.")
 
     token_data = {"id": user.id, "sub": user.email}
     access_token = create_access_token(token_data)
@@ -100,52 +126,44 @@ def logout():
     response.delete_cookie("access_token")
     return response
 
+# ------------------ USER INFO ------------------ #
 @router.get("/me")
 def get_current_user_info(request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user_from_cookie(request, db)
     return {
         "id": current_user.id,
         "username": current_user.username,
-        "email": current_user.email
+        "email": current_user.email,
+        "is_verified": current_user.is_verified,
     }
 
-@router.get("/login/{provider}")
-async def login_provider(request: Request, provider: str):
-    if provider not in oauth:
-        raise HTTPException(status_code=400, detail="Unsupported OAuth provider")
-    redirect_uri = request.url_for("auth_provider", provider=provider)
-    return await oauth.create_client(provider).authorize_redirect(request, redirect_uri)
-
-@router.get("/{provider}")
-async def auth_provider(request: Request, provider: str):
-    client = oauth.create_client(provider)
-    if not client:
-        raise HTTPException(status_code=500, detail=f"OAuth provider '{provider}' not configured")
-
-    token = await client.authorize_access_token(request)
-    user = (
-        await client.parse_id_token(request, token)
-        if provider == "google"
-        else token
-    )
-    return {"provider": provider, "user": user}
-
-@router.get("/protected/")
-async def protected_route(request: Request, db: Session = Depends(get_db)):
-    current_user = get_current_user_from_cookie(request, db)
-    return {"message": f"Hello, {current_user.username}!"}
-
+# ------------------ PASSWORD RESET FLOW ------------------ #
 @router.post("/forgot-password/")
-async def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    email = request.email
+async def forgot_password(request: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == request.email).first()
+    if not user:
+        return {"message": "If that email exists, a reset link was sent."}
+
+    token = create_password_reset_token(user.email)
+    background_tasks.add_task(send_password_reset_email, user.email, token)
+
+    return {"message": "Reset instructions sent."}
+
+@router.post("/reset-password/")
+async def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    try:
+        email = decode_password_reset_token(request.token)
+    except HTTPException as e:
+        raise HTTPException(status_code=400, detail=f"Token error: {e.detail}")
+
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        return JSONResponse(status_code=200, content={"message": "If an account with that email exists, a reset link has been sent."})
+        raise HTTPException(status_code=404, detail="User not found")
 
-    # TODO: implement secure token creation and send email
-    print(f"[DEBUG] Password reset requested for: {email}")
+    user.hashed_password = hash_password(request.new_password)
+    db.commit()
 
-    return {"message": "If an account with that email exists, a reset link has been sent."}
+    return {"message": "✅ Password reset successfully."}
 
 # ------------------ HELPER ------------------ #
 def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)) -> User:
@@ -159,7 +177,6 @@ def get_current_user_from_cookie(request: Request, db: Session = Depends(get_db)
         if not email:
             raise HTTPException(status_code=401, detail="Invalid token")
     except JWTError as e:
-        print("JWT error:", str(e))
         raise HTTPException(status_code=401, detail="Token decoding failed")
 
     user = db.query(User).filter(User.email == email).first()

@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Container, Button, Alert, Spinner, Card, ListGroup } from "react-bootstrap";
+import {
+  Container,
+  Button,
+  Alert,
+  Spinner,
+  Card,
+  ListGroup,
+} from "react-bootstrap";
 import api from "../util/apiService";
 
 const GeneratedTestPage = () => {
@@ -30,8 +37,30 @@ const GeneratedTestPage = () => {
   }, [testId]);
 
   const handleStartTest = () => {
+    if (!test?.test_metadata?.questions?.length) {
+      setError("Test is incomplete or contains no questions.");
+      return;
+    }
+
     navigate("/take-test", { state: { testId } });
   };
+
+  const handleRegenerate = () => {
+    navigate("/generate-test", {
+      state: { fileId: test?.study_material_id },
+    });
+  };
+
+  if (!testId) {
+    return (
+      <Container className="mt-4">
+        <Alert variant="danger">Missing test ID. Please generate a test again.</Alert>
+        <Button onClick={() => navigate("/dashboard")} variant="primary">
+          Go Back to Dashboard
+        </Button>
+      </Container>
+    );
+  }
 
   if (error) {
     return (
@@ -73,9 +102,33 @@ const GeneratedTestPage = () => {
           </Card.Body>
         </Card>
       ))}
+
       <div className="text-center mt-4">
-        <Button onClick={handleStartTest} variant="success" size="lg">
+        {error && <Alert variant="warning">{error}</Alert>}
+
+        <Button
+          onClick={handleStartTest}
+          variant="success"
+          size="lg"
+          className="me-3"
+        >
           Start Test
+        </Button>
+
+        <Button
+          onClick={handleRegenerate}
+          variant="outline-danger"
+          className="me-3"
+        >
+          Regenerate Test
+        </Button>
+
+        <Button
+          onClick={() => navigate("/dashboard")}
+          variant="secondary"
+          size="lg"
+        >
+          Cancel
         </Button>
       </div>
     </Container>

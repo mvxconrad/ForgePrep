@@ -43,7 +43,7 @@ const TestGeneratorPage = () => {
       });
 
       const testId = response.data.test_id;
-      navigate("/take-test", { state: { testId } });
+      navigate("/generated-test", { state: { testId } });
     } catch (err) {
       console.error("Error generating test:", err);
       setError("❌ Failed to generate test. Try again.");
