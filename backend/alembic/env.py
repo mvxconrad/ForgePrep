@@ -5,7 +5,10 @@ from sqlalchemy import pool
 
 from database.database import Base  # ✅ correct Base import
 from app.models import models       # ✅ forces model registration
+<<<<<<< HEAD
 
+=======
+>>>>>>> b9e10afdb9fc6942f6db23ba3b1d38c3340f27b9
 
 from alembic import context
 
