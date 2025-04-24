@@ -80,4 +80,4 @@ const VerifyEmailPrompt = () => {
   );
 };
 
-export default VerifyEmailPrompt;
+// export default VerifyEmailPrompt;

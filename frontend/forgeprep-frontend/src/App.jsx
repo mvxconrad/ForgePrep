@@ -27,10 +27,9 @@ import AITestInsightsPage from "./pages/AITestInsightsPage";
 import TakeTestPage from "./pages/TakeTestPage";
 import GeneratedTestPage from "./pages/GeneratedTestPage";
 import StudySetsPage from "./pages/StudySetsPage";
-import VerifyEmailPrompt from "./pages/VerifyEmailPrompt";
+// import VerifyEmailPrompt from "./pages/VerifyEmailPrompt"; // ❌ Email verification disabled
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-
 
 // Components
 import AppNavbar from "./components/AppNavbar";
@@ -54,11 +53,10 @@ const AppContent = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<SignupPage />} />
-        <Route path="/verify-email-prompt" element={<VerifyEmailPrompt />} />
+        {/* <Route path="/verify-email-prompt" element={<VerifyEmailPrompt />} /> */}
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/github/callback" element={<GitHubCallback />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
