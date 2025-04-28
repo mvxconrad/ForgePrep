@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Container, Button, Alert } from "react-bootstrap";
-import api from "../utils/apiService";
-import PageWrapper from "../components/PageWrapper";
+import {
+  Container,
+  Button,
+  Alert,
+  Spinner,
+  Card,
+  ListGroup,
+} from "react-bootstrap";
+import api from "../util/apiService";
 
 const GeneratedTestPage = () => {
   const location = useLocation();
@@ -31,8 +37,30 @@ const GeneratedTestPage = () => {
   }, [testId]);
 
   const handleStartTest = () => {
+    if (!test?.test_metadata?.questions?.length) {
+      setError("Test is incomplete or contains no questions.");
+      return;
+    }
+
     navigate("/take-test", { state: { testId } });
   };
+
+  const handleRegenerate = () => {
+    navigate("/generate-test", {
+      state: { fileId: test?.study_material_id },
+    });
+  };
+
+  if (!testId) {
+    return (
+      <Container className="mt-4">
+        <Alert variant="danger">Missing test ID. Please generate a test again.</Alert>
+        <Button onClick={() => navigate("/dashboard")} variant="primary">
+          Go Back to Dashboard
+        </Button>
+      </Container>
+    );
+  }
 
   if (error) {
     return (
@@ -46,35 +74,66 @@ const GeneratedTestPage = () => {
 
   if (!test) {
     return (
-      <PageWrapper>
-        <Container className="mt-4">
-          <p>Loading test data...</p>
-        </Container>
-      </PageWrapper>
+      <Container className="mt-4 text-center">
+        <Spinner animation="border" role="status" />
+        <p className="mt-2">Loading test data...</p>
+      </Container>
     );
   }
 
   return (
-    <PageWrapper>
-      <Container className="mt-4">
-        <h1>Generated Test</h1>
-        <ul>
-          {test.questions.map((question, index) => (
-            <li key={index}>
-              <strong>{question.questionText}</strong>
-              <ul>
-                {question.options.map((option, idx) => (
-                  <li key={idx}>{option}</li>
+    <Container className="mt-5">
+      <h2 className="mb-4">🧠 Test Preview</h2>
+      {test.test_metadata?.questions.map((q, index) => (
+        <Card key={index} className="mb-4 shadow-sm">
+          <Card.Body>
+            <Card.Title>Question {index + 1}</Card.Title>
+            <Card.Text>{q.question}</Card.Text>
+            {Array.isArray(q.options) && (
+              <ListGroup variant="flush">
+                {q.options.map((option, idx) => (
+                  <ListGroup.Item key={idx}>{option}</ListGroup.Item>
                 ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
-        <Button onClick={handleStartTest} variant="primary">
+              </ListGroup>
+            )}
+            {q.answer && (
+              <div className="mt-2 text-muted">
+                <small>✅ Answer: <strong>{q.answer}</strong></small>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      ))}
+
+      <div className="text-center mt-4">
+        {error && <Alert variant="warning">{error}</Alert>}
+
+        <Button
+          onClick={handleStartTest}
+          variant="success"
+          size="lg"
+          className="me-3"
+        >
           Start Test
         </Button>
-      </Container>
-    </PageWrapper>
+
+        <Button
+          onClick={handleRegenerate}
+          variant="outline-danger"
+          className="me-3"
+        >
+          Regenerate Test
+        </Button>
+
+        <Button
+          onClick={() => navigate("/dashboard")}
+          variant="secondary"
+          size="lg"
+        >
+          Cancel
+        </Button>
+      </div>
+    </Container>
   );
 };
 

@@ -1,16 +1,17 @@
 import io
 import os
+import re
+import fitz  # PyMuPDF
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-import fitz  # PyMuPDF
 from tempfile import SpooledTemporaryFile
 from dotenv import load_dotenv
 
 from database.database import get_db
 from app.models.models import File as FileModel, User
 from app.routes.auth import get_current_user_from_cookie
-from app.services.antivirus import scan_file
+from app.services.antivirus import scan_file  # Uses subprocess to run ClamAV
 
 load_dotenv()
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
@@ -18,7 +19,11 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter()
 
-# ------------------ UTILITY FUNCTIONS ------------------ #
+# ------------------ Utility Functions ------------------ #
+
+def sanitize_filename(filename: str) -> str:
+    """Sanitize uploaded filename to avoid filesystem issues."""
+    return re.sub(r'[^a-zA-Z0-9_.-]', '_', filename)
 
 async def extract_text_from_pdf(file_bytes: bytes) -> str:
     """Extract readable text from PDF bytes using PyMuPDF."""
@@ -28,39 +33,37 @@ async def extract_text_from_pdf(file_bytes: bytes) -> str:
     return text
 
 async def is_valid_pdf(file: UploadFile) -> bool:
-    """Check if the uploaded file is a valid PDF based on header."""
+    """Check for %PDF header."""
     header = await file.read(4)
     await file.seek(0)
     return header == b"%PDF"
 
 def save_and_scan_file(filelike, filename: str) -> str:
     """
-    Saves a file-like object to disk, scans it with ClamAV, and returns:
-    - The saved file path if clean
-    - "infected" if malicious
+    Saves a file-like object to disk, runs a ClamAV scan, and returns file path if clean.
+    Returns 'infected' if virus is found.
     """
+    filepath = os.path.join(UPLOAD_DIR, filename)
     try:
-        filepath = os.path.join(UPLOAD_DIR, filename)
+        filelike.seek(0)
         with open(filepath, "wb") as f:
             f.write(filelike.read())
         filelike.seek(0)
 
-        from app.services.antivirus import scan_file  # Ensure it's imported locally or globally
         if not scan_file(filepath):
             os.remove(filepath)
             return "infected"
         return filepath
     except Exception as e:
-        raise RuntimeError(f"Scan failed: {e}")
+        raise RuntimeError(f"Scan failed: {str(e)}")
 
-# ------------------ ROUTES ------------------ #
+# ------------------ Routes ------------------ #
 
 @router.get("/")
 async def list_files(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """Return all files uploaded by the current user."""
     files = db.query(FileModel).filter(FileModel.user_id == current_user.id).all()
     return [
         {
@@ -72,13 +75,13 @@ async def list_files(
         for f in files
     ]
 
+
 @router.post("/upload/raw/")
 async def upload_raw(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """Directly upload PDF (for testing, no virus scan)."""
     if (
         not file.filename.lower().endswith(".pdf")
         or file.content_type != "application/pdf"
@@ -90,7 +93,7 @@ async def upload_raw(
     extracted_text = await extract_text_from_pdf(file_data)
 
     db_file = FileModel(
-        filename=file.filename,
+        filename=sanitize_filename(file.filename),
         content=file_data,
         extracted_text=extracted_text,
         user_id=current_user.id
@@ -105,13 +108,13 @@ async def upload_raw(
         "extracted_text": extracted_text[:1000]
     }
 
+
 @router.post("/upload/scan/")
 async def upload_scanned(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user_from_cookie),
 ):
-    """Upload a PDF after AV scan and extract text (safely reads stream once)."""
     if (
         not file.filename.lower().endswith(".pdf")
         or file.content_type != "application/pdf"
@@ -119,31 +122,27 @@ async def upload_scanned(
     ):
         raise HTTPException(status_code=400, detail="Only valid PDF files are allowed.")
 
-    # STEP 1: Read the file once
     file_data = await file.read()
     if not file_data:
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
 
-    # STEP 2: Run virus scan using a file-like buffer
     try:
         with SpooledTemporaryFile() as temp:
             temp.write(file_data)
             temp.seek(0)
-            scan_result = save_and_scan_file(temp, filename=file.filename)
+            scan_result = save_and_scan_file(temp, filename=sanitize_filename(file.filename))
             if scan_result == "infected":
                 raise HTTPException(status_code=400, detail="File is infected and was removed.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Virus scan failed: {str(e)}")
 
-    # STEP 3: Extract text from the original in-memory stream
     try:
         extracted_text = await extract_text_from_pdf(file_data)
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to extract text from PDF.")
 
-    # STEP 4: Save the file
     db_file = FileModel(
-        filename=file.filename,
+        filename=sanitize_filename(file.filename),
         content=file_data,
         extracted_text=extracted_text,
         user_id=current_user.id
@@ -158,12 +157,12 @@ async def upload_scanned(
         "extracted_text": extracted_text[:1000]
     }
 
+
 @router.get("/download/{file_id}")
 async def download_file(
     file_id: int,
     db: Session = Depends(get_db),
 ):
-    """Download a previously uploaded file by ID."""
     db_file = db.query(FileModel).filter(FileModel.id == file_id).first()
     if not db_file:
         raise HTTPException(status_code=404, detail="File not found")
@@ -173,3 +172,17 @@ async def download_file(
         media_type="application/octet-stream",
         headers={"Content-Disposition": f"attachment; filename={db_file.filename}"}
     )
+
+@router.delete("/{file_id}")
+async def delete_file(
+    file_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_cookie),
+):
+    file = db.query(FileModel).filter_by(id=file_id, user_id=current_user.id).first()
+    if not file:
+        raise HTTPException(status_code=404, detail="File not found or unauthorized.")
+    db.delete(file)
+    db.commit()
+    return {"message": "File deleted successfully."}
+

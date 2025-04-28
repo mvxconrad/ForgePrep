@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import {
   Container, Row, Col, Card, ListGroup,
-  ProgressBar, Button, Form, Spinner
+  ProgressBar, Button, Spinner
 } from "react-bootstrap";
 import { AuthContext } from "../components/AuthContext";
 import styles from "./Dashboard.module.css";
@@ -14,11 +14,8 @@ const Dashboard = () => {
   const [recentTests, setRecentTests] = useState([]);
   const [goals, setGoals] = useState([]);
   const [statistics, setStatistics] = useState({});
-  const [backgroundImage, setBackgroundImage] = useState(backgroundFallback);
-  const [prompt, setPrompt] = useState("");
-  const [generatedQuestions, setGeneratedQuestions] = useState([]);
-  const [error, setError] = useState("");
   const [notifications, setNotifications] = useState([]);
+  const [backgroundImage, setBackgroundImage] = useState(backgroundFallback);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -56,22 +53,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleGenerateQuestions = async () => {
-    try {
-      const res = await fetch("/api/gpt/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json();
-      setGeneratedQuestions(data.questions || []);
-    } catch (err) {
-      console.error("[Dashboard] Question generation failed:", err);
-      setError("Could not generate questions.");
-    }
-  };
-
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -89,13 +70,14 @@ const Dashboard = () => {
 
   return (
     <div
-      className="bg-dark text-light position-relative"
+      className="text-light position-relative"
       style={{
         zIndex: 1,
         minHeight: "100vh",
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
-        backgroundPosition: "center"
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
       }}
     >
       <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
@@ -159,41 +141,6 @@ const Dashboard = () => {
             </Card>
           </Col>
 
-          {/* GPT Generator */}
-          <Col md={12}>
-            <Card className={styles.glassCard}>
-              <div className={styles.cardHeader}>AI-Powered Question Generator</div>
-              <Form.Group controlId="formPrompt" className="mb-3">
-                <Form.Control
-                  type="text"
-                  placeholder="Enter a topic or prompt"
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-              </Form.Group>
-              <Button onClick={handleGenerateQuestions} variant="primary">
-                Generate Questions
-              </Button>
-              {error && <p className="text-danger mt-3">{error}</p>}
-            </Card>
-          </Col>
-
-          {/* Generated Results */}
-          {generatedQuestions.length > 0 && (
-            <Col md={12}>
-              <Card className={styles.glassCard}>
-                <div className={styles.cardHeader}>Generated Questions</div>
-                <ListGroup>
-                  {generatedQuestions.map((q, idx) => (
-                    <ListGroup.Item key={idx} className="bg-transparent text-white">
-                      {q}
-                    </ListGroup.Item>
-                  ))}
-                </ListGroup>
-              </Card>
-            </Col>
-          )}
-
           {/* Notifications */}
           <Col md={12}>
             <Card className={styles.glassCard}>
@@ -211,8 +158,42 @@ const Dashboard = () => {
               )}
             </Card>
           </Col>
+
+          {/* Quick Actions */}
+          <Col md={12}>
+            <Card className={styles.glassCard}>
+              <div className={styles.cardHeader}>🧰 Quick Actions</div>
+              <div className="d-flex flex-wrap gap-3 p-3">
+                <Button
+                  variant="light"
+                  className="fw-semibold shadow-sm rounded-pill px-4 py-2 text-dark custom-hover"
+                  onClick={() => window.location.href = "/upload"}
+                >
+                  📁 Upload Study Guide
+                </Button>
+                <Button
+                  variant="light"
+                  className="fw-semibold shadow-sm rounded-pill px-4 py-2 text-dark custom-hover"
+                  onClick={() => window.location.href = "/testgenerator"}
+                >
+                  🧠 Generate Test
+                </Button>
+              </div>
+            </Card>
+          </Col>
         </Row>
       </Container>
+
+      {/* Button hover override */}
+      <style>
+        {`
+          .custom-hover:hover {
+            background-color: #f0f0f0 !important;
+            color: #000 !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
+          }
+        `}
+      </style>
     </div>
   );
 };

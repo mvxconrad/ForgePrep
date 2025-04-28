@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Container,
-  Form,
-  Button,
-  ProgressBar,
-  Table,
-  Card
-} from "react-bootstrap";
+import { Container, Form, Button, ProgressBar, Table, Card } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import styles from "./Dashboard.module.css";
 import backgroundImage from "../assets/background_abstract2.png";
@@ -18,22 +11,24 @@ const FileUploadPage = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileHistory, setFileHistory] = useState([]);
   const [uploadedFileId, setUploadedFileId] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/files/`, {
-          withCredentials: true,
-        });
-        setFileHistory(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error("Fetch history failed:", err);
-        setFileHistory([]);
-      }
-    };
     fetchHistory();
   }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/files/`, {
+        withCredentials: true,
+      });
+      setFileHistory(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Fetch history failed:", err);
+      setFileHistory([]);
+    }
+  };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -42,10 +37,18 @@ const FileUploadPage = () => {
 
   const handleFileUpload = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || isUploading) return;
 
     const formData = new FormData();
     formData.append("file", file);
+
+    setIsUploading(true);
+    setUploadProgress(0);
+    setMessage("");
+
+    const simulate = setInterval(() => {
+      setUploadProgress((prev) => (prev >= 98 ? prev : prev + 3));
+    }, 200);
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/files/upload/scan/`, {
@@ -54,28 +57,39 @@ const FileUploadPage = () => {
         credentials: "include",
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText || "Upload failed.");
-      }
+      clearInterval(simulate);
+      setUploadProgress(100);
+
+      if (!res.ok) throw new Error(await res.text());
 
       const data = await res.json();
       setUploadedFileId(data.file_id);
       setMessage("✅ File uploaded and scanned successfully!");
       setFile(null);
-      setUploadProgress(0);
 
-      setFileHistory((prev) => [
-        ...prev,
-        {
-          filename: file.name,
-          size: file.size / 1024,
-          uploadedAt: new Date(),
-        },
-      ]);
+      await fetchHistory();
     } catch (err) {
+      clearInterval(simulate);
+      setUploadProgress(0);
       console.error("Upload error:", err);
       setMessage("❌ Upload failed. Check console.");
+    } finally {
+      setTimeout(() => {
+        setUploadProgress(0);
+        setIsUploading(false);
+      }, 800);
+    }
+  };
+
+  const handleDelete = async (fileId) => {
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/files/${fileId}`, {
+        withCredentials: true,
+      });
+      setFileHistory((prev) => prev.filter((f) => f.file_id !== fileId));
+    } catch (err) {
+      console.error("Failed to delete file:", err);
+      setMessage("❌ Failed to delete file.");
     }
   };
 
@@ -91,29 +105,40 @@ const FileUploadPage = () => {
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-        paddingBottom: "3rem",
       }}
     >
-      <Container className="py-5 position-relative" style={{ zIndex: 2 }}>
-        <Card className={`${styles.glassCard} border-0 shadow p-4`}>
+      <Container className="py-5">
+        <Card className={`${styles.glassCard} p-4 border-0 shadow-lg`}>
           <Card.Body>
-            <h3 className="fw-bold text-white mb-4">Upload Study Guide</h3>
+            <h3 className="fw-bold mb-4 text-white">Upload Study Guide</h3>
             <Form onSubmit={handleFileUpload}>
               <Form.Group className="mb-3">
                 <Form.Label className="text-white">Upload a PDF file</Form.Label>
-                <Form.Control type="file" accept=".pdf" onChange={handleFileChange} className="glass" />
+                <Form.Control type="file" accept=".pdf" onChange={handleFileChange} disabled={isUploading} />
               </Form.Group>
 
               {file && (
-                <Card className="mb-3 p-3 glass border-0">
-                  <strong className="text-white">Name:</strong> {file.name}<br />
-                  <strong className="text-white">Size:</strong> {(file.size / 1024).toFixed(2)} KB
+                <Card className="bg-transparent text-white border-light-subtle p-3 mb-3">
+                  <div><strong>Name:</strong> {file.name}</div>
+                  <div><strong>Size:</strong> {(file.size / 1024).toFixed(2)} KB</div>
                 </Card>
               )}
 
-              <div className="d-flex flex-wrap gap-2">
-                <Button type="submit" variant="light" className="fw-semibold text-dark" disabled={!file}>
-                  Upload & Scan
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                <Button
+                  type="submit"
+                  variant="light"
+                  className="text-dark fw-semibold"
+                  disabled={!file || isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" />
+                      Scanning...
+                    </>
+                  ) : (
+                    "Upload & Scan"
+                  )}
                 </Button>
 
                 {uploadedFileId && (
@@ -124,36 +149,61 @@ const FileUploadPage = () => {
               </div>
 
               {uploadProgress > 0 && (
-                <ProgressBar now={uploadProgress} className="mt-3" animated />
+                <ProgressBar
+                  now={uploadProgress}
+                  className="mt-3"
+                  animated
+                  variant={uploadProgress < 100 ? "info" : "success"}
+                  label={`${uploadProgress.toFixed(0)}%`}
+                />
               )}
 
-              {message && <p className="mt-3 text-white">{message}</p>}
+              {message && (
+                <div
+                  className={`mt-3 fw-semibold ${
+                    message.includes("✅") ? "text-success" : "text-danger"
+                  }`}
+                  style={{ fontSize: "1.1rem", textShadow: "0 0 6px rgba(255,255,255,0.2)" }}
+                >
+                  {message}
+                </div>
+              )}
             </Form>
           </Card.Body>
         </Card>
 
-        <Card className={`${styles.glassCard} mt-5 p-4`}>
-          <h4 className="fw-bold text-white mb-3">Upload History</h4>
-          <Table responsive bordered variant="dark" className="glass text-white">
+        <Card className={`${styles.glassCard} p-4 border-0 shadow mt-5`}>
+          <h4 className="fw-semibold mb-3 text-white">Upload History</h4>
+          <Table hover responsive className="table-dark rounded overflow-hidden">
             <thead>
               <tr>
                 <th>Filename</th>
                 <th>Uploaded</th>
                 <th>Size</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {fileHistory.length > 0 ? (
                 fileHistory.map((f, idx) => (
                   <tr key={idx}>
-                    <td>{f.filename}</td>
-                    <td>{new Date(f.uploadedAt).toLocaleString()}</td>
-                    <td>{f.size.toFixed(2)} KB</td>
+                    <td className="text-white">{f.filename}</td>
+                    <td className="text-white">{new Date(f.uploadedAt).toLocaleString()}</td>
+                    <td className="text-white">{f.size.toFixed(2)} KB</td>
+                    <td>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDelete(f.file_id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3" className="text-center text-muted">No uploads yet.</td>
+                  <td colSpan="4" className="text-center text-muted">No uploads yet.</td>
                 </tr>
               )}
             </tbody>

@@ -1,20 +1,14 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
 export default defineConfig({
+  plugins: [react()],
   server: {
-    plugins: [react()],
-    host: '0.0.0.0',
+    host: '0.0.0.0', // allow access from external IPs (useful on EC2)
     port: 5173,
     cors: true,
-    hmr:{
+    hmr: {
       clientPort: 5173,
-    }
-  },
-  define: {
-    'process.env': {
-      VITE_API_BASE_URL: 'https://forgeprep.net',
     },
   },
-})
+});
