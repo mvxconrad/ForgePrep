@@ -105,13 +105,19 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    if EMAIL_VERIFICATION_ENABLED and not user.is_verified:
-        raise HTTPException(status_code=403, detail="Please verify your email first.")
 
     token_data = {"id": user.id, "sub": user.email}
     access_token = create_access_token(token_data)
 
-    response = JSONResponse(content={"message": "Login successful"})
+    response = JSONResponse(content={
+        "message": "Login successful",
+        "user": {
+            "email": user.email,
+            "username": user.username,
+            "is_verified": user.is_verified
+        }
+    })
+
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -119,8 +125,10 @@ async def login(data: LoginRequest, db: Session = Depends(get_db)):
         secure=True,
         samesite="None",
         max_age=86400,
-        path="/"
+        path="/",
+        domain=".forgeprep.net"
     )
+
     return response
 
 @router.post("/logout")
