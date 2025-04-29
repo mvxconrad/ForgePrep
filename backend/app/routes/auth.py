@@ -40,7 +40,6 @@ def send_verification_email(to_email: str, token: str):
 def send_password_reset_email(to_email: str, token: str):
     link = f"{FRONTEND_URL}/reset-password?token={token}"
     print(f"[🔐 RESET] Password reset: {link}")
->>>>>>> 78fb4a0344a8ae1b6bb41139365830131824dba8
 
 # ------------------ MODELS ------------------ #
 class ForgotPasswordRequest(BaseModel):
