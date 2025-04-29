@@ -26,9 +26,16 @@ const VerifyEmailPrompt = () => {
   const handleResend = async () => {
     setSending(true);
     setError("");
+  
+    if (!user?.email) {
+      setError("User email is not available. Please log in again.");
+      setSending(false);
+      return;
+    }
+  
     try {
       await api.post("/auth/resend-verification", {
-        email: user?.email,
+        email: user.email,
       });
       setSent(true);
     } catch (err) {
@@ -38,6 +45,7 @@ const VerifyEmailPrompt = () => {
       setSending(false);
     }
   };
+  
 
   return (
     <Container className="text-center text-light py-5">
