@@ -19,7 +19,7 @@ import GitHubCallback from "./pages/GitHubCallback";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
 import LandingPage from "./pages/LandingPage";
-import Navbar from "./components/Navbar";
+import AppNavbar from "./components/AppNavbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import TestResults from "./pages/TestResults";
 import StudySetDetailsPage from "./pages/StudySetDetailsPage";
