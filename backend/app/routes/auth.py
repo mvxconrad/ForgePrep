@@ -30,7 +30,17 @@ load_dotenv()
 router = APIRouter()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
-EMAIL_VERIFICATION_ENABLED = True # Change to True once Email Server is Set Up
+EMAIL_VERIFICATION_ENABLED = True  # Email verification is active
+
+# ------------------ EMAIL MOCKS ------------------ #
+def send_verification_email(to_email: str, token: str):
+    link = f"{FRONTEND_URL}/verify-email?token={token}"
+    print(f"[📧 EMAIL] Verify email: {link}")
+
+def send_password_reset_email(to_email: str, token: str):
+    link = f"{FRONTEND_URL}/reset-password?token={token}"
+    print(f"[🔐 RESET] Password reset: {link}")
+>>>>>>> 78fb4a0344a8ae1b6bb41139365830131824dba8
 
 # ------------------ MODELS ------------------ #
 class ForgotPasswordRequest(BaseModel):

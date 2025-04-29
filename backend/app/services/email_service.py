@@ -1,72 +1,47 @@
-# import os
-# from dotenv import load_dotenv
-
-# load_dotenv()
-
-# FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
-# EMAILS_ENABLED = os.getenv("EMAILS_ENABLED", "false").lower() == "true"
-
-# def send_verification_email(to_email: str, token: str):
-#     link = f"{FRONTEND_URL}/verify-email?token={token}"
-#     if EMAILS_ENABLED:
-#         # TODO: integrate with SendGrid here
-#         pass
-#     else:
-#         print(f"[📧 MOCK VERIFY EMAIL] To: {to_email} | Link: {link}")
-
-# def send_password_reset_email(to_email: str, token: str):
-#     link = f"{FRONTEND_URL}/reset-password?token={token}"
-#     if EMAILS_ENABLED:
-#         # TODO: integrate with SendGrid here
-#         pass
-#     else:
-#         print(f"[📧 MOCK RESET EMAIL] To: {to_email} | Link: {link}")
-
-# app/services/email_service.py
-
 import os
-import smtplib
-from email.mime.text import MIMEText
 from dotenv import load_dotenv
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 load_dotenv()
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
 EMAILS_ENABLED = os.getenv("EMAILS_ENABLED", "false").lower() == "true"
-
-SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
-SMTP_USERNAME = os.getenv("SMTP_USERNAME")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-FROM_EMAIL = os.getenv("FROM_EMAIL", "no-reply@forgeprep.net")
-
-def send_email(to_email: str, subject: str, body: str):
-    if not EMAILS_ENABLED:
-        print(f"[📧 MOCK EMAIL] To: {to_email} | Subject: {subject} | Body: {body}")
-        return
-
-    message = MIMEText(body)
-    message["Subject"] = subject
-    message["From"] = FROM_EMAIL
-    message["To"] = to_email
-
-    try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(FROM_EMAIL, to_email, message.as_string())
-        print(f"[✅ EMAIL SENT] To: {to_email} | Subject: {subject}")
-    except Exception as e:
-        print(f"[❌ EMAIL ERROR] {e}")
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+EMAIL_FROM = os.getenv("EMAIL_FROM", "no-reply@forgeprep.net")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
 
 def send_verification_email(to_email: str, token: str):
     link = f"{FRONTEND_URL}/verify-email?token={token}"
-    subject = "Verify your email address"
-    body = f"Click the link to verify your email: {link}"
-    send_email(to_email, subject, body)
+    if EMAILS_ENABLED:
+        message = Mail(
+            from_email=EMAIL_FROM,
+            to_emails=to_email,
+            subject="ForgePrep: Verify Your Email",
+            html_content=f"<p>Welcome to ForgePrep!</p><p>Please verify your email by clicking <a href='{link}'>this link</a>.</p>"
+        )
+        try:
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            sg.send(message)
+            print(f"[✅ EMAIL SENT] Verification sent to {to_email}")
+        except Exception as e:
+            print(f"[❌ ERROR SENDING VERIFY EMAIL] {e}")
+    else:
+        print(f"[📧 MOCK VERIFY EMAIL] To: {to_email} | Link: {link}")
 
 def send_password_reset_email(to_email: str, token: str):
     link = f"{FRONTEND_URL}/reset-password?token={token}"
-    subject = "Reset your password"
-    body = f"Click the link to reset your password: {link}"
-    send_email(to_email, subject, body)
+    if EMAILS_ENABLED:
+        message = Mail(
+            from_email=EMAIL_FROM,
+            to_emails=to_email,
+            subject="ForgePrep: Reset Your Password",
+            html_content=f"<p>You requested a password reset.</p><p>Click <a href='{link}'>here</a> to reset your password.</p>"
+        )
+        try:
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            sg.send(message)
+            print(f"[✅ EMAIL SENT] Password reset sent to {to_email}")
+        except Exception as e:
+            print(f"[❌ ERROR SENDING RESET EMAIL] {e}")
+    else:
+        print(f"[📧 MOCK RESET EMAIL] To: {to_email} | Link: {link}")
