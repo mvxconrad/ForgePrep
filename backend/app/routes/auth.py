@@ -28,7 +28,7 @@ load_dotenv()
 router = APIRouter()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
-EMAIL_VERIFICATION_ENABLED = False # Change to True once Email Server is Set Up
+EMAIL_VERIFICATION_ENABLED = True # Change to True once Email Server is Set Up
 
 # ------------------ EMAIL MOCKS ------------------ #
 def send_verification_email(to_email: str, token: str):

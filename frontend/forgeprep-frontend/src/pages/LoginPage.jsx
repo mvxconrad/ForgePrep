@@ -6,7 +6,8 @@ import {
   Button,
   Container,
   Row,
-  Col
+  Col,
+  Alert
 } from "react-bootstrap";
 import { AuthContext } from "../components/AuthContext";
 import AppNavbar from "../components/AppNavbar";
@@ -43,15 +44,26 @@ const LoginPage = () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const { detail } = await response.json();
+        if (response.status === 403) {
+          navigate("/verify-email-prompt", { replace: true });
+        } else {
+          setError(detail || "Login failed. Please try again.");
+        }
+        return;
       }
 
       const userData = await response.json();
       setUser(userData);
+
+      if (userData.is_verified) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        navigate("/verify-email-prompt", { replace: true });
+      }
     } catch (err) {
-      setError(err.message);
+      setError("Login failed. Please check your connection or try again.");
+      console.error("Login error:", err);
     }
   };
 
@@ -89,7 +101,9 @@ const LoginPage = () => {
                 <h2 className="mb-4 text-center text-white">Login</h2>
 
                 {error && (
-                  <p className="text-danger text-center">{error}</p>
+                  <Alert variant="danger" className="text-center">
+                    {error}
+                  </Alert>
                 )}
 
                 <Form onSubmit={handleLogin}>
