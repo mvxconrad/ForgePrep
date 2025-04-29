@@ -6,7 +6,7 @@ import { AuthContext } from "../components/AuthContext";
 
 const VerifyEmailPrompt = () => {
   const navigate = useNavigate();
-  const { refreshUser } = useContext(AuthContext);
+  const { user, refreshUser } = useContext(AuthContext);
 
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -27,7 +27,9 @@ const VerifyEmailPrompt = () => {
     setSending(true);
     setError("");
     try {
-      await api.post("/auth/resend-verification");
+      await api.post("/auth/resend-verification", {
+        email: user?.email,
+      });
       setSent(true);
     } catch (err) {
       console.error("Resend failed:", err);
