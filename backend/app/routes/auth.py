@@ -7,6 +7,8 @@ from pydantic import BaseModel, EmailStr
 import os
 from dotenv import load_dotenv
 from starlette.responses import RedirectResponse
+import smtplib
+from email.mime.text import MIMEText
 from app.services.email_service import send_verification_email, send_password_reset_email
 
 
@@ -28,7 +30,7 @@ load_dotenv()
 router = APIRouter()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
-EMAIL_VERIFICATION_ENABLED = True # Change to True once Email Server is Set Up
+EMAIL_VERIFICATION_ENABLED = True  # Email verification is active
 
 # ------------------ EMAIL MOCKS ------------------ #
 def send_verification_email(to_email: str, token: str):

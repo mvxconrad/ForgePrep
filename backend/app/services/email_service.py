@@ -5,10 +5,10 @@ from sendgrid.helpers.mail import Mail
 
 load_dotenv()
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
 EMAILS_ENABLED = os.getenv("EMAILS_ENABLED", "false").lower() == "true"
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 EMAIL_FROM = os.getenv("EMAIL_FROM", "no-reply@forgeprep.net")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
 
 def send_verification_email(to_email: str, token: str):
     link = f"{FRONTEND_URL}/verify-email?token={token}"
