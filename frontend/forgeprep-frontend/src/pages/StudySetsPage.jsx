@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, ListGroup, Alert } from "react-bootstrap";
-import api from "../utils/apiService";
+import api from "../util/apiService";
 import PageWrapper from "../components/PageWrapper";
 
 const StudySetsPage = () => {

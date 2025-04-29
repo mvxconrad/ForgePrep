@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Card, Form, Button, ListGroup, Alert, Spinner } from "react-bootstrap";
-import api from "../utils/apiService";
+import api from "../util/apiService";
 import styles from "./Dashboard.module.css"; // For glassCard styling
 import backgroundImage from "../assets/background_abstract2.png";
 
