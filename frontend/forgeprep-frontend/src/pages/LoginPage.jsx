@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   Card,
   Form,
@@ -20,6 +20,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [searchParams] = useSearchParams();
+  const verified = searchParams.get("verified") === "true";
 
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
@@ -99,6 +101,12 @@ const LoginPage = () => {
                 </div>
 
                 <h2 className="mb-4 text-center text-white">Login</h2>
+
+                {verified && (
+                  <Alert variant="success" className="text-center">
+                    ✅ Your email has been verified! You can now log in.
+                  </Alert>
+                )}
 
                 {error && (
                   <Alert variant="danger" className="text-center">
