@@ -19,7 +19,6 @@ import GitHubCallback from "./pages/GitHubCallback";
 import Classes from "./pages/Classes";
 import Templates from "./pages/Templates";
 import LandingPage from "./pages/LandingPage";
-import AppNavbar from "./components/AppNavbar";
 import AdminDashboard from "./pages/AdminDashboard";
 import TestResults from "./pages/TestResults";
 import StudySetDetailsPage from "./pages/StudySetDetailsPage";
@@ -31,11 +30,12 @@ import StudySetsPage from "./pages/StudySetsPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import VerifyEmailPrompt from "./pages/VerifyEmailPrompt";
-import VerifyEmailPage from "./pages/VerifyEmailPage"; // 🆕 New
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 // Components
 import AppNavbar from "./components/AppNavbar";
 import ProtectedRoute from "./components/ProtectedRoute";
+
 
 const AppContent = () => {
   const { user, loading } = useContext(AuthContext);
