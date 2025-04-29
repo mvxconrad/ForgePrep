@@ -7,11 +7,7 @@ from pydantic import BaseModel, EmailStr
 import os
 from dotenv import load_dotenv
 from starlette.responses import RedirectResponse
-import smtplib
-from email.mime.text import MIMEText
 from app.services.email_service import send_verification_email, send_password_reset_email
-
-
 from app.models.models import User
 from app.schemas.schemas import UserCreate, LoginRequest
 from app.security.security import (
@@ -30,16 +26,7 @@ load_dotenv()
 router = APIRouter()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
-EMAIL_VERIFICATION_ENABLED = True  # Email verification is active
-
-# ------------------ EMAIL MOCKS ------------------ #
-def send_verification_email(to_email: str, token: str):
-    link = f"{FRONTEND_URL}/verify-email?token={token}"
-    print(f"[📧 EMAIL] Verify email: {link}")
-
-def send_password_reset_email(to_email: str, token: str):
-    link = f"{FRONTEND_URL}/reset-password?token={token}"
-    print(f"[🔐 RESET] Password reset: {link}")
+EMAIL_VERIFICATION_ENABLED = True
 
 # ------------------ MODELS ------------------ #
 class ForgotPasswordRequest(BaseModel):
@@ -60,7 +47,7 @@ async def register_user(request: UserCreate, background_tasks: BackgroundTasks, 
         username=request.username,
         email=request.email,
         hashed_password=hashed_password,
-        is_verified=not EMAIL_VERIFICATION_ENABLED  # Change when DNS is Set Up / Automatically verify in dev
+        is_verified=not EMAIL_VERIFICATION_ENABLED
     )
 
     db.add(new_user)
@@ -87,6 +74,9 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
 
     user.is_verified = True
     db.commit()
+    db.refresh(user)
+    print(f"[✅ USER VERIFIED] {user.email} | Verified Status: {user.is_verified}")
+
     return RedirectResponse(url=f"{FRONTEND_URL}/login?verified=true")
 
 @router.post("/resend-verification/")

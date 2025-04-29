@@ -21,8 +21,10 @@ def send_verification_email(to_email: str, token: str):
         )
         try:
             sg = SendGridAPIClient(SENDGRID_API_KEY)
-            sg.send(message)
-            print(f"[✅ EMAIL SENT] Verification sent to {to_email}")
+            response = sg.send(message)
+            print(f"[✅ EMAIL SENT] To: {to_email} | Status: {response.status_code}")
+            print(f"Response Body: {response.body}")
+            print(f"Headers: {response.headers}")
         except Exception as e:
             print(f"[❌ ERROR SENDING VERIFY EMAIL] {e}")
     else:
@@ -39,8 +41,10 @@ def send_password_reset_email(to_email: str, token: str):
         )
         try:
             sg = SendGridAPIClient(SENDGRID_API_KEY)
-            sg.send(message)
-            print(f"[✅ EMAIL SENT] Password reset sent to {to_email}")
+            response = sg.send(message)
+            print(f"[✅ EMAIL SENT] To: {to_email} | Status: {response.status_code}")
+            print(f"Response Body: {response.body}")
+            print(f"Headers: {response.headers}")
         except Exception as e:
             print(f"[❌ ERROR SENDING RESET EMAIL] {e}")
     else:
