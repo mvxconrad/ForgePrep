@@ -7,52 +7,49 @@ import backgroundImage from "../assets/background_abstract2.png";
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [files, setFiles] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start loading as true initially
   const [error, setError] = useState("");
 
+  // Check if the user is an admin
   const checkAdmin = async () => {
     try {
       const response = await axios.get("/api/auth/me", { withCredentials: true });
       if (!response.data.is_admin) {
-        window.location.href = "/login";
+        window.location.href = "/login"; // Redirect if not admin
       }
     } catch (err) {
       console.error("Authorization error:", err);
-      window.location.href = "/login";
+      window.location.href = "/login"; // Redirect on error
+    }
+  };
+
+  // Fetch data after confirming admin status
+  const fetchAdminData = async () => {
+    try {
+      const response = await axios.get("/api/admin/data", { withCredentials: true });
+      setUsers(response.data.users || []);
+      setFiles(response.data.files || []);
+    } catch (err) {
+      console.error("Error fetching admin data:", err);
+      setError("Failed to load admin data. Please try again.");
+    } finally {
+      setLoading(false); // Stop loading once data is fetched
     }
   };
 
   useEffect(() => {
-    checkAdmin();
+    checkAdmin(); // Check if the user is an admin
   }, []);
 
   useEffect(() => {
-    const fetchAdminData = async () => {
-      try {
-        const response = await axios.get("/api/admin/data", {
-          withCredentials: true, // ✅ Send HttpOnly cookies
-        });
-
-        setUsers(response.data.users || []);
-        setFiles(response.data.files || []);
-      } catch (err) {
-        console.error("Error fetching admin data:", err);
-        setError("Failed to load admin data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    setLoading(true);
-    setError("");
-    fetchAdminData();
-  }, []);
+    if (!loading) fetchAdminData(); // Fetch admin data only after the user has been confirmed as admin
+  }, [loading]);
 
   const handleDeleteUser = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         await axios.delete(`/api/users/${userId}`, { withCredentials: true });
-        setUsers(users.filter((user) => user.id !== userId));
+        setUsers(users.filter((user) => user.id !== userId)); // Remove user from state
       } catch (err) {
         console.error("Error deleting user:", err);
         setError("Failed to delete user. Please try again.");
@@ -62,10 +59,8 @@ const AdminDashboard = () => {
 
   const handleDeleteFile = async (fileId) => {
     try {
-      await axios.delete(`/api/files/${fileId}`, {
-        withCredentials: true,
-      });
-      setFiles(files.filter((file) => file.id !== fileId));
+      await axios.delete(`/api/files/${fileId}`, { withCredentials: true });
+      setFiles(files.filter((file) => file.id !== fileId)); // Remove file from state
     } catch (err) {
       console.error("Error deleting file:", err);
       setError("Failed to delete file. Please try again.");

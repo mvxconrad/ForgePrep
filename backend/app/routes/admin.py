@@ -1,21 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.models.models import User, StudySet, File
-from app.routes.auth import get_current_user_from_cookie  # ✅ This is your new standard
+from app.routes.auth import get_current_user_from_cookie
 from database.database import get_db
 
 router = APIRouter()
 
 @router.get("/admin/data")
-async def get_admin_data(current_user: User = Depends(get_current_user_from_cookie), db: Session = Depends(get_db)):
+async def get_admin_data(
+    current_user: User = Depends(get_current_user_from_cookie), db: Session = Depends(get_db)
+):
     """
     Retrieve admin data including users, study sets, and files.
     """
     if not getattr(current_user, "is_admin", False):
         raise HTTPException(status_code=403, detail="Access forbidden: Admins only")
 
+    # Fetch data from the database
     users = db.query(User).all()
-    study_sets = db.query(StudySet).all()
+    study_sets = db.query(StudySet).all()  # You might want to handle this later
     files = db.query(File).all()
 
     return {
