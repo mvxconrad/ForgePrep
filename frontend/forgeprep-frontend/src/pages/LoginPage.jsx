@@ -24,7 +24,7 @@ const LoginPage = () => {
   const verified = searchParams.get("verified") === "true";
 
   const navigate = useNavigate();
-  const { user, setUser } = useContext(AuthContext);
+  const { user, setUser, refreshUser } = useContext(AuthContext);
 
   useEffect(() => {
     if (user && !hasRedirected) {
@@ -56,7 +56,10 @@ const LoginPage = () => {
       }
 
       const userData = await response.json();
-      setUser(userData);
+      setUser(userData); // Set user immediately
+
+      // Refresh the user to make sure is_admin and is_verified are included
+      await refreshUser();
 
       if (userData.is_verified) {
         navigate("/dashboard", { replace: true });

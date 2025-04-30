@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setUser(data);
+      setUser(data); // set user with the full data including is_admin
       console.log("[AuthContext] Fetched user:", data);
     } catch (err) {
       setUser(null);
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   // Optional: Expose manual refresh for things like "Check Again" in verify prompt
   const refreshUser = async () => {
     setLoading(true);
-    await fetchUser();
+    await fetchUser(); // Fetch user data again
   };
 
   return (
