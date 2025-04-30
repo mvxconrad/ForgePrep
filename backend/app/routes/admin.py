@@ -19,9 +19,10 @@ async def get_admin_data(
 
     offset = (page - 1) * page_size
 
-    users = db.query(User).offset(offset).limit(page_size).all()
-    study_sets = db.query(StudySet).offset(offset).limit(page_size).all()
-    files = db.query(File).offset(offset).limit(page_size).all()
+    users = db.query(User).all()
+    study_sets = db.query(StudySet).all()
+    files = db.query(File).all()
+
 
     response_data = {
         "users": [{"id": u.id, "username": u.username, "email": u.email} for u in users],
