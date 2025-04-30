@@ -54,6 +54,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     is_verified = Column(Boolean, default=False)  # ✅ NEW FIELD
+    is_admin = Column(Boolean, default=False)
 
     sets = relationship("StudySet", back_populates="owner")
     progress = relationship("UserProgress", back_populates="user")
