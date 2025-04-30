@@ -89,7 +89,7 @@ const AppNavbar = () => {
                   </Nav.Link>
 
                   {/* Conditionally Render Admin Dashboard Link */}
-                  {user.is_admin && (
+                  {user.is_admin && user.is_verified && (
                     <Nav.Link as={Link} to="/admin" active={isActive("/admin")}>
                       Admin Dashboard
                     </Nav.Link>
