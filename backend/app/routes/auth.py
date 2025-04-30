@@ -26,7 +26,7 @@ load_dotenv()
 router = APIRouter()
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://forgeprep.net")
-EMAIL_VERIFICATION_ENABLED = True
+EMAIL_VERIFICATION_ENABLED = os.getenv("EMAIL_VERIFICATION_ENABLED", "False") == "True"
 
 # ------------------ MODELS ------------------ #
 class ForgotPasswordRequest(BaseModel):
