@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Container, Button, Spinner, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import api from "../util/apiService";
@@ -12,10 +12,18 @@ const VerifyEmailPrompt = () => {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
+  const emailVerificationEnabled = process.env.REACT_APP_EMAIL_VERIFICATION_ENABLED === "true";
+
+  useEffect(() => {
+    if (!emailVerificationEnabled || user?.is_verified) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate, emailVerificationEnabled]);
+
   const handleCheckAgain = async () => {
     try {
       const refreshed = await refreshUser();
-      if (refreshed?.is_verified) {
+      if (!emailVerificationEnabled || refreshed?.is_verified) {
         navigate("/dashboard");
       }
     } catch (err) {
@@ -26,13 +34,13 @@ const VerifyEmailPrompt = () => {
   const handleResend = async () => {
     setSending(true);
     setError("");
-  
+
     if (!user?.email) {
       setError("User email is not available. Please log in again.");
       setSending(false);
       return;
     }
-  
+
     try {
       await api.post("/auth/resend-verification", {
         email: user.email,
@@ -45,7 +53,6 @@ const VerifyEmailPrompt = () => {
       setSending(false);
     }
   };
-  
 
   return (
     <Container className="text-center text-light py-5">
