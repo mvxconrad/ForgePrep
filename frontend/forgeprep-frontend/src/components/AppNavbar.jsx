@@ -60,15 +60,40 @@ const AppNavbar = () => {
             <Nav className="me-auto">
               {user && (
                 <>
-                  <Nav.Link as={Link} to="/dashboard" active={isActive("/dashboard")}>Dashboard</Nav.Link>
-                  <Nav.Link as={Link} to="/upload" active={isActive("/upload")}>File Upload</Nav.Link>
-                  <Nav.Link as={Link} to="/testgenerator" active={isActive("/testgenerator")}>Test Generator</Nav.Link>
-                  <Nav.Link as={Link} to="/classes" active={isActive("/classes")}>Classes</Nav.Link>
-                  <Nav.Link as={Link} to="/templates" active={isActive("/templates")}>Templates</Nav.Link>
-                  <Nav.Link as={Link} to="/study-sets" active={isActive("/study-sets")}>Study Sets</Nav.Link>
-                  <Nav.Link as={Link} to="/test-results" active={isActive("/test-results")}>Test Results</Nav.Link>
-                  <Nav.Link as={Link} to="/profile" active={isActive("/profile")}>Profile</Nav.Link>
-                  <Nav.Link as={Link} to="/settings" active={isActive("/settings")}>Settings</Nav.Link>
+                  <Nav.Link as={Link} to="/dashboard" active={isActive("/dashboard")}>
+                    Dashboard
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/upload" active={isActive("/upload")}>
+                    File Upload
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/testgenerator" active={isActive("/testgenerator")}>
+                    Test Generator
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/classes" active={isActive("/classes")}>
+                    Classes
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/templates" active={isActive("/templates")}>
+                    Templates
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/study-sets" active={isActive("/study-sets")}>
+                    Study Sets
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/test-results" active={isActive("/test-results")}>
+                    Test Results
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/profile" active={isActive("/profile")}>
+                    Profile
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/settings" active={isActive("/settings")}>
+                    Settings
+                  </Nav.Link>
+
+                  {/* Conditionally Render Admin Dashboard Link */}
+                  {user.is_admin && (
+                    <Nav.Link as={Link} to="/admin" active={isActive("/admin")}>
+                      Admin Dashboard
+                    </Nav.Link>
+                  )}
                 </>
               )}
             </Nav>
