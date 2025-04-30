@@ -15,8 +15,8 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // ✅ Redirect unverified users to verification prompt
-  if (!user.is_verified) return <Navigate to="/verify-email-prompt" replace />;
+  // ✅ Redirect unverified users to verification prompt. Commented out for now.
+  // if (!user.is_verified) return <Navigate to="/verify-email-prompt" replace />;
 
   return children;
 };
