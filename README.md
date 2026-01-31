@@ -63,7 +63,6 @@ This application allows users to **upload study materials, generate practice que
 ### **Additional Dependencies**
 - **PyPDF2, pdfplumber, python-docx** – For parsing text from uploaded study materials.
 - **Tesseract OCR** *(Planned)* – Will be integrated to process scanned PDFs and extract text.
-- **Docker** *(Planned)* – Will be used for containerization to ensure consistent development and production environments.
 - **GitHub Actions** *(Planned)* – Will be implemented for CI/CD automation.
 
 ---

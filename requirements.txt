@@ -1,0 +1,17 @@
+# Backend Packages
+fastapi
+pydantic
+sqlalchemy
+passlib[bcrypt]
+uvicorn
+psycopg2-binary
+python-dotenv
+python-jose[cryptography]
+authlib
+pyjwt
+httpx
+pydantic[email]
+python-multipart
+
+# Frontend Packages
+vite

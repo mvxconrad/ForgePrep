@@ -1,0 +1,79 @@
+/* === Base Styling === */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0d1117;
+  color: white;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* === Glass Panels (Hero, Feature Cards) === */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+}
+
+.glass:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* === Make text inside glass more visible === */
+.glass p,
+.glass h5 {
+  color: #fff !important;
+}
+
+/* === Navbar === */
+.navbar .nav-link {
+  color: #fff !important;
+  transition: color 0.3s ease;
+}
+
+.navbar .nav-link:hover {
+  color: #cfcfcf !important;
+}
+
+/* === Glow on CTA Button Hover === */
+.btn-glow {
+  transition: all 0.3s ease-in-out;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+  transform: scale(1.03);
+}
+
+/* === Shadow on Hero Text for Contrast === */
+.text-shadow {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+/* === Remove accidental gray section backgrounds === */
+section {
+  background-color: transparent !important;
+}
+
+/* === Flowing abstract backgrounds === */
+.bg-abstract {
+  position: absolute;
+  width: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* === Spacing fix if needed === */
+.py-5 {
+  padding-top: 3rem !important;
+  padding-bottom: 3rem !important;
+}
+
+/* === Footer Colors === */
+footer {
+  background: linear-gradient(135deg, #6f42c1, #4b0082);
+}

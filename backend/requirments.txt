@@ -1,7 +1,0 @@
-Resources
--------------------
-* Apache running on Ubuntu web server
-* Amazon RDS server
-  -
-  -
-  -
