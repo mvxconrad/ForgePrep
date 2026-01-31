@@ -10,33 +10,16 @@ This application allows users to **upload study materials, generate practice que
 ## **Features**
 - **Upload and Process Study Materials**  
   Users can upload **PDF, Word, and plain text files**, which are parsed for test generation.  
-- **AI-Powered Test Generation** *(In Progress)*  
+- **AI-Powered Test Generation**   
   The application uses **GPT-4** to generate **multiple-choice, short-answer, and essay** questions based on the provided materials. The AI integration is currently being refined for better accuracy and customization.  
-- **User Authentication** *(In Progress)*  
+- **User Authentication** 
   OAuth 2.0 is being implemented to allow users to log in via **Google and GitHub**. JWT is used for **secure session management**, ensuring only authorized users access their tests and data.  
 - **Frontend-Backend Integration**  
   The **React (Vite) frontend** is fully connected to the **FastAPI backend**, allowing seamless interaction with the PostgreSQL database.  
 - **User Dashboard for Test Management**  
   Users have access to a dashboard where they can manage their study materials and tests. Authentication ensures that only logged-in users can access this page.  
-- **Frontend Optimization and UI Enhancements** *(Ongoing)*  
+- **Frontend Optimization and UI Enhancements** 
   The UI is being refined to improve user experience, with a focus on **responsiveness and modern design**.  
-
----
-
-## **Development Progress**
-
-| **Feature**                          | **Status**        | **Details** |
-|--------------------------------------|------------------|-----------------------------------------------------------------|
-| Define project scope                 | Completed        | The initial scope, features, and technical architecture were defined. |
-| GitHub Repository & Version Control  | Completed        | Repository was initialized, and a branching strategy was established. |
-| Frontend Upgrade to Vite              | Completed        | Switched from Create React App to Vite for better performance. |
-| OAuth 2.0 & JWT Authentication        | In Progress      | Google and GitHub login authentication is being implemented, JWT session management is partially completed. |
-| AI-Powered Test Generation            | In Progress      | GPT-4 integration is functional but requires fine-tuning for better question accuracy. |
-| File Upload and Parsing               | In Progress      | Text extraction from PDFs, Word, and plain text is working; OCR support for scanned documents is still in development. |
-| Frontend-Backend Integration          | Completed        | The frontend is fully linked with the backend and PostgreSQL database. |
-| User Dashboard                        | Completed        | Authentication-protected dashboard for managing tests is implemented. |
-| UI and Frontend Enhancements          | Ongoing         | The UI is being refined for a modern, user-friendly experience. |
-| Deployment Planning                    | Not Yet Started | AWS deployment will be handled after core functionalities are complete. |
 
 ---
 
@@ -62,8 +45,6 @@ This application allows users to **upload study materials, generate practice que
 
 ### **Additional Dependencies**
 - **PyPDF2, pdfplumber, python-docx** – For parsing text from uploaded study materials.
-- **Tesseract OCR** *(Planned)* – Will be integrated to process scanned PDFs and extract text.
-- **GitHub Actions** *(Planned)* – Will be implemented for CI/CD automation.
 
 ---
 
